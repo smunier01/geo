@@ -1,42 +1,72 @@
+var displayPoints = function(s, data) {
+    var i = 0;
+
+    s.clear();
+    
+    for (var f in data) {
+	s.addFeature(new ol.Feature({
+	    'geometry': new ol.geom.Point(
+		ol.proj.transform([data[f][0], data[f][1]], 'EPSG:4326', 'EPSG:3857')),
+	    'i': i,
+	    'f': parseInt(f)
+	}))
+
+	i++;
+    }
+}
+
 $(function(){
 
     var map;
-
+    
     //
     // ROUTING
     //
-    var polyCoords = [];
 
-    var sourceRouting = new ol.source.Vector([])
+    var nodeSelected = [];
+    
+    var sourceNodes = new ol.source.Vector([])
 
-    var layerRouting = new ol.layer.Vector({
-	source: sourceRouting
+    var layerNodes = new ol.layer.Vector({
+	source: sourceNodes,
+	title: 'Node Layer'
+    });
+
+    var sourceRoute = new ol.source.Vector([])
+
+    var layerRoute = new ol.layer.Vector({
+	source: sourceRoute,
+	style: new ol.style.Style({
+            fill: new ol.style.Fill({
+		color: "#cecece"
+            }),
+            stroke: new ol.style.Stroke({
+		color: "#E86FB0",
+		width: 2
+            })
+	})
+    });
+
+    var sourceHover = new ol.source.Vector([])
+
+    var layerHover = new ol.layer.Vector({
+	source: sourceHover,
+	style: new ol.style.Style({
+            fill: new ol.style.Fill({
+		color: "#cecece"
+            }),
+            stroke: new ol.style.Stroke({
+		color: "#E86FB0",
+		width: 2
+            })
+	})
     });
 
     var r = new Routing();
 
     r.init("ressources/routing.json").promise().then(function() {
-	r.dijkstra(1, 6);
 
-	/*
-	  Le resultat est cencé donner ça pour 1->6. Mais je suis pas certain à quoi ca correspond.
-	  Surement les identifiant des noeuds.
-
-	  1,598,602,603,616,617,674,571,565,380,381,178,160,161,850,851,84,85,86,94,93,121,120,100,99,98,68,5,6
-	*/
-	
-	var i = 0;
-	sourceRouting.clear();
-	
-	for (var f in r.data) {
-	    sourceRouting.addFeature(new ol.Feature({
-		'geometry': new ol.geom.Point(
-		    ol.proj.transform([r.data[f][0], r.data[f][1]], 'EPSG:4326', 'EPSG:3857')),
-		'i': i
-	    }))
-
-	    i++;
-	}
+	displayPoints(sourceNodes, r.data);
 
     });
 
@@ -133,18 +163,49 @@ $(function(){
     });
     
     var vectorLayer = new ol.layer.Vector({
-	title: 'added Layer',
+	title: 'Main Layer',
 	source: source,
 	style: styleFunction
     });
 
     map = new ol.Map({
-	layers: [vectorLayer, layerRouting],
+	layers: [vectorLayer, layerRoute, layerNodes, layerHover],
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
 	    zoom: 15
 	})
+    });
+
+    map.on('click', function(evt) {
+
+	var t = true;
+                                                  
+	map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {    
+
+	    if (t && layer.C.title == "Node Layer") {
+
+		t = false;
+		
+		console.log(feature);
+
+		if (nodeSelected.length == 2) {
+		    nodeSelected.length = 0;
+		}
+
+		nodeSelected.push(feature.C.f);
+
+		if (nodeSelected.length == 2) {
+		    var route = r.dijkstra(nodeSelected[0], nodeSelected[1]);
+
+		    var f = r.getRouteFromNodes(route);
+
+		    sourceRoute.clear();
+		    sourceRoute.addFeatures(f);
+		}
+
+	    }
+	});                                                                       
     });
 
 });
