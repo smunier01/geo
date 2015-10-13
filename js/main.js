@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 var GEO_SERVER_IP = "82.229.108.217:8080";
 
 $(function() {
@@ -12,17 +11,7 @@ $(function() {
 	    features: [startPoint, destPoint]
 	})
     });
-    
-=======
-var GEO_SERVER_IP = "localhost:8080";
 
-$(function() {
-
-    var layer1 = new ol.layer.Tile({
-	source: new ol.source.MapQuest({layer: 'osm'})
-    });
-
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
     var wmsSource1 = new ol.source.TileWMS({
 	url: 'http://' + GEO_SERVER_IP + '/geoserver/wms/cite',
 	params: {'LAYERS': 'planet_osm_line', 'TILED': true},
@@ -50,7 +39,6 @@ $(function() {
 
 	serverType: 'geoserver'
     });
-<<<<<<< HEAD
 
     var wmsSource5 = new ol.source.TileWMS({
 	url: 'http://' + GEO_SERVER_IP + '/geoserver/wms/cite',
@@ -65,20 +53,12 @@ $(function() {
 	    source: new ol.source.MapQuest({layer: 'osm'})
 	}),
 	*/
-	
-=======
-    
-    var layers = [
-	new ol.layer.Tile({
-	    source: new ol.source.MapQuest({layer: 'osm'})
-	}),
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
+
 	new ol.layer.Tile({
 	    source: wmsSource3,
 	    opacity: 0.6
 	}),
-<<<<<<< HEAD
-	
+
 	new ol.layer.Tile({
 	    source: wmsSource1
 	}),
@@ -90,19 +70,7 @@ $(function() {
 	new ol.layer.Tile({
 	    source: wmsSource4
 	})*/
-=======
-	/*
-	new ol.layer.Tile({
-	    source: wmsSource1
-	}),
-	*/
-	new ol.layer.Tile({
-	    source: wmsSource2
-	}),
-	new ol.layer.Tile({
-	    source: wmsSource4
-	})
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
+
     ];
     
     var map = new ol.Map({
@@ -129,7 +97,6 @@ $(function() {
 	})
     })
 
-<<<<<<< HEAD
     var result;
     var click = 0;
     map.addLayer(vectorLayer);
@@ -143,18 +110,7 @@ $(function() {
 
 	var url = wmsSource1.getGetFeatureInfoUrl(
 	    event.coordinate, viewResolution, 'EPSG:3857',
-=======
-    map.addLayer(vectorLayer);
 
-    var geojsonFormat = new ol.format.GeoJSON();
-    
-    map.on('click', function(evt) {
-
-	var viewResolution = (map.C.view.getResolution());
-
-	var url = wmsSource4.getGetFeatureInfoUrl(
-	    evt.coordinate, viewResolution, 'EPSG:3857',
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
 	    {'INFO_FORMAT': 'text/javascript'}
 	);
 	
@@ -171,16 +127,13 @@ $(function() {
 
 		    vectorSource.clear();
 		    vectorSource.addFeatures(geojsonFormat.readFeatures(response));
-<<<<<<< HEAD
 		    console.log(geojsonFormat.readFeatures(response));
-=======
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
 	
 		});
 	    }
 	    
 	}
-<<<<<<< HEAD
+
 	*/
 	//**********************************
 	//**********************************
@@ -223,14 +176,11 @@ $(function() {
 	    
 	    map.addLayer(result);
 	}
-=======
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
 	
     });
 
     // 'http://' + GEO_SERVER_IP + '/geoserver/cite/wfs?service=WFS&version=2.0.0&request=GetFeature&typenames=cite:planet_osm_roads&propertyName=way&CQL_FILTER=osm_id%3D%27308574435%27'
 
-<<<<<<< HEAD
     // var url = 'http://' + GEO_SERVER_IP + ':8080/geoserver/wfs?service=WFS&version=1.2.0&request=GetFeature&typeName=cite:planet_osm_polygon&outputformat=text/javascript&format_options=callback:loadFeatures&srsName=EPSG:3857';
 
     /*
@@ -252,9 +202,5 @@ select pgr_analyzegraph('planet_osm_line', 0.0001, 'way', 'osm_id');
 SELECT osm_id as id, source, target, 1.0 as cost FROM ways;
 */
     
-=======
-     // var url = 'http://' + GEO_SERVER_IP + ':8080/geoserver/wfs?service=WFS&version=1.2.0&request=GetFeature&typeName=cite:planet_osm_polygon&outputformat=text/javascript&format_options=callback:loadFeatures&srsName=EPSG:3857';
-
->>>>>>> a8e39c82a1aba10a3e479f0192344e90e6494965
 });
 
