@@ -1,19 +1,42 @@
 $(function(){
 
+    var map;
+
     //
     // ROUTING
     //
-    
+    var polyCoords = [];
+
+    var sourceRouting = new ol.source.Vector([])
+
+    var layerRouting = new ol.layer.Vector({
+	source: sourceRouting
+    });
+
     var r = new Routing();
 
     r.init("ressources/routing.json").promise().then(function() {
 	r.dijkstra(1, 6);
-	/*
-	Le resultat est cencé donner ça pour 1->6. Mais je suis pas certain à quoi ca correspond.
-	Surement les identifiant des noeuds.
 
-	1,598, 602, 603,616,617,674,571,565,380,381,178,160,161,850,851,84,85,86,94,93,121,120,100,99,98,68,5,6
+	/*
+	  Le resultat est cencé donner ça pour 1->6. Mais je suis pas certain à quoi ca correspond.
+	  Surement les identifiant des noeuds.
+
+	  1,598,602,603,616,617,674,571,565,380,381,178,160,161,850,851,84,85,86,94,93,121,120,100,99,98,68,5,6
 	*/
+	
+	var i = 0;
+	sourceRouting.clear();
+	
+	for (var f in r.data) {
+	    sourceRouting.addFeature(new ol.Feature({
+		'geometry': new ol.geom.Point(
+		    ol.proj.transform([r.data[f][0], r.data[f][1]], 'EPSG:4326', 'EPSG:3857')),
+		'i': i
+	    }))
+
+	    i++;
+	}
 
     });
 
@@ -115,8 +138,8 @@ $(function(){
 	style: styleFunction
     });
 
-    var map = new ol.Map({
-	layers: [vectorLayer],
+    map = new ol.Map({
+	layers: [vectorLayer, layerRouting],
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
