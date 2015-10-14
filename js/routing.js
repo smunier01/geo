@@ -39,7 +39,9 @@ Routing.prototype.dijkstra = function (start, stop) {
 	"father" : null
     };
     do {
-
+	if( Object.keys(visitedNodes).length == 0){
+	    return [];
+	}
 	var selectedNode;
 	var dst = Infinity;
 
@@ -53,7 +55,7 @@ Routing.prototype.dijkstra = function (start, stop) {
 	var neighbors = this.graph.getNode(selectedNode)._outEdges;
 
 	for (neighbor in neighbors) {
-
+	    
 	    if (neighbor in validatedNodes) {
 		continue;
 	    }
