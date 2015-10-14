@@ -8,12 +8,23 @@ var displayPoints = function(s, data) {
 	    'geometry': new ol.geom.Point(
 		ol.proj.transform([data[f][0], data[f][1]], 'EPSG:4326', 'EPSG:3857')),
 	    'i': i,
-	    'f': parseInt(f)
+	    'id': parseInt(f)
 	}))
 
 	i++;
     }
 }
+
+var nodeSelectedStyle =  new ol.style.Circle({
+    fill: new ol.style.Fill({
+	color: "#CECECE"
+    }),
+    stroke: new ol.style.Stroke({
+	color: "#E86FB0",
+	width: 2
+    }),
+    radius: 5
+});
 
 $(function(){
 
@@ -37,13 +48,14 @@ $(function(){
     var layerRoute = new ol.layer.Vector({
 	source: sourceRoute,
 	style: new ol.style.Style({
-            fill: new ol.style.Fill({
-		color: "#cecece"
-            }),
-            stroke: new ol.style.Stroke({
+	    image: nodeSelectedStyle,
+	    fill: new ol.style.Fill({
+		color: "#CECECE"
+	    }),
+	    stroke: new ol.style.Stroke({
 		color: "#E86FB0",
 		width: 2
-            })
+	    })
 	})
     });
 
@@ -52,13 +64,16 @@ $(function(){
     var layerHover = new ol.layer.Vector({
 	source: sourceHover,
 	style: new ol.style.Style({
-            fill: new ol.style.Fill({
-		color: "#cecece"
-            }),
-            stroke: new ol.style.Stroke({
-		color: "#E86FB0",
-		width: 2
-            })
+	    image: nodeSelectedStyle
+	})
+    });
+
+    var sourceSelected = new ol.source.Vector([])
+
+    var layerSelected = new ol.layer.Vector({
+	source: sourceSelected,
+	style: new ol.style.Style({
+	    image: nodeSelectedStyle
 	})
     });
 
@@ -104,8 +119,13 @@ $(function(){
             color: "#ffffff",
             width: 3
         }),
-	width: 10,
-	opacity: 0.5
+	opacity: 0.5,
+	text: new ol.style.Text({
+	    text : "Nom de la Rue",                    
+            textAlign: "center",
+            textBaseline: "middle",
+	    rotation: 2
+	})
     });
 
     var road2 = new ol.style.Style({
@@ -169,7 +189,7 @@ $(function(){
     });
 
     map = new ol.Map({
-	layers: [vectorLayer, layerRoute, layerNodes, layerHover],
+	layers: [vectorLayer, layerNodes, layerRoute, layerHover, layerSelected],
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
@@ -179,33 +199,62 @@ $(function(){
 
     map.on('click', function(evt) {
 
-	var t = true;
-                                                  
-	map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {    
+	var feature = sourceNodes.getClosestFeatureToCoordinate(evt.coordinate);
 
-	    if (t && layer.C.title == "Node Layer") {
+	// openlayers plante si t'ajoute deux fois le même feature
+	for (var f of sourceSelected.getFeatures()) {
+	    if (f.get('id') == feature.get('id')) {
+		return false;
+	    }
+	}
+
+	if (nodeSelected.length >= 2) {
+	    nodeSelected = [];
+	    sourceSelected.clear();
+	    sourceRoute.clear();
+	}
+
+	nodeSelected.push(feature.get('id'));
+	sourceSelected.addFeature(feature);
+	
+	if (nodeSelected.length >= 2) {
+
+	    // liste des noeuds du chemin
+	    var route = r.dijkstra(nodeSelected[0], nodeSelected[1]);
+
+	    // conversion des noeuds en des données geometrique ol3 pour affichage
+	    var f = r.getRouteFromNodes(route);
+
+	    // affichage de la route
+	    sourceRoute.addFeatures(f);
+	    
+	}
+        
+    });
+
+    map.on('pointermove', function(evt) {
+
+	var t = true;
+
+	sourceHover.clear();
+	
+	map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+
+	    if (t && layer.get('title') == "Node Layer") {
 
 		t = false;
-		
-		console.log(feature);
-
-		if (nodeSelected.length == 2) {
-		    nodeSelected.length = 0;
-		}
-
-		nodeSelected.push(feature.C.f);
-
-		if (nodeSelected.length == 2) {
-		    var route = r.dijkstra(nodeSelected[0], nodeSelected[1]);
-
-		    var f = r.getRouteFromNodes(route);
-
-		    sourceRoute.clear();
-		    sourceRoute.addFeatures(f);
-		}
+	
+		sourceHover.addFeature(feature);
 
 	    }
-	});                                                                       
+	});  
     });
 
 });
+
+
+
+
+
+
+

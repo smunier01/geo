@@ -1,3 +1,26 @@
 #map {
     background: #E0DFDF;
 }
+
+#gui {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    background: #FF0000;
+}
+
+#toggleDisplay {
+    background: #77A5D4;
+    float: right;
+    border-left: 1px solid #6B6B6B;
+    border-right: 1px solid #6B6B6B;
+    cursor: pointer;
+    height: 100%;
+}
+
+#content {
+    float: right;
+    background: #E0E0E0;
+    height: 100%;
+    display: none;
+}
