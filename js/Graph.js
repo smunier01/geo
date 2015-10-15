@@ -109,7 +109,7 @@
 	    return nodeToRemove;
 	};
 
-	Graph.prototype.addEdge = function(fromId, toId, weight) {
+	Graph.prototype.addEdge = function(fromId, toId, weight, gid) {
 	    var edgeToAdd, fromNode, toNode;
 	    if (weight == null) {
 		weight = 1;
@@ -135,7 +135,8 @@
 		return;
 	    }
 	    edgeToAdd = {
-		weight: weight
+		weight: weight,
+		gid: gid
 	    };
 	    fromNode._outEdges[toId] = edgeToAdd;
 	    toNode._inEdges[fromId] = edgeToAdd;
