@@ -77,11 +77,42 @@ $(function(){
 	})
     });
 
+    var tSource = new ol.source.OSM({
+	url: "http://localhost/tiles/{z}_{x}_{y}.png"
+    });
+
+    var oms_tiles = new ol.layer.Tile({
+	    //source: new ol.source.MapQuest({layer: 'osm'})
+	    source: tSource
+    });
+
+    tSource.on('tileloaderror', function(event) {
+	console.log(event.tile.getTileCoord());
+
+	var z = event.tile.getTileCoord()[0];
+	var x = event.tile.getTileCoord()[1];
+	var y = event.tile.getTileCoord()[2];
+
+	$.get("http://localhost/php-test/test2.php?z=" + z + "&x=" + x + "&y=" + y, function(data, status){
+	    tSource.changed();
+	});
+	
+    });
+
+    $(document).keypress(function(e) {
+	if(e.which == 13) {
+	    console.log("ok");
+	    map.updateSize();
+	    tSource.changed();
+	    tSource.setTileUrlFunction(tSource.getTileUrlFunction());
+	}
+    });
+
     var r = new Routing();
 
-    r.init("ressources/routing.json").promise().then(function() {
+    r.init("ressources/routing2.json").promise().then(function() {
 
-	displayPoints(sourceNodes, r.data);
+	displayPoints(sourceNodes, r.geomNodes);
 
     });
 
@@ -119,13 +150,7 @@ $(function(){
             color: "#ffffff",
             width: 3
         }),
-	opacity: 0.5,
-	text: new ol.style.Text({
-	    text : "Nom de la Rue",                    
-            textAlign: "center",
-            textBaseline: "middle",
-	    rotation: 2
-	})
+	opacity: 0.5
     });
 
     var road2 = new ol.style.Style({
@@ -189,7 +214,7 @@ $(function(){
     });
 
     map = new ol.Map({
-	layers: [vectorLayer, layerNodes, layerRoute, layerHover, layerSelected],
+	layers: [/*oms_tiles, */vectorLayer, layerNodes, layerRoute, layerHover, layerSelected],
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
@@ -223,7 +248,7 @@ $(function(){
 	    var route = r.dijkstra(nodeSelected[0], nodeSelected[1]);
 
 	    // conversion des noeuds en des données geometrique ol3 pour affichage
-	    var f = r.getRouteFromNodes(route);
+	    var f = r.getGeometryFromRoute(route);
 
 	    // affichage de la route
 	    sourceRoute.addFeatures(f);

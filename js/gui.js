@@ -2,18 +2,31 @@ $(function() {
 
     var isHidden = true;
 
+    var leftWidth = 0.005;
+    var rightWidth = 0.08;
+
     function resizeGui() {
 	$('#gui').css({
 	    "height": $(window).height(),
 	});
 	
 	$('#toggleDisplay').css({
-	    "width": ($(window).width() * 0.005) + 'px' 
+	    "width": ($(window).width() * leftWidth) + 'px' 
 	});
 
 	$('#content').css({
-	    "width": ($(window).width() * 0.08) + 'px' 
+	    "width": ($(window).width() * rightWidth) + 'px' 
 	});
+
+	if (isHidden) {
+	    $('#gui').css({
+		"right": -1.0 * ($(window).width() * rightWidth) + 'px'
+	    });
+	} else {
+	    $('#gui').css({
+		"right": '0px'
+	    });
+	}
     }
 
     $(window).resize(function() {
@@ -21,17 +34,8 @@ $(function() {
     });
 
     $('#toggleDisplay').on('click', function() {
-	if (isHidden) {
-	    $('#content').css({
-		"display": "block"
-	    });
-	} else {
-	    $('#content').css({
-		"display": "none"
-	    });
-	}
-
 	isHidden = !isHidden;
+	resizeGui();
     });
 
     resizeGui();

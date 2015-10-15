@@ -5,8 +5,8 @@
 #gui {
     position: fixed;
     top: 0px;
-    right: 0px;
     background: #FF0000;
+    transition: right 0.5s ease 0s;
 }
 
 #toggleDisplay {
@@ -22,5 +22,5 @@
     float: right;
     background: #E0E0E0;
     height: 100%;
-    display: none;
+    //display: none;
 }

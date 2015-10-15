@@ -1,8 +1,8 @@
 var Routing = function() {
 
     this.graph = undefined;
-    this.data = [];
-    
+    this.geomNodes = [];
+    this.geomRoutes = [];
 };
 
 Routing.prototype.init = function(file) {
@@ -16,12 +16,21 @@ Routing.prototype.init = function(file) {
     $.getJSON(file, function(result){
 	
 	$.each(result, function(i, field){
-	    that.data[field.source] = [field.x1, field.y1];
-	    that.data[field.target] = [field.x2, field.y2];
-            that.graph.addNode(field.source);
+
+	    // On remplis notre graph pour appliquer les differents algorithmes nécessaire
+	    that.graph.addNode(field.source);
 	    that.graph.addNode(field.target);
+	    // Le graph est orienté, mais nos routes ne le sont pas.
 	    that.graph.addEdge(field.source, field.target, field.length);
 	    that.graph.addEdge(field.target, field.source, field.length);
+	    
+	    // on enregistre les données géométrique nous intéressant pour l'affichage
+	    that.geomNodes[field.source] = [field.x1, field.y1];
+	    that.geomNodes[field.target] = [field.x2, field.y2];
+
+	    that.geomRoutes[field.source + '/' + field.target] = field.st_astext;
+	    that.geomRoutes[field.target + '/' + field.source] = field.st_astext;
+	    
 	});
 
 	d.resolve();
@@ -32,12 +41,15 @@ Routing.prototype.init = function(file) {
 };
 
 Routing.prototype.dijkstra = function (start, stop) {
+
     var validatedNodes = [];
     var visitedNodes = [];
+
     visitedNodes[start] = {
 	"dst" : 0,
 	"father" : null
     };
+
     do {
 	if( Object.keys(visitedNodes).length == 0){
 	    return [];
@@ -92,28 +104,36 @@ Routing.prototype.dijkstra = function (start, stop) {
     return path;
 };
 
-Routing.prototype.getRouteFromNodes = function(nodes) {
+
+/*
+  
+*/
+Routing.prototype.getGeometryFromRoute = function(nodes) {
 
     var features = [];
-
+    var x1, y1, x2, y2;
+    var route;
+    
     for (var i = 0; i < (nodes.length - 1); i++) {
 
-	x1 = this.data[nodes[i+0]][0];
-	y1 = this.data[nodes[i+0]][1];
-	x2 = this.data[nodes[i+1]][0];
-	y2 = this.data[nodes[i+1]][1];
+	x1 = this.geomNodes[nodes[i+0]][0];
+	y1 = this.geomNodes[nodes[i+0]][1];
+	x2 = this.geomNodes[nodes[i+1]][0];
+	y2 = this.geomNodes[nodes[i+1]][1];
+
+	route = this.geomRoutes[nodes[i+0] + '/' + nodes[i+1]];
 
 	features.push(new ol.Feature({
 	    'geometry': new ol.geom.Point(
 		ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
 	}));
+
+	var f = (new ol.format.WKT()).readFeature(route);
+
+	f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
 	
-	features.push(new ol.Feature({
-	    'geometry': new ol.geom.LineString(
-		[ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'),
-		 ol.proj.transform([x2, y2], 'EPSG:4326', 'EPSG:3857')]
-	    )
-	}));
+	features.push(f);
+	
     }
 
     return features;

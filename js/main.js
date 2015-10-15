@@ -48,12 +48,15 @@ $(function() {
     });
 
     var layers = [
-	/*
+	
 	new ol.layer.Tile({
-	    source: new ol.source.MapQuest({layer: 'osm'})
+	    //source: new ol.source.MapQuest({layer: 'osm'})
+	    source: new ol.source.OSM({
+		//url: "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
+		url: "http://localhost/tiles/{z}_{x}_{y}.png"
+	    })
 	}),
-	*/
-
+	
 	new ol.layer.Tile({
 	    source: wmsSource3,
 	    opacity: 0.6
@@ -63,13 +66,13 @@ $(function() {
 	    source: wmsSource1
 	}),
 	/*
-	new ol.layer.Tile({
-	    source: wmsSource2
-	})*/
+	  new ol.layer.Tile({
+	  source: wmsSource2
+	  })*/
 	/*
-	new ol.layer.Tile({
-	    source: wmsSource4
-	})*/
+	  new ol.layer.Tile({
+	  source: wmsSource4
+	  })*/
 
     ];
     
@@ -106,33 +109,33 @@ $(function() {
     
     map.on('click', function(event) {
 	/*
-	var viewResolution = (map.C.view.getResolution());
+	  var viewResolution = (map.C.view.getResolution());
 
-	var url = wmsSource1.getGetFeatureInfoUrl(
-	    event.coordinate, viewResolution, 'EPSG:3857',
+	  var url = wmsSource1.getGetFeatureInfoUrl(
+	  event.coordinate, viewResolution, 'EPSG:3857',
 
-	    {'INFO_FORMAT': 'text/javascript'}
-	);
-	
-	if (url) {
+	  {'INFO_FORMAT': 'text/javascript'}
+	  );
+	  
+	  if (url) {
 
-	    if (url) {
-		$.ajax({
+	  if (url) {
+	  $.ajax({
 
-		    url: url,
-		    dataType: 'jsonp',
-		    jsonpCallback: 'parseResponse'
+	  url: url,
+	  dataType: 'jsonp',
+	  jsonpCallback: 'parseResponse'
 
-		}).then(function(response) {
+	  }).then(function(response) {
 
-		    vectorSource.clear();
-		    vectorSource.addFeatures(geojsonFormat.readFeatures(response));
-		    console.log(geojsonFormat.readFeatures(response));
-	
-		});
-	    }
-	    
-	}
+	  vectorSource.clear();
+	  vectorSource.addFeatures(geojsonFormat.readFeatures(response));
+	  console.log(geojsonFormat.readFeatures(response));
+	  
+	  });
+	  }
+	  
+	  }
 
 	*/
 	//**********************************
@@ -185,22 +188,22 @@ $(function() {
 
     /*
 
-/*
-alter table planet_osm_line add column source integer;
-alter table planet_osm_line add column target integer;
-*/
-/*
-select pgr_createTopology('planet_osm_line', 0.0001, 'way', 'osm_id');
-*/
-/*
-select pgr_analyzegraph('planet_osm_line', 0.0001, 'way', 'osm_id');
-*/
+      /*
+      alter table planet_osm_line add column source integer;
+      alter table planet_osm_line add column target integer;
+    */
+    /*
+      select pgr_createTopology('planet_osm_line', 0.0001, 'way', 'osm_id');
+    */
+    /*
+      select pgr_analyzegraph('planet_osm_line', 0.0001, 'way', 'osm_id');
+    */
 
-//SELECT * FROM pgr_astar('SELECT cast(osm_id as integer) as id, source, target, cast(1.0 as double precision) as cost, x1, x2, y1, y2 FROM ways', 1, 12, false, false);
+    //SELECT * FROM pgr_astar('SELECT cast(osm_id as integer) as id, source, target, cast(1.0 as double precision) as cost, x1, x2, y1, y2 FROM ways', 1, 12, false, false);
 
-/*
-SELECT osm_id as id, source, target, 1.0 as cost FROM ways;
-*/
+    /*
+      SELECT osm_id as id, source, target, 1.0 as cost FROM ways;
+    */
     
 });
 
