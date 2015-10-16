@@ -104,8 +104,7 @@ Routing.prototype.dijkstra = function (start, stop) {
 	
     } while(validatedNodes[selectedNode].father != null);
 
-    console.log(path);
-    
+
     return path;
 };
 
@@ -117,30 +116,11 @@ Routing.prototype.getGeometryFromRoute = function(nodes) {
 
     var features = [];
     var x1, y1, x2, y2;
-    var route;
+    var route, edge;
     
     for (var i = 0; i < (nodes.length); i++) {
-	/*
-	  x1 = this.geomNodes[nodes[i+0]][0];
-	  y1 = this.geomNodes[nodes[i+0]][1];
-	  x2 = this.geomNodes[nodes[i+1]][0];
-	  y2 = this.geomNodes[nodes[i+1]][1];
-	  
-	  features.push(new ol.Feature({
-	  'geometry': new ol.geom.Point(
-	  ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
-	  }));
-	  
-	  route = this.geomRoutes[nodes[i]];
 
-	  var f = (new ol.format.WKT()).readFeature(route);
-
-	  f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
-	  
-	  features.push(f);
-	*/
-
-	var edge = this.geomRoutes[nodes[i]];
+	edge = this.geomRoutes[nodes[i]];
 	
 	x1 = this.geomNodes[edge[0]][0];
 	y1 = this.geomNodes[edge[0]][1];

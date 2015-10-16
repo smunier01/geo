@@ -1,8 +1,148 @@
+/**
+ * Application Offline
+ *
+ * @class
+ */
 var AppOffline = function() {
-
+    
     var that = this;
-
+    
+    //
+    // Public Variables
+    //
+    
+    /**
+     *  @type {Object.<string, ol.layer.Vector>}
+     */ 
     this.layers = [];
+
+    /**
+     *  @type {ol.Map}
+     */
+    this.map = undefined;
+
+    /**
+     *  @type {Object.<string, ol.style.Style}
+     */
+    this.styles = []
+    
+    //
+    // Style
+    //
+
+    /**
+     *  @type {string}
+     */
+    const COLOR1 = "#E86FB0";
+
+    /**
+     *  @type {string}
+     */
+    const COLOR2 = "#A8FFC7";
+
+    /**
+     *  @type {string}
+     */
+    const COLOR3 = "#A8FFC7";
+
+    /**
+     * @type {string}
+     */
+    const GREY1 = "#CECECE";
+
+    this.styles['building'] = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: "white"
+        }),
+        stroke: new ol.style.Stroke({
+            color: COLOR1,
+            width: 1
+        }),
+	opacity: 0.8
+    });
+
+    this.styles['parking'] = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: GREY1
+        }),
+        stroke: new ol.style.Stroke({
+            color: COLOR2,
+            width: 1
+        }),
+	opacity: 0.8
+    });
+
+    this.styles['road1'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "white",
+            width: 3
+        })
+    });
+
+    this.styles['hidden'] = new ol.style.Style({
+        display: "none"
+    });
+
+    this.styles['nodeSelected'] = new ol.style.Style({
+	image: new ol.style.Circle({
+	    fill: new ol.style.Fill({
+		color: GREY1
+	    }),
+	    stroke: new ol.style.Stroke({
+		color: COLOR1,
+		width: 2
+	    }),
+	    radius: 5
+	})
+    });
+
+    this.styles['nodeAndRouteSelected'] = new ol.style.Style({
+	image: new ol.style.Circle({
+	    fill: new ol.style.Fill({
+		color: GREY1
+	    }),
+	    stroke: new ol.style.Stroke({
+		color: COLOR1,
+		width: 2
+	    }),
+	    radius: 5
+	}),
+	stroke: new ol.style.Stroke({
+	    color: COLOR1,
+	    width: 2
+	})
+    });
+
+    
+    function styleFunctionGeojson(feature, resolution) {
+	
+	var fType = feature.get('id').split('/')[0];
+	var fGeomType = feature.getGeometry().getType();
+
+	if (!(fGeomType in geometryTypes)) {
+	    geometryTypes[fGeomType] = 1;
+	    console.log(geometryTypes);
+	} else {
+	    geometryTypes[fGeomType]++;
+	}
+
+	if (!(fType in types)) {
+	    types[fType] = 1;
+	} else {
+	    types[fType]++;
+	}
+	
+	
+	if (fGeomType == "Polygon" && feature.get('building') != undefined) {
+	    return [that.styles['building']];
+	} else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
+	    return [that.styles['parking']];
+	} else if (fGeomType == "LineString") {
+	    return [that.styles['road1']];
+	} else {
+	    return [that.styles['hidden']];
+	}
+    }
     
     //
     // ROUTING
@@ -26,7 +166,7 @@ var AppOffline = function() {
 	'layer': new ol.layer.Vector({
 	    title: 'Main Layer',
 	    source: sourceVectors,
-	    style: styleFunction
+	    style: styleFunctionGeojson
 	}),
 	'order': 10
     };
@@ -42,38 +182,25 @@ var AppOffline = function() {
     this.layers['route'] = {
 	'layer': new ol.layer.Vector({
 	    source: sourceRoute,
-	    style: new ol.style.Style({
-		image: this.nodeSelectedStyle,
-		fill: new ol.style.Fill({
-		    color: "#CECECE"
-		}),
-		stroke: new ol.style.Stroke({
-		    color: "#E86FB0",
-		    width: 2
-		})
-	    })
+	    style: that.styles['nodeAndRouteSelected']
 	}),
-	'order': 50
+	'order': 97
     };
 
     this.layers['hover'] = {
 	'layer': new ol.layer.Vector({
 	    source: sourceHover,
-	    style: new ol.style.Style({
-		image: this.nodeSelectedStyle
-	    })
+	    style: that.styles['nodeSelected']
 	}),
-	'order': 99
+	'order': 100
     };
 
     this.layers['selected'] = {
 	'layer': new ol.layer.Vector({
 	    source: sourceSelected,
-	    style: new ol.style.Style({
-		image: this.nodeSelectedStyle
-	    })
+	    style: that.styles['nodeSelected']
 	}),
-	'order': 99
+	'order': 98
     };
 
     this.layers['osm'] = {
@@ -114,91 +241,10 @@ var AppOffline = function() {
 
     });
 
-    //
-    // STYLE
-    //
-    
-    var building = new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: [250,250,250,1]
-        }),
-        stroke: new ol.style.Stroke({
-            color: "#FF85BE",
-            width: 1
-        }),
-	opacity: 0.8
-    });
-
-    var parking = new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: "#cecece"
-        }),
-        stroke: new ol.style.Stroke({
-            color: "#A8FFC7",
-            width: 1
-        }),
-	opacity: 0.8
-    });
-
-    var road1 = new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: "#000000"
-        }),
-        stroke: new ol.style.Stroke({
-            color: "#ffffff",
-            width: 3
-        }),
-	opacity: 0.5
-    });
-
-    var road2 = new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: [250,250,250,1]
-        }),
-        stroke: new ol.style.Stroke({
-            color: [220,220,220,1],
-            width: 1
-        })
-    });
-
-    var hidden = new ol.style.Style({
-        display: "none"
-    });
-
     var styleCache = {};
     var a = 1;
     var geometryTypes = [];
     var types = [];
-
-    function styleFunction(feature, resolution) {
-
-	var fType = feature.get('id').split('/')[0];
-	var fGeomType = feature.getGeometry().getType();
-
-	if (!(fGeomType in geometryTypes)) {
-	    geometryTypes[fGeomType] = 1;
-	    console.log(geometryTypes);
-	} else {
-	    geometryTypes[fGeomType]++;
-	}
-
-	if (!(fType in types)) {
-	    types[fType] = 1;
-	} else {
-	    types[fType]++;
-	}
-	
-	
-	if (fGeomType == "Polygon" && feature.get('building') != undefined) {
-	    return [building];
-	} else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
-	    return [parking];
-	} else if (fGeomType == "LineString") {
-	    return [road1];
-	} else {
-	    return [hidden];
-	}
-    }
 
     this.map = new ol.Map({
 	layers: [],
@@ -241,7 +287,7 @@ var AppOffline = function() {
 
 	    // conversion des noeuds en des données geometrique ol3 pour affichage
 	    var f = r.getGeometryFromRoute(route);
-
+	    
 	    // affichage de la route
 	    sourceRoute.addFeatures(f);
 	    
@@ -260,6 +306,7 @@ var AppOffline = function() {
 	
 	that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
 
+	    
 	    if (t && layer.get('title') == "Node Layer") {
 
 		t = false;
@@ -271,6 +318,11 @@ var AppOffline = function() {
     });
 };
 
+/**
+ *
+ *
+ *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
+ */
 AppOffline.prototype.addLayers = function() {
 
     this.map.getLayers().clear();
@@ -289,23 +341,33 @@ AppOffline.prototype.addLayers = function() {
 
     sortByKey(tmp, 'order');
 
-    for (var l of _tmp) {
+    for (var l of tmp) {
 	this.map.addLayer(l.layer);
     }
 };
 
+
+/**
+ *  Change la visibilitéé d'un layer
+ *  @param {string} clé du layer défini au moment de ça définition
+ *  @param {boolean} visible ou non
+ */
 AppOffline.prototype.setVisible = function(name, bool) {
-
     this.layers[name].layer.setVisible(bool);
-
 };
 
+/**
+ *  Clean la source 's' et y ajoute la série de points contenu dans data
+ *  @param {ol.source.Vector}
+ *  @param {Array.<Array.<Number>>}
+ */
 AppOffline.prototype.displayPoints = function(s, data) {
     var i = 0;
 
     s.clear();
     
     for (var f in data) {
+
 	s.addFeature(new ol.Feature({
 	    'geometry': new ol.geom.Point(
 		ol.proj.transform([data[f][0], data[f][1]], 'EPSG:4326', 'EPSG:3857')),
@@ -316,17 +378,6 @@ AppOffline.prototype.displayPoints = function(s, data) {
 	i++;
     }
 };
-
-AppOffline.prototype.nodeSelectedStyle =  new ol.style.Circle({
-    fill: new ol.style.Fill({
-	color: "#CECECE"
-    }),
-    stroke: new ol.style.Stroke({
-	color: "#E86FB0",
-	width: 2
-    }),
-    radius: 5
-});
 
 function sortByKey(array, key) {
     return array.sort(function(a, b) {
