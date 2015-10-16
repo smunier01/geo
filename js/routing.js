@@ -46,7 +46,8 @@ Routing.prototype.dijkstra = function (start, stop) {
 
     visitedNodes[start] = {
 	"dst" : 0,
-	"father" : null
+	"father" : null,
+	"path" : null
     };
 
     do {
@@ -77,12 +78,14 @@ Routing.prototype.dijkstra = function (start, stop) {
 		
 		visitedNodes[neighbor] = {
 		    "dst" : dst,
-		    "father" : selectedNode
+		    "father" : selectedNode,
+		    "path" : neighbors[neighbor].gid
 		};
 	    } else if (visitedNodes[neighbor].dst > dst) {
 		visitedNodes[neighbor] = {
 		    "dst" : dst,
-		    "father" : selectedNode
+		    "father" : selectedNode,
+		    "path" : neighbors[neighbor].gid
 		};
 	    }
 
@@ -96,10 +99,12 @@ Routing.prototype.dijkstra = function (start, stop) {
     selectedNode = stop;
     
     do{
-	path.unshift(selectedNode);
+	path.unshift(validatedNodes[selectedNode].path);
 	selectedNode = validatedNodes[selectedNode].father;
-    } while(selectedNode != null);
+	
+    } while(validatedNodes[selectedNode].father != null);
 
+    console.log(path);
     
     return path;
 };
@@ -107,7 +112,7 @@ Routing.prototype.dijkstra = function (start, stop) {
 
 /*
   
-*/
+ */
 Routing.prototype.getGeometryFromRoute = function(nodes) {
 
     var features = [];
@@ -116,23 +121,23 @@ Routing.prototype.getGeometryFromRoute = function(nodes) {
     
     for (var i = 0; i < (nodes.length); i++) {
 	/*
-	x1 = this.geomNodes[nodes[i+0]][0];
-	y1 = this.geomNodes[nodes[i+0]][1];
-	x2 = this.geomNodes[nodes[i+1]][0];
-	y2 = this.geomNodes[nodes[i+1]][1];
-	
-	features.push(new ol.Feature({
-	    'geometry': new ol.geom.Point(
-		ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
-	}));
-	
-	route = this.geomRoutes[nodes[i]];
+	  x1 = this.geomNodes[nodes[i+0]][0];
+	  y1 = this.geomNodes[nodes[i+0]][1];
+	  x2 = this.geomNodes[nodes[i+1]][0];
+	  y2 = this.geomNodes[nodes[i+1]][1];
+	  
+	  features.push(new ol.Feature({
+	  'geometry': new ol.geom.Point(
+	  ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
+	  }));
+	  
+	  route = this.geomRoutes[nodes[i]];
 
-	var f = (new ol.format.WKT()).readFeature(route);
+	  var f = (new ol.format.WKT()).readFeature(route);
 
-	f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
-	
-	features.push(f);
+	  f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
+	  
+	  features.push(f);
 	*/
 
 	var edge = this.geomRoutes[nodes[i]];
