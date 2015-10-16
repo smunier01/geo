@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="libs/ol.css" type="text/css">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <script src="libs/ol-debug.js"></script>
-<script src="js/offline.js"></script>
+<script src="js/appOffline.js"></script>
 <script src="js/Graph.js"></script>
 <script src="js/routing.js"></script>
 <script src="js/gui.js"></script>
@@ -26,9 +26,28 @@
   </div>
 
   <div id="gui">
-    <div id="content"></div>
+    <div id="content">
+
+      <div id="layersCheckboxes">
+
+	<div>
+	  <label for="displayNodes">Nodes</label><input type="checkbox" name="nodes" id="displayNodes" checked/>
+	</div>
+	<div>
+	  <label for="displayVectors">Vectors</label><input type="checkbox" name="mapVectors" id="displayVectors" checked/>
+	</div>
+	<div>
+	  <label for="displayOsm">Osm</label><input type="checkbox" name="osm" id="displayOsm" checked/>
+	</div>
+      </div>
+    </div>
     <div id="toggleDisplay"></div>
   </div>
+
+  <script>
+    var app = new AppGisOffline();
+    var gui = new Gui(app);
+  </script>
   
 </body>
 </html>

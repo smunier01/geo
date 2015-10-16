@@ -1,34 +1,8 @@
-var displayPoints = function(s, data) {
-    var i = 0;
+var AppGisOffline = function() {
 
-    s.clear();
-    
-    for (var f in data) {
-	s.addFeature(new ol.Feature({
-	    'geometry': new ol.geom.Point(
-		ol.proj.transform([data[f][0], data[f][1]], 'EPSG:4326', 'EPSG:3857')),
-	    'i': i,
-	    'id': parseInt(f)
-	}))
+    var that = this;
 
-	i++;
-    }
-}
-
-var nodeSelectedStyle =  new ol.style.Circle({
-    fill: new ol.style.Fill({
-	color: "#CECECE"
-    }),
-    stroke: new ol.style.Stroke({
-	color: "#E86FB0",
-	width: 2
-    }),
-    radius: 5
-});
-
-$(function(){
-
-    var map;
+    this.layers = [];
     
     //
     // ROUTING
@@ -36,55 +10,80 @@ $(function(){
 
     var nodeSelected = [];
     
-    var sourceNodes = new ol.source.Vector([])
-
-    var layerNodes = new ol.layer.Vector({
-	source: sourceNodes,
-	title: 'Node Layer'
-    });
-
-    var sourceRoute = new ol.source.Vector([])
-
-    var layerRoute = new ol.layer.Vector({
-	source: sourceRoute,
-	style: new ol.style.Style({
-	    image: nodeSelectedStyle,
-	    fill: new ol.style.Fill({
-		color: "#CECECE"
-	    }),
-	    stroke: new ol.style.Stroke({
-		color: "#E86FB0",
-		width: 2
-	    })
-	})
-    });
-
-    var sourceHover = new ol.source.Vector([])
-
-    var layerHover = new ol.layer.Vector({
-	source: sourceHover,
-	style: new ol.style.Style({
-	    image: nodeSelectedStyle
-	})
-    });
-
-    var sourceSelected = new ol.source.Vector([])
-
-    var layerSelected = new ol.layer.Vector({
-	source: sourceSelected,
-	style: new ol.style.Style({
-	    image: nodeSelectedStyle
-	})
-    });
-
+    var sourceNodes = new ol.source.Vector([]);
+    var sourceRoute = new ol.source.Vector([]);
+    var sourceHover = new ol.source.Vector([]);
+    var sourceSelected = new ol.source.Vector([]);
     var tSource = new ol.source.OSM({
 	url: "http://localhost/tiles/{z}_{x}_{y}.png"
     });
-
-    var oms_tiles = new ol.layer.Tile({
-	    //source: new ol.source.MapQuest({layer: 'osm'})
-	    source: tSource
+    var sourceVectors = new ol.source.Vector({
+        url: 'ressources/map.geojson',
+        format: new ol.format.GeoJSON()
     });
+    
+    this.layers['mapVectors'] = {
+	'layer': new ol.layer.Vector({
+	    title: 'Main Layer',
+	    source: sourceVectors,
+	    style: styleFunction
+	}),
+	'order': 10
+    };
+    
+    this.layers['nodes'] = {
+	'layer': new ol.layer.Vector({
+	    source: sourceNodes,
+	    title: 'Node Layer'
+	}),
+	'order': 75
+    };
+
+    this.layers['route'] = {
+	'layer': new ol.layer.Vector({
+	    source: sourceRoute,
+	    style: new ol.style.Style({
+		image: this.nodeSelectedStyle,
+		fill: new ol.style.Fill({
+		    color: "#CECECE"
+		}),
+		stroke: new ol.style.Stroke({
+		    color: "#E86FB0",
+		    width: 2
+		})
+	    })
+	}),
+	'order': 50
+    };
+
+    this.layers['hover'] = {
+	'layer': new ol.layer.Vector({
+	    source: sourceHover,
+	    style: new ol.style.Style({
+		image: this.nodeSelectedStyle
+	    })
+	}),
+	'order': 99
+    };
+
+    this.layers['selected'] = {
+	'layer': new ol.layer.Vector({
+	    source: sourceSelected,
+	    style: new ol.style.Style({
+		image: this.nodeSelectedStyle
+	    })
+	}),
+	'order': 99
+    };
+
+    this.layers['osm'] = {
+	'layer': new ol.layer.Tile({
+	    //source: new ol.source.MapQuest({layer: 'osm'})
+	    source: tSource,
+	    visible: true
+	}),
+	'order': 0
+    };
 
     tSource.on('tileloaderror', function(event) {
 	console.log(event.tile.getTileCoord());
@@ -101,7 +100,6 @@ $(function(){
 
     $(document).keypress(function(e) {
 	if(e.which == 13) {
-	    console.log("ok");
 	    map.updateSize();
 	    tSource.changed();
 	    tSource.setTileUrlFunction(tSource.getTileUrlFunction());
@@ -112,14 +110,14 @@ $(function(){
 
     r.init("ressources/routing2.json").promise().then(function() {
 
-	displayPoints(sourceNodes, r.geomNodes);
+	that.displayPoints(sourceNodes, r.geomNodes);
 
     });
 
     //
     // STYLE
     //
-   
+    
     var building = new ol.style.Style({
         fill: new ol.style.Fill({
             color: [250,250,250,1]
@@ -202,19 +200,8 @@ $(function(){
 	}
     }
 
-    var source = new ol.source.Vector({
-        url: 'ressources/map.geojson',
-        format: new ol.format.GeoJSON()
-    });
-    
-    var vectorLayer = new ol.layer.Vector({
-	title: 'Main Layer',
-	source: source,
-	style: styleFunction
-    });
-
-    map = new ol.Map({
-	layers: [/*oms_tiles, */vectorLayer/*, layerNodes*/, layerRoute, layerHover, layerSelected],
+    this.map = new ol.Map({
+	layers: [],
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
@@ -222,7 +209,12 @@ $(function(){
 	})
     });
 
-    map.on('click', function(evt) {
+    this.addLayers();
+
+    /*
+      Quand on click deux fois --> dijkstra
+     */
+    this.map.on('click', function(evt) {
 
 	var feature = sourceNodes.getClosestFeatureToCoordinate(evt.coordinate);
 
@@ -257,29 +249,90 @@ $(function(){
         
     });
 
-    map.on('pointermove', function(evt) {
+    /*
+      Change la couleur des noeuds au passage de la souris
+     */
+    this.map.on('pointermove', function(evt) {
 
 	var t = true;
 
 	sourceHover.clear();
 	
-	map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+	that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
 
 	    if (t && layer.get('title') == "Node Layer") {
 
 		t = false;
-	
+		
 		sourceHover.addFeature(feature);
 
 	    }
 	});  
     });
+};
 
+AppGisOffline.prototype.addLayers = function() {
+
+    this.map.getLayers().clear();
+
+    var tmp = [];
+
+    for (var key in this.layers) {
+	
+	if (this.layers.hasOwnProperty(key)) {
+	    var l = this.layers[key];
+
+	    tmp.push(l);
+	}
+
+    }
+
+    sortByKey(tmp, 'order');
+
+    for (var l of _tmp) {
+	this.map.addLayer(l.layer);
+    }
+};
+
+AppGisOffline.prototype.setVisible = function(name, bool) {
+
+    this.layers[name].layer.setVisible(bool);
+
+};
+
+AppGisOffline.prototype.displayPoints = function(s, data) {
+    var i = 0;
+
+    s.clear();
+    
+    for (var f in data) {
+	s.addFeature(new ol.Feature({
+	    'geometry': new ol.geom.Point(
+		ol.proj.transform([data[f][0], data[f][1]], 'EPSG:4326', 'EPSG:3857')),
+	    'i': i,
+	    'id': parseInt(f)
+	}))
+
+	i++;
+    }
+};
+
+AppGisOffline.prototype.nodeSelectedStyle =  new ol.style.Circle({
+    fill: new ol.style.Fill({
+	color: "#CECECE"
+    }),
+    stroke: new ol.style.Stroke({
+	color: "#E86FB0",
+	width: 2
+    }),
+    radius: 5
 });
 
-
-
-
-
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+}
 
 
