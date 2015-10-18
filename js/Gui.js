@@ -1,5 +1,10 @@
+/**
+ * @class
+ */
 var Gui = function(app) {
+
     this.app = app;
+
     this.isHidden = true;
 
     this.width = 0.08;
@@ -21,6 +26,25 @@ Gui.prototype.init = function() {
 	that.refreshSize();
     });
 
+    var div;
+    
+    for (var l in this.app.layers) {
+
+	if ( this.app.layers[l].layer.getVisible() == true ) {
+	    
+	    div = $(
+		'<div><label for="display"' + l + '>' + l + '</label><input type="checkbox" name="' + l + '" id="display' + l + '" checked/></div>'
+	    );
+
+	} else {
+	    div = $(
+		'<div><label for="display"' + l + '>' + l + '</label><input type="checkbox" name="' + l + '" id="display' + l + '"/></div>'
+	    );
+	}
+	
+	$("#layersCheckboxes").append(div);
+	
+    }
     // quand on click sur une des check box, on passe le layer correspondant en visible/non-visible
     $("#layersCheckboxes input").on("click", function() {
 	that.app.setVisible($(this).attr('name'), $(this).prop("checked"));
