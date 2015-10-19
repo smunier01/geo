@@ -113,33 +113,13 @@ var AppOffline = function() {
     // Sources & Layers
     //
 
-    // Pour l'affichage des noeuds de chaque routes
-    var sourceNodes = new ol.source.Vector([]);
-
-    // Pour l'affichage du résultat d'un chemin (dijkstra etc..)
-    var sourceRoute = new ol.source.Vector([]);
-
-    // Pour le changement de couleur lors du passage de la souris sur un object
-    var sourceHover = new ol.source.Vector([]);
-
-    // Pour le changement de couleur de la liste des objects selectionné
-    var sourceSelected = new ol.source.Vector([]);
-
-    // Pour l'affichage des tiles OSM (enregistré localement)
-    var tSource = new ol.source.OSM({
-	url: "http://localhost/tiles/{z}_{x}_{y}.png"
-    });
-
-    // Pour l'affichage de la map (routes, batiments etc..)
-    var sourceVectors = new ol.source.Vector({
-        url: 'ressources/map.geojson',
-        format: new ol.format.GeoJSON()
-    });
-    
     this.layers['mapVectors'] = {
 	'layer': new ol.layer.Vector({
 	    title: 'Main Layer',
-	    source: sourceVectors,
+	    source: new ol.source.Vector({
+		url: 'ressources/map.geojson',
+		format: new ol.format.GeoJSON()
+	    }),
 	    style: styleFunctionGeojson
 	}),
 	'order': 10
@@ -147,7 +127,7 @@ var AppOffline = function() {
     
     this.layers['nodes'] = {
 	'layer': new ol.layer.Vector({
-	    source: sourceNodes,
+	    source: new ol.source.Vector([]),
 	    title: 'Node Layer'
 	}),
 	'order': 75
@@ -155,7 +135,7 @@ var AppOffline = function() {
 
     this.layers['route'] = {
 	'layer': new ol.layer.Vector({
-	    source: sourceRoute,
+	    source:  new ol.source.Vector([]),
 	    style: that.styles['nodeAndRouteSelected']
 	}),
 	'order': 97
@@ -163,7 +143,7 @@ var AppOffline = function() {
 
     this.layers['hover'] = {
 	'layer': new ol.layer.Vector({
-	    source: sourceHover,
+	    source: new ol.source.Vector([]),
 	    style: that.styles['nodeSelected']
 	}),
 	'order': 100
@@ -171,7 +151,7 @@ var AppOffline = function() {
 
     this.layers['selected'] = {
 	'layer': new ol.layer.Vector({
-	    source: sourceSelected,
+	    source: new ol.source.Vector([]),
 	    style: that.styles['nodeSelected']
 	}),
 	'order': 98
@@ -180,7 +160,9 @@ var AppOffline = function() {
     this.layers['osm'] = {
 	'layer': new ol.layer.Tile({
 	    //source: new ol.source.MapQuest({layer: 'osm'})
-	    source: tSource,
+	    source: new ol.source.OSM({
+		url: "http://localhost/tiles/{z}_{x}_{y}.png"
+	    }),
 	    visible: false
 	}),
 	'order': 0
@@ -194,9 +176,9 @@ var AppOffline = function() {
 
     this.routing = new Routing();
 
-    this.routing.init("ressources/routing2.json").promise().then(function() {
+    this.routing.init("ressources/routing.json").then(function() {
 
-	that.displayPoints(sourceNodes, that.routing.geomNodes);
+	that.displayPoints(that.layers['nodes'].layer.getSource(), that.routing.geomNodes);
 
     });
 
@@ -207,8 +189,10 @@ var AppOffline = function() {
     /**
      * Si il y a une erreur lors du chargement d'une des tiles (elle existe surement pas)
      */
-    tSource.on('tileloaderror', function(event) {
+    this.layers['osm'].layer.getSource().on('tileloaderror', function(event) {
 
+	var self = this;
+	
 	// Coordonnées de la tile en question
 	var z = event.tile.getTileCoord()[0];
 	var x = event.tile.getTileCoord()[1];
@@ -216,7 +200,7 @@ var AppOffline = function() {
 
 	// On dit à php d'aller telecharger cette tile 
 	$.get("http://localhost/php-test/test2.php?z=" + z + "&x=" + x + "&y=" + y, function(data, status){
-	    tSource.changed();
+	    self.changed();
 	});
 	
     });
@@ -227,9 +211,12 @@ var AppOffline = function() {
      */
     $(document).keypress(function(e) {
 	if (e.which == 13) {
-	    map.updateSize();
-	    tSource.changed();
-	    tSource.setTileUrlFunction(tSource.getTileUrlFunction());
+
+	    var s = that.layers['osm'].layer.getSource();
+	    
+	    that.map.updateSize();
+	    s.changed();
+	    s.setTileUrlFunction(s.getTileUrlFunction());
 	}
     });
 
@@ -240,8 +227,10 @@ var AppOffline = function() {
     */
     this.map.on('click', function(evt) {
 
-	var feature = sourceNodes.getClosestFeatureToCoordinate(evt.coordinate);
-
+	var feature = that.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
+	var sourceSelected = that.layers['selected'].layer.getSource();
+	var sourceRoute = that.layers['route'].layer.getSource();
+	
 	// openlayers plante si t'ajoute deux fois le même feature
 	for (var f of sourceSelected.getFeatures()) {
 	    if (f.get('id') == feature.get('id')) {
@@ -280,6 +269,8 @@ var AppOffline = function() {
 
 	var t = true;
 
+	var sourceHover = that.layers['hover'].layer.getSource(); 
+
 	sourceHover.clear();
 	
 	that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
@@ -293,7 +284,46 @@ var AppOffline = function() {
 	    }
 	});  
     });
+
+    /*
+       Click Droit
+     */
+    this.map.getViewport().addEventListener('contextmenu', function (e) {
+
+	e.preventDefault();
+
+	var feature = that.getClosestParking(that.map.getEventCoordinate(e))
+
+	that.layers['route'].layer.getSource().addFeature(feature);
+	
+    });
 };
+
+/**
+ *  PAS FINI
+ */
+AppOffline.prototype.getClosestParking = function(coord) {
+    var min = Infinity;
+    var minF = undefined;
+    
+    this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+	
+	if (f.get('amenity') == "parking") {
+	    
+	    var v = f.getGeometry().getClosestPoint(coord);
+
+	    var dist = (new ol.geom.LineString([v, coord])).getLength();
+	    
+	    if (dist <= min) {
+		min = dist;
+		minF = f;
+	    }
+	    
+	}
+    });
+
+    return minF;
+}
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'

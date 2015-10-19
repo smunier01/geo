@@ -38,11 +38,11 @@ Routing.prototype.init = function(file) {
 
     var d = jQuery.Deferred();
 
-    that = this;
+    var that = this;
     
-    $.getJSON(file, function(result){
-	
-	$.each(result, function(i, field){
+    $.getJSON(file).done(function(result) {
+
+	$.each(result, function(i, field) {
 
 	    // On remplis notre graph pour appliquer les differents algorithmes nécessaire
 	    that.graph.addNode(field.source);
@@ -60,10 +60,10 @@ Routing.prototype.init = function(file) {
 	});
 
 	d.resolve();
-
+	
     });
 
-    return d;
+    return d.promise();
 };
 
 /**
