@@ -53,7 +53,7 @@ Gui.prototype.init = function() {
     // var buildings = this.app.getBuildingList()
     // $('#buildingList');
  
-    $("#buildingSearch").bind("keyup", function(){
+    $("#buildingSearch").bind("keyup", function() {
         var inputTxt = $("#buildingSearch").val().toLowerCase();
         $("#buildingList li").each(function(index, element){
             if(inputTxt.length > 0){
@@ -75,6 +75,7 @@ Gui.prototype.init = function() {
 };
 
 Gui.prototype.updateBuildingList = function(buildings) {
+
     var $buildingList = $("#buildingList");
     var list = "<ul> ";
     $.each(buildings, function(index, value){
@@ -84,6 +85,7 @@ Gui.prototype.updateBuildingList = function(buildings) {
     });
     list += "</ul>";
     $buildingList.append(list);
+
 }
 
 Gui.prototype.clearHoverBox = function() {

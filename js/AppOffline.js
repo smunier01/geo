@@ -48,6 +48,11 @@ var AppOffline = function () {
      *  @type {boolean}
      */
     this.adminMode = true;
+
+    /**
+     *  @type {Object.<string, Array.<ol.Features>>}
+     */
+    this.cache = [];
     
     //
     // Style
@@ -88,7 +93,6 @@ var AppOffline = function () {
         // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
         var fGeomType = feature.getGeometry().getType();
 
-
         if (fGeomType == "Polygon" && feature.get('building') != undefined) {
 
             return [that.styles['building']];
@@ -97,16 +101,53 @@ var AppOffline = function () {
 
             return [that.styles['parking']];
 
+	} else if (feature.get('highway') == 'footway' || feature.get('highway') == 'path') {
+
+	    return [that.styles['road_footway']];
+
+	} else if (feature.get('highway') == 'cycleway') {
+
+	    return [that.styles['road_cycleway']];
+	    
+	} else if (feature.get('railway') == 'tram') {
+
+	    return that.styles['road_tram'];
+
+	} else if (feature.get('highway') == 'primary') {
+
+	    return that.styles['road_secondary'];
+	    
+        } else if (feature.get('highway') == 'secondary') {
+
+	    return that.styles['road_secondary'];
+
+	} else if (feature.get('highway') == 'primary_link') {
+
+	    return that.styles['road_secondary'];
+
+	} else if (parseInt(feature.get('lanes')) >= 2) {
+	    
+	    return that.styles['road_secondary'];
+	    
+	} else if (feature.get('highway') == 'trunk' || feature.get('highway') == 'trunk_link') {
+
+	    return that.styles['road_secondary'];
+	    
+	} else if (feature.get('highway') == 'tertiary') {
+
+	    return that.styles['road_secondary'];
+	    
         } else if (fGeomType == "LineString") {
 
             return [that.styles['road1']];
 
         } else {
-
+	    
             return [that.styles['hidden']];
 
-        }
+	}
     }
+
 
     this.initStyles();
 
@@ -149,7 +190,8 @@ var AppOffline = function () {
     this.layers['nodes'] = {
 	'layer': new ol.layer.Vector({
 	    source: new ol.source.Vector([]),
-	    title: 'Nodes Layer'
+	    title: 'Nodes Layer',
+	    visible: false
 	}),
 	'order': 75
     };
@@ -331,38 +373,126 @@ var AppOffline = function () {
 
 	e.preventDefault();
 
-	var feature = that.getClosestParking(that.map.getEventCoordinate(e))
+	var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
+	var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e))
 
-	that.layers['route'].layer.getSource().addFeature(feature);
+	that.layers['route'].layer.getSource().addFeature(feature1);
+	that.layers['route'].layer.getSource().addFeature(feature2);
 
     });
 };
 
 /**
- *  PAS FINI
+ * 
+ */
+AppOffline.prototype.getClosestRoad = function(coord) {
+    
+    var min = Infinity;
+    var minR = undefined;
+
+    for (var p of this.getRoadList()) {
+	
+	var v = p.getGeometry().getClosestPoint(coord);
+
+	var dist = (new ol.geom.LineString([v, coord])).getLength();
+
+	if (dist <= min) {
+	    min = dist;
+	    minR = p;
+	}
+    }
+    
+    return minR;
+    
+}
+
+/**
+ *  
  */
 AppOffline.prototype.getClosestParking = function(coord) {
+
     var min = Infinity;
-    var minF = undefined;
+    var minP = undefined;
 
-    this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+    for (var p of this.getParkingList()) {
+    
+	var v = p.getGeometry().getClosestPoint(coord);
 
-	if (f.get('amenity') == "parking") {
+	var dist = (new ol.geom.LineString([v, coord])).getLength();
 
-	    var v = f.getGeometry().getClosestPoint(coord);
-
-	    var dist = (new ol.geom.LineString([v, coord])).getLength();
-
-	    if (dist <= min) {
-		min = dist;
-		minF = f;
-	    }
-
+	if (dist <= min) {
+	    min = dist;
+	    minP = p;
 	}
-    });
+    }
+    
+    return minP;
+};
 
-    return minF;
-}
+AppOffline.prototype.getRoadList = function() {
+
+    var roads = [];
+
+    var that = this;
+
+    var start = new Date().getTime();
+    
+    if (this.cache['roads'] === undefined) {
+	
+	this.cache['roads'] = [];
+
+	this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+
+	    if (f.getGeometry().getType() == "LineString") {
+
+		that.cache['roads'].push(f);
+		
+	    }
+	});
+	
+    }
+    
+    roads = this.cache['roads'];
+
+    var d = new Date().getTime() - start;
+
+    console.log(d);
+
+    return roads;
+    
+};
+
+AppOffline.prototype.getParkingList = function() {
+
+    var parkings = [];
+
+    var that = this;
+
+    var start = new Date().getTime();
+    
+    if (this.cache['parkings'] === undefined) {
+	
+	this.cache['parkings'] = [];
+
+	this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+
+	    if (f.get('amenity') == "parking") {
+
+		that.cache['parkings'].push(f);
+		
+	    }
+	});
+	
+    }
+    
+    parkings = this.cache['parkings'];
+
+    var d = new Date().getTime() - start;
+
+    console.log(d);
+    
+    return parkings;    
+};
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
@@ -427,8 +557,6 @@ AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
 
-    console.log(this.layers['mapVectors'].layer.getSource());
-    
     this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
 
 
@@ -469,12 +597,84 @@ AppOffline.prototype.initStyles = function() {
 	opacity: 0.8
     });
 
+    this.styles['road_footway'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "#D19B9B",
+            width: 1,
+	    lineDash: [4, 4]
+        })
+    });
+
+    this.styles['road_primary'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "#D9D9D9",
+            width: 5
+        })
+    });
+
+    this.styles['road_secondary'] = [
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: "#737373",
+		width: 4
+            }),
+	    zIndex: 8
+	}),
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: "#FAD9B6",
+		width: 3
+            }),
+	    zIndex: 9
+	})
+    ];
+
+    this.styles['road_tertiary'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "#FFFFFF",
+            width: 2
+        })
+    });
+
+    this.styles['road_cycleway'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "#93CF98",
+            width: 2,
+	    lineDash: [4, 4]
+        })
+    });
+
+    this.styles['road_oneway'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: "#BA3C57",
+            width: 3
+        })
+    });
+
     this.styles['road1'] = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: "white",
             width: 3
         })
     });
+
+    this.styles['road_tram'] = [
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: "#737373",
+		width: 4
+            }),
+	    zIndex: 10
+	}),
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: "#FFFBBF",
+		width: 3
+            }),
+	    zIndex: 10
+	})
+    ];
+	
 
     this.styles['hidden'] = new ol.style.Style({
         display: "none"
