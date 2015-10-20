@@ -2,10 +2,16 @@
     background: #E0DFDF;
 }
 
+#hoverbox {
+    position: fixed;
+    background: white;
+    border: 1px solid #6b6b6b;
+    padding: 1%;
+}
+
 #gui {
     position: fixed;
     top: 0px;
-    background: #FF0000;
     transition: right 0.5s ease 0s;
 }
 
@@ -22,5 +28,14 @@
     float: right;
     background: #E0E0E0;
     height: 100%;
-    //display: none;
+}
+
+#content h2 {
+    width: 80%;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-top: 1%;
+    text-align: center;
+    border-bottom: 2px solid #77A5D4;
 }

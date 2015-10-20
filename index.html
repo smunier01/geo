@@ -29,11 +29,23 @@
   </div>
 
   <div id="gui">
+
+    <div id="hoverbox">test</div>
+    
     <div id="content">
+      
+      <h2>Layers</h2>
 
       <div id="layersCheckboxes">
 
       </div>
+
+      <h2>Buildings</h2>
+
+      <div id="buildingList">
+
+      </div>
+      
     </div>
     <div id="toggleDisplay"></div>
   </div>
@@ -41,6 +53,7 @@
   <script>
     var app = new AppOffline();
     var gui = new Gui(app);
+    app.setGui(gui);
   </script>
   
 </body>

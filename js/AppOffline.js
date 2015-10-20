@@ -1,12 +1,15 @@
+/* global ol, Routing */
+/* jshint sub: true */
+
 /**
  * Application Offline
  *
  * @class
  */
-var AppOffline = function() {
-    
+var AppOffline = function () {
+
     var that = this;
-    
+
     //
     // Public Variables
     //
@@ -18,22 +21,33 @@ var AppOffline = function() {
     this.map = undefined;
 
     /**
+     *  Reference à l'objet Gui
+     *  @type {Gui}
+     */
+    this.gui = undefined;
+
+    /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
-     */ 
+     */
     this.layers = [];
 
     /**
      *  Array contenant la liste des styles généré par la methode initStyles
      *  @type {Object.<string, ol.style.Style>}
      */
-    this.styles = []
+    this.styles = [];
 
     /**
      *  Class contenant le graphe des routes et l'implémentation de dijkstra
      *  @ŧype {Routing}
      */
     this.routing = undefined;
+
+    /**
+     *  @type {boolean}
+     */
+    this.adminMode = true;
     
     //
     // Style
@@ -64,34 +78,34 @@ var AppOffline = function() {
     this.GREY1 = "#CECECE";
 
     /**
-     *  
+     *
      */
-    var styleFunctionGeojson = function(feature, resolution) {
+    var styleFunctionGeojson = function (feature, resolution) {
 
-	// Le type [way, node, relation]. On s'en fiche un peu, presque tout ont pour type 'way'
-	var fType = feature.get('id').split('/')[0];
+        // Le type [way, node, relation]. On s'en fiche un peu, presque tout ont pour type 'way'
+        var fType = feature.get('id').split('/')[0];
 
-	// Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
-	var fGeomType = feature.getGeometry().getType();
+        // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
+        var fGeomType = feature.getGeometry().getType();
 
-	
-	if (fGeomType == "Polygon" && feature.get('building') != undefined) {
 
-	    return [that.styles['building']];
+        if (fGeomType == "Polygon" && feature.get('building') != undefined) {
 
-	} else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
+            return [that.styles['building']];
 
-	    return [that.styles['parking']];
+        } else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
 
-	} else if (fGeomType == "LineString") {
+            return [that.styles['parking']];
 
-	    return [that.styles['road1']];
+        } else if (fGeomType == "LineString") {
 
-	} else {
+            return [that.styles['road1']];
 
-	    return [that.styles['hidden']];
+        } else {
 
-	}
+            return [that.styles['hidden']];
+
+        }
     }
 
     this.initStyles();
@@ -115,7 +129,7 @@ var AppOffline = function() {
 
     this.layers['mapVectors'] = {
 	'layer': new ol.layer.Vector({
-	    title: 'Main Layer',
+	    title: 'Vector Layer',
 	    source: new ol.source.Vector({
 		url: 'ressources/map.geojson',
 		format: new ol.format.GeoJSON()
@@ -124,11 +138,11 @@ var AppOffline = function() {
 	}),
 	'order': 10
     };
-    
+
     this.layers['nodes'] = {
 	'layer': new ol.layer.Vector({
 	    source: new ol.source.Vector([]),
-	    title: 'Node Layer'
+	    title: 'Nodes Layer'
 	}),
 	'order': 75
     };
@@ -136,7 +150,8 @@ var AppOffline = function() {
     this.layers['route'] = {
 	'layer': new ol.layer.Vector({
 	    source:  new ol.source.Vector([]),
-	    style: that.styles['nodeAndRouteSelected']
+	    style: that.styles['nodeAndRouteSelected'],
+	    title: 'Route Layer',
 	}),
 	'order': 97
     };
@@ -144,7 +159,8 @@ var AppOffline = function() {
     this.layers['hover'] = {
 	'layer': new ol.layer.Vector({
 	    source: new ol.source.Vector([]),
-	    style: that.styles['nodeSelected']
+	    style: that.styles['nodeSelected'],
+	    title: 'Hover Layer'
 	}),
 	'order': 100
     };
@@ -152,7 +168,8 @@ var AppOffline = function() {
     this.layers['selected'] = {
 	'layer': new ol.layer.Vector({
 	    source: new ol.source.Vector([]),
-	    style: that.styles['nodeSelected']
+	    style: that.styles['nodeSelected'],
+	    title: 'Selected Layer'
 	}),
 	'order': 98
     };
@@ -163,13 +180,14 @@ var AppOffline = function() {
 	    source: new ol.source.OSM({
 		url: "http://localhost/tiles/{z}_{x}_{y}.png"
 	    }),
-	    visible: false
+	    visible: false,
+	    title: 'OSM Layer'
 	}),
 	'order': 0
     };
 
     this.addAllLayers();
-    
+
     //
     // Routing
     //
@@ -192,19 +210,19 @@ var AppOffline = function() {
     this.layers['osm'].layer.getSource().on('tileloaderror', function(event) {
 
 	var self = this;
-	
+
 	// Coordonnées de la tile en question
 	var z = event.tile.getTileCoord()[0];
 	var x = event.tile.getTileCoord()[1];
 	var y = event.tile.getTileCoord()[2];
 
-	// On dit à php d'aller telecharger cette tile 
+	// On dit à php d'aller telecharger cette tile
 	$.get("http://localhost/php-test/test2.php?z=" + z + "&x=" + x + "&y=" + y, function(data, status){
 	    self.changed();
 	});
-	
+
     });
-    
+
     /**
      *  Mise à jour de la map quand on press "enter".
      *  (c'est utile (pour le moment) pour voir si le 'tileloaderror' à bien fonctionné)
@@ -213,7 +231,7 @@ var AppOffline = function() {
 	if (e.which == 13) {
 
 	    var s = that.layers['osm'].layer.getSource();
-	    
+
 	    that.map.updateSize();
 	    s.changed();
 	    s.setTileUrlFunction(s.getTileUrlFunction());
@@ -230,7 +248,7 @@ var AppOffline = function() {
 	var feature = that.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
 	var sourceSelected = that.layers['selected'].layer.getSource();
 	var sourceRoute = that.layers['route'].layer.getSource();
-	
+
 	// openlayers plante si t'ajoute deux fois le même feature
 	for (var f of sourceSelected.getFeatures()) {
 	    if (f.get('id') == feature.get('id')) {
@@ -246,7 +264,7 @@ var AppOffline = function() {
 
 	nodeSelected.push(feature.get('id'));
 	sourceSelected.addFeature(feature);
-	
+
 	if (nodeSelected.length >= 2) {
 
 	    // liste des noeuds du chemin
@@ -254,35 +272,49 @@ var AppOffline = function() {
 
 	    // conversion des noeuds en des données geometrique ol3 pour affichage
 	    var f = that.routing.getGeometryFromRoute(route);
-	    
+
 	    // affichage de la route
 	    sourceRoute.addFeatures(f);
-	    
+
 	}
+
+        return true;
         
     });
 
     /*
       Change la couleur des noeuds au passage de la souris
+      &
+      Affichage des infos sur les differents objets
     */
     this.map.on('pointermove', function(evt) {
 
-	var t = true;
-
-	var sourceHover = that.layers['hover'].layer.getSource(); 
+	var t = true, nbFeatures = 0;
+	
+	var sourceHover = that.layers['hover'].layer.getSource();
 
 	sourceHover.clear();
 	
+	that.gui.clearHoverBox();
+
 	that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-   
-	    if (t && layer.get('title') == "Node Layer") {
+
+	    nbFeatures += 1;
+
+	    that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
+	    
+	    if (t && layer.get('title') == "Nodes Layer") {
 
 		t = false;
-		
+
 		sourceHover.addFeature(feature);
 
 	    }
-	});  
+	});
+
+	if (nbFeatures > 0) {
+	    that.gui.setHoverBoxPosition(evt.pixel);
+	}
     });
 
     /*
@@ -295,7 +327,7 @@ var AppOffline = function() {
 	var feature = that.getClosestParking(that.map.getEventCoordinate(e))
 
 	that.layers['route'].layer.getSource().addFeature(feature);
-	
+
     });
 };
 
@@ -305,20 +337,20 @@ var AppOffline = function() {
 AppOffline.prototype.getClosestParking = function(coord) {
     var min = Infinity;
     var minF = undefined;
-    
+
     this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
-	
+
 	if (f.get('amenity') == "parking") {
-	    
+
 	    var v = f.getGeometry().getClosestPoint(coord);
 
 	    var dist = (new ol.geom.LineString([v, coord])).getLength();
-	    
+
 	    if (dist <= min) {
 		min = dist;
 		minF = f;
 	    }
-	    
+
 	}
     });
 
@@ -336,7 +368,7 @@ AppOffline.prototype.addAllLayers = function() {
     var tmp = [];
 
     for (var key in this.layers) {
-	
+
 	if (this.layers.hasOwnProperty(key)) {
 	    var l = this.layers[key];
 
@@ -370,7 +402,7 @@ AppOffline.prototype.setVisible = function(name, value) {
 AppOffline.prototype.displayPoints = function(source, data) {
 
     source.clear();
-    
+
     for (var f in data) {
 
 	source.addFeature(new ol.Feature({
@@ -380,6 +412,26 @@ AppOffline.prototype.displayPoints = function(source, data) {
 	}))
     }
 };
+
+/**
+ *  @returns {??} liste des batiments
+ */
+AppOffline.prototype.getBuildingList = function() {
+
+    var buildings = [];
+    
+    this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+
+
+	if (f.getGeometry().getType() == "Polygon" && f.get('building') != undefined) {
+	    buildings.push(f.getProperties);
+	}
+	
+    });
+
+    return building;
+    
+}
 
 AppOffline.prototype.initStyles = function() {
 
@@ -430,7 +482,7 @@ AppOffline.prototype.initStyles = function() {
 	    radius: 5
 	})
     });
-    
+
     this.styles['nodeAndRouteSelected'] = new ol.style.Style({
 	image: new ol.style.Circle({
 	    fill: new ol.style.Fill({
@@ -450,11 +502,16 @@ AppOffline.prototype.initStyles = function() {
 
 };
 
+/**
+*  @param {Gui}
+*/
+AppOffline.prototype.setGui = function(gui) {
+    this.gui = gui;
+}
+
 function sortByKey(array, key) {
     return array.sort(function(a, b) {
         var x = a[key]; var y = b[key];
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     });
-}
-
-
+};

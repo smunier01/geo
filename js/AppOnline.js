@@ -30,15 +30,14 @@ var AppOnline = function() {
 	'layer': new ol.layer.Tile({
 	    //source: new ol.source.MapQuest({layer: 'osm'})
 	    source: new ol.source.OSM({
-		//url: "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
-		url: "http://localhost/tiles/{z}_{x}_{y}.png"
+		url: "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
 	    }),
 	    visible: false
 	}),
 	'order': 2
     };
 
-    // battiments
+    // batiments
     this.layers['buildings'] = {
 	'layer': new ol.layer.Tile({
 	    source: new ol.source.TileWMS({
@@ -63,23 +62,6 @@ var AppOnline = function() {
 	    })
 	}),
 	'order': 4
-    };
-
-    // ??
-    this.layers['vectorRoute'] = {
-	'layer': new ol.layer.Vector({
-	    source: new ol.source.Vector([]),
-	    style: new ol.style.Style({
-		stroke: new ol.style.Stroke({
-		    color: 'rgba(255, 0, 0, 1.0)',
-		    width: 2
-		}),
-		fill: new ol.style.Fill({
-		    color: 'rgba(165, 165, 165, 0.5)'
-		})
-	    })
-	}),
-	'order': 5
     };
 
     // chemin resultat dikjstra

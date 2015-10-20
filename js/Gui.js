@@ -49,14 +49,41 @@ Gui.prototype.init = function() {
     $("#layersCheckboxes input").on("click", function() {
 	that.app.setVisible($(this).attr('name'), $(this).prop("checked"));
     });
+
+    // var buildings = this.app.getBuildingList()
+    // $('#buildingList');
     
     this.refreshSize();
 };
 
+Gui.prototype.clearHoverBox = function() {
+    $("#hoverbox").empty();
+    $("#hoverbox").hide();
+}
+
+Gui.prototype.addToHoverBox = function(object, title) {
+
+    var div = $('<div><h3>' + title + '</h3></div>');
+
+    for (var p in object) {
+	div.append($('<div>' + p + ':' + object[p] + '</div>'));
+    }
+    
+    $("#hoverbox").append(div);
+}
+
+Gui.prototype.setHoverBoxPosition = function(pos) {
+
+    $('#hoverbox').show();
+    
+    $("#hoverbox").css({
+	"top": pos[1] + 50,
+	"left": pos[0]
+    });
+}
+
 Gui.prototype.refreshSize = function() {
 
-    console.log(this.isHidden);
-    
     $('#gui').css({
 	"height": $(window).height(),
     });
