@@ -52,9 +52,13 @@ Gui.prototype.init = function() {
 
     // var buildings = this.app.getBuildingList()
     // $('#buildingList');
-    
+ 
     this.refreshSize();
 };
+
+Gui.prototype.updateBuildingList = function(buildings) {
+    console.log(buildings);
+}
 
 Gui.prototype.clearHoverBox = function() {
     $("#hoverbox").empty();

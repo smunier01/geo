@@ -139,6 +139,13 @@ var AppOffline = function () {
 	'order': 10
     };
 
+    var key = this.layers['mapVectors'].layer.getSource().on('change', function() {
+	if (that.layers['mapVectors'].layer.getSource().getState() == 'ready') {
+	    that.layers['mapVectors'].layer.getSource().unByKey(key);
+	    that.gui.updateBuildingList(that.getBuildingList());
+	}
+    });
+
     this.layers['nodes'] = {
 	'layer': new ol.layer.Vector({
 	    source: new ol.source.Vector([]),
@@ -419,17 +426,20 @@ AppOffline.prototype.displayPoints = function(source, data) {
 AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
+
+    console.log(this.layers['mapVectors'].layer.getSource());
     
     this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
 
 
 	if (f.getGeometry().getType() == "Polygon" && f.get('building') != undefined) {
-	    buildings.push(f.getProperties);
+	    buildings.push(f.getProperties());
 	}
+
 	
     });
 
-    return building;
+    return buildings;
     
 }
 
