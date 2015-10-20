@@ -47,17 +47,43 @@ Gui.prototype.init = function() {
     }
     // quand on click sur une des check box, on passe le layer correspondant en visible/non-visible
     $("#layersCheckboxes input").on("click", function() {
-	that.app.setVisible($(this).attr('name'), $(this).prop("checked"));
+	   that.app.setVisible($(this).attr('name'), $(this).prop("checked"));
     });
 
     // var buildings = this.app.getBuildingList()
     // $('#buildingList');
  
+    $("#buildingSearch").bind("keyup", function(){
+        var inputTxt = $("#buildingSearch").val().toLowerCase();
+        $("#buildingList li").each(function(index, element){
+            if(inputTxt.length > 0){
+                if($(element).html().toLowerCase().indexOf(inputTxt) < 0){
+                    $(element).css({display: 'none'});
+                }
+                else{
+                    $(element).css({display: 'list-item'});   
+                }
+            }
+            else{
+                $(element).css({display: 'list-item'});
+            }
+            
+        });
+    });
+
     this.refreshSize();
 };
 
 Gui.prototype.updateBuildingList = function(buildings) {
-    console.log(buildings);
+    var $buildingList = $("#buildingList");
+    var list = "<ul> ";
+    $.each(buildings, function(index, value){
+        if(value.name != undefined){
+            list += "<li>" + value.name + "</li>";    
+        }
+    });
+    list += "</ul>";
+    $buildingList.append(list);
 }
 
 Gui.prototype.clearHoverBox = function() {
