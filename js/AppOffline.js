@@ -6,7 +6,7 @@
  *
  * @class
  */
-var AppOffline = function () {
+var AppOffline = function (imgMode) {
 
     var that = this;
 
@@ -53,7 +53,15 @@ var AppOffline = function () {
      *  @type {Object.<string, Array.<ol.Features>>}
      */
     this.cache = [];
-    
+
+    /**
+     *  Transforme ol.layer.Vector en ol.layer.Image (surement plus rapide)
+     *  @type {boolean}
+     */
+    this.imgMode = imgMode;
+
+    this.toLonLat = {'dataProjection': 'EPSG:3857', 'featureProjection': 'EPSG:4326'};
+    this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'},
     //
     // Style
     //
@@ -93,7 +101,7 @@ var AppOffline = function () {
         // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
         var fGeomType = feature.getGeometry().getType();
 
-        if (fGeomType == "Polygon" && feature.get('building') != undefined) {
+        if (fGeomType == "Polygon" && feature.get('building') !== undefined) {
 
             return [that.styles['building']];
 
@@ -136,6 +144,10 @@ var AppOffline = function () {
 	} else if (feature.get('highway') == 'tertiary') {
 
 	    return that.styles['road_secondary'];
+
+	} else if (feature.get('power') !== undefined || feature.get('barrier') !== undefined) {
+
+	    return [that.styles['hidden']];
 	    
         } else if (fGeomType == "LineString") {
 
@@ -168,18 +180,37 @@ var AppOffline = function () {
     // Sources & Layers
     //
 
-    this.layers['mapVectors'] = {
-	'layer': new ol.layer.Vector({
-	    title: 'Vector Layer',
-	    source: new ol.source.Vector({
-		url: 'ressources/map.geojson',
-		format: new ol.format.GeoJSON()
+    if (!this.imgMode) {
+	
+	this.layers['mapVectors'] = {
+	    'layer': new ol.layer.Vector({
+		title: 'Vector Layer',
+		source: new ol.source.Vector({
+		    url: 'ressources/map.geojson',
+		    format: new ol.format.GeoJSON()
+		}),
+		style: styleFunctionGeojson
 	    }),
-	    style: styleFunctionGeojson
-	}),
-	'order': 10
-    };
-
+	    'order': 10
+	};
+	
+    } else {
+	
+	this.layers['mapVectors'] = {
+	    'layer': new ol.layer.Image({
+		title: 'Vector Layer',
+		source: new ol.source.ImageVector({
+		    source: new ol.source.Vector({
+			url: 'ressources/map.geojson',
+			format: new ol.format.GeoJSON()
+		    }),
+		    style: styleFunctionGeojson
+		})
+	    }),
+	    'order': 10
+	};
+    }
+    
     var key = this.layers['mapVectors'].layer.getSource().on('change', function() {
 	if (that.layers['mapVectors'].layer.getSource().getState() == 'ready') {
 	    that.layers['mapVectors'].layer.getSource().unByKey(key);
@@ -241,7 +272,7 @@ var AppOffline = function () {
     // Routing
     //
 
-    this.routing = new Routing();
+    this.routing = new Routing(this);
 
     this.routing.init("ressources/routing.json").then(function() {
 
@@ -337,7 +368,7 @@ var AppOffline = function () {
       Affichage des infos sur les differents objets
     */
     this.map.on('pointermove', function(evt) {
-
+	
 	var t = true, nbFeatures = 0;
 	
 	var sourceHover = that.layers['hover'].layer.getSource();
@@ -345,9 +376,9 @@ var AppOffline = function () {
 	sourceHover.clear();
 	
 	that.gui.clearHoverBox();
-
+	
 	that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-
+	    
 	    nbFeatures += 1;
 
 	    that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
@@ -359,11 +390,15 @@ var AppOffline = function () {
 		sourceHover.addFeature(feature);
 
 	    }
+	    
 	});
 
 	if (nbFeatures > 0) {
+	    
 	    that.gui.setHoverBoxPosition(evt.pixel);
+
 	}
+	
     });
 
     /*
@@ -372,13 +407,28 @@ var AppOffline = function () {
     this.map.getViewport().addEventListener('contextmenu', function (e) {
 
 	e.preventDefault();
-
-	var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
+	
+	//var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
 	var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e))
 
-	that.layers['route'].layer.getSource().addFeature(feature1);
-	that.layers['route'].layer.getSource().addFeature(feature2);
+	var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
 
+	that.layers['route'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
+
+	var edge = that.routing.osmFeatureToEdge(feature2, new_node);
+
+	
+	
+	console.log(edge);
+	
+	var edges = that.routing.splitEdge(new_node, edge);
+	
+	var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
+	var edge2 = (new ol.format.WKT()).readFeature(edges[1][2], that.to3857);
+
+	that.layers['route'].layer.getSource().addFeature(edge1);
+	that.layers['route'].layer.getSource().addFeature(edge2);
+	
     });
 };
 
@@ -386,7 +436,7 @@ var AppOffline = function () {
  * 
  */
 AppOffline.prototype.getClosestRoad = function(coord) {
-    
+
     var min = Infinity;
     var minR = undefined;
 
@@ -396,7 +446,7 @@ AppOffline.prototype.getClosestRoad = function(coord) {
 
 	var dist = (new ol.geom.LineString([v, coord])).getLength();
 
-	if (dist <= min) {
+	if (dist <= min && this.routing.isRouting[p.get('id').split('/')[1]] === true) {
 	    min = dist;
 	    minR = p;
 	}
@@ -441,7 +491,10 @@ AppOffline.prototype.getRoadList = function() {
 	
 	this.cache['roads'] = [];
 
-	this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+	var l = this.layers['mapVectors'].layer;
+	var source = this.imgMode ? l.getSource().getSource() : l.getSource();
+
+	source.forEachFeature(function(f) {
 
 	    if (f.getGeometry().getType() == "LineString") {
 
@@ -469,12 +522,15 @@ AppOffline.prototype.getParkingList = function() {
     var that = this;
 
     var start = new Date().getTime();
+
+    var l = this.layers['mapVectors'].layer;
+    var source = this.imgMode ? l.getSource().getSource() : l.getSource();
     
     if (this.cache['parkings'] === undefined) {
 	
 	this.cache['parkings'] = [];
 
-	this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+	source.forEachFeature(function(f) {
 
 	    if (f.get('amenity') == "parking") {
 
@@ -557,7 +613,9 @@ AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
 
-    this.layers['mapVectors'].layer.getSource().forEachFeature(function(f) {
+    var source = this.imgMode ? this.layers['mapVectors'].layer.getSource().getSource() : this.layers['mapVectors'].layer.getSource();
+    
+    source.forEachFeature(function(f) {
 
 
 	if (f.getGeometry().getType() == "Polygon" && f.get('building') != undefined) {
