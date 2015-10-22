@@ -187,13 +187,17 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
 	     // distance entre B et C
 	    var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
-	    // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
 
-	    if ( Math.abs(cross) < 1.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
+	    // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
+	    if ( Math.abs(cross) < 10.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
+		console.log('ok');
 		return e;
 	    }
 	}
     }
+
+    return edges[0];
+    
 }
 
 Routing.prototype.getEdgesFromOsmId = function(osmId) {
@@ -205,7 +209,8 @@ Routing.prototype.getEdgesFromOsmId = function(osmId) {
 	    edges.push(this.geomRoutes[e]);
 	}
     }
-    
+
+  
     return edges;
 }
 
@@ -247,7 +252,7 @@ Routing.prototype.splitEdge = function(node, edge) {
 	var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
 	// Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
-	if ( Math.abs(cross) < 0.0001 && (dAC < dAB && dBC < dAB) ) {
+	if ( Math.abs(cross) < 10 && (dAC < dAB && dBC < dAB) ) {
 
 	    foundNode = true;
 	    

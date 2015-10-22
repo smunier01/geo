@@ -62,8 +62,16 @@ var AppOffline = function (imgMode) {
      */
     this.imgMode = imgMode;
 
-    this.toLonLat = {'dataProjection': 'EPSG:3857', 'featureProjection': 'EPSG:4326'};
+   /**
+    *  @type {ol.ProjectionLike}
+    */
     this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'},
+
+    /**
+     *  @type {MyStorage}
+     */
+    this.storage = new MyStorage();
+
     //
     // Style
     //
@@ -231,10 +239,31 @@ var AppOffline = function (imgMode) {
 	'order': 9
     };
     
-    var key = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
-	if (that.layers['buildingsVectors'].layer.getSource().getState() == 'ready') {
-	    that.layers['buildingsVectors'].layer.getSource().unByKey(key);
+    // callback pour buildings.json
+    var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
+
+	var source = that.layers['buildingsVectors'].layer.getSource();
+	
+	if (source.getState() == 'ready') {
+
+	    source.unByKey(key1);
+
+	    // met à jour la liste des batiments dans le menu
 	    that.gui.updateBuildingList(that.getBuildingList());
+	}
+    });
+
+    // callback pour lines.json
+    var key2 = this.layers['mapVectors'].layer.getSource().on('change', function() {
+
+	var source = that.layers['mapVectors'].layer.getSource();
+	
+	if (source.getState() == 'ready') {
+
+	    source.unByKey(key2);
+
+	    that.updateFeaturesFromStorage(source);
+	    
 	}
     });
 
@@ -437,20 +466,33 @@ var AppOffline = function (imgMode) {
 
 	e.preventDefault();
 	
-	//ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326')
-
 	that.layers['nearest'].layer.getSource().clear();
 	
 	//var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
-	var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e))
+
+	var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e));
 
 	var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
 
 	that.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
-
+	
 	var edge = that.routing.osmFeatureToEdge(feature2, new_node);
 
+	/*
+	var f = feature2.getProperties();
+
+	delete f['geometry'];
+
+	f['highway'] = 'secondary';
+
+	that.storage.addToStorage('edit', f);
+	*/
 	
+	that.storage.addToStorage('edit', {'osm_id' : feature2.getId(), 'highway': 'secondary'});
+
+	that.updateFeaturesFromStorage(that.layers['mapVectors'].layer.getSource());
+	
+
 	var edges = that.routing.splitEdge(new_node, edge);
 	
 	var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
@@ -645,6 +687,30 @@ AppOffline.prototype.getBuildingList = function() {
 
     return buildings;
     
+};
+
+/**
+ *  Met à jour la liste des features en fonction de se qu'il y a en local storage
+ *  @param {ol.source.Vector} source source to update
+ */
+AppOffline.prototype.updateFeaturesFromStorage = function(source) {
+    
+    var featuresToEdit = this.storage.get('edit');
+
+    if (!(featuresToEdit instanceof Array)) {
+	featuresToEdit = [featuresToEdit];
+    }
+
+    for (var f of featuresToEdit) {
+	
+	var feature = source.getFeatureById(f['osm_id']);
+
+	if (feature) {
+	    for (var property in f) {
+		feature.set(property, f[property]);
+	    }
+	}
+    }
 }
 
 AppOffline.prototype.initStyles = function() {
