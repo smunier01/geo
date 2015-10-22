@@ -160,7 +160,7 @@ Routing.prototype.dijkstra = function(start, stop) {
 Routing.prototype.osmFeatureToEdge = function(feature, c) {
 
     // liste des arcs possible où C peut se trouver
-    var edges = this.getEdgesFromOsmId(parseInt(feature.get('id').split('/')[1]));
+    var edges = this.getEdgesFromOsmId(parseInt(feature.get('osm_id')));
 
     for (var e of edges) {
 
@@ -188,8 +188,8 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
 	    var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
 	    // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
-	    
-	    if ( Math.abs(cross) < 0.0001 && (dAC <= dAB && dBC <= dAB) ) {
+
+	    if ( Math.abs(cross) < 1.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
 		return e;
 	    }
 	}
