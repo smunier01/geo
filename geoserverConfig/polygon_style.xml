@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor version="1.0.0" xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/sld http://schemas.opengis.net/sld/1.0.0/StyledLayerDescriptor.xsd">
+  <NamedLayer>
+    <Name>Polygons_Projet</Name>
+    <UserStyle>
+      <Name>green</Name>
+      <Title>Green polygon</Title>
+      <Abstract>Green fill with black outline</Abstract>
+      <FeatureTypeStyle>
+        <!-- non private Parkings -->
+        <Rule>
+
+          <ogc:Filter>
+            <And>
+              <ogc:PropertyIsEqualTo>
+                <PropertyName>amenity</PropertyName>
+                <Literal>parking</Literal>
+              </ogc:PropertyIsEqualTo>
+
+              <ogc:PropertyNotEqualTo>
+                <PropertyName>access</PropertyName>
+                <Literal>Private</Literal>
+              </ogc:PropertyNotEqualTo>
+            </And>
+          </ogc:Filter>
+
+          <PolygonSymbolizer>
+            <Fill>
+              <CssParameter name="fill">#CECECE</CssParameter>
+            </Fill>
+            <Stroke>
+              <CssParameter name="stroke">#ADFBC9</CssParameter>
+            </Stroke>
+          </PolygonSymbolizer>
+        </Rule>
+
+
+        <!-- Buildings -->
+        <Rule>
+          <ogc:Filter>
+
+            <And>
+              <ogc:PropertyIsNotEqualTo>
+                <PropertyName>building</PropertyName>
+                <Literal></Literal>
+              </ogc:PropertyIsNotEqualTo>
+              
+              <Not>
+                <ogc:PropertyIsNull>
+                  <PropertyName>building</PropertyName>
+                </ogc:PropertyIsNull>
+              </Not>
+
+            </And>
+
+          </ogc:Filter>
+          <PolygonSymbolizer>
+            <Fill>
+              <CssParameter name="fill">#FFFFFF</CssParameter>
+            </Fill>
+            <Stroke>
+              <CssParameter name="stroke">#E878B4</CssParameter>
+            </Stroke>
+          </PolygonSymbolizer>
+        </Rule>
+
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>

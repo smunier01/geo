@@ -8,7 +8,7 @@ class DB {
 
     function __construct() {
 
-        $this->db = new PDO('pgsql:dbname=gis;host=localhost;user=postgres;password=');
+        $this->db = new PDO('pgsql:dbname=gis;host=localhost;user=postgres;password=postgres');
 
         $this->stmt1 = $this->db->prepare("SELECT osm_id as id, source, target, 1.0 as cost FROM ways;");
 

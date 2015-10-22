@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>gis openlayers</title>
+<script src="libs/jquery.min.js"></script>
+
+<link rel="stylesheet" href="css/reset.css" type="text/css">
+
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="stylesheet" href="libs/ol.css" type="text/css">
+
+<script src="libs/ol.js"></script>
+<script src="js/AppOffline.js"></script>
+<script src="js/AppOnline.js"></script>
+<script src="js/Graph.js"></script>
+<script src="js/Routing.js"></script>
+<script src="js/Gui.js"></script>
+
+</head>
+<body>
+  <div class="container-fluid">
+
+    <div class="row-fluid">
+      <div class="span12">
+	<div id="map" class="map"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="gui">
+
+    <div id="hoverbox">test</div>
+    
+    <div id="content">
+      
+      <h2>Layers</h2>
+
+      <div id="layersCheckboxes">
+
+      </div>
+
+      <h2>Buildings</h2>
+
+      <div id="buildingList">
+      <input id="buildingSearch"/>
+
+      </div>
+
+      <h2>Services</h2>
+
+      <div id="servicesList">
+
+      </div>
+      
+    </div>
+    <div id="toggleDisplay"></div>
+  </div>
+
+  <script>
+    var app = new AppOnline(false);
+    var gui = new Gui(app);
+    app.setGui(gui);
+  </script>
+  
+</body>
+</html>
