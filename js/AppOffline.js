@@ -1,6 +1,8 @@
 /* global ol, Routing */
 /* jshint sub: true */
 
+const PHP_ROOT = 'http://localhost/geo/php/';
+
 /**
  * Application Offline
  *
@@ -101,63 +103,67 @@ var AppOffline = function (imgMode) {
         // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
         var fGeomType = feature.getGeometry().getType();
 
+	var s = [];
+	
         if (fGeomType == "Polygon" && feature.get('building') !== undefined) {
 
-            return [that.styles['building']];
+            s = s.concat(that.styles['building']);
 
         } else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
 
-            return [that.styles['parking']];
-
+            s = s.concat(that.styles['parking']);
+	    
 	} else if (feature.get('highway') == 'footway' || feature.get('highway') == 'path') {
 
-	    return [that.styles['road_footway']];
+	    s = s.concat(that.styles['road_footway']);
 
 	} else if (feature.get('highway') == 'cycleway') {
 
-	    return [that.styles['road_cycleway']];
+	    s = s.concat(that.styles['road_cycleway']);
 	    
 	} else if (feature.get('railway') == 'tram') {
 
-	    return that.styles['road_tram'];
+	    s = s.concat(that.styles['road_tram']);
 
 	} else if (feature.get('highway') == 'primary') {
 
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 	    
         } else if (feature.get('highway') == 'secondary') {
 
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 
 	} else if (feature.get('highway') == 'primary_link') {
 
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 
 	} else if (parseInt(feature.get('lanes')) >= 2) {
 	    
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 	    
 	} else if (feature.get('highway') == 'trunk' || feature.get('highway') == 'trunk_link') {
 
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 	    
 	} else if (feature.get('highway') == 'tertiary') {
 
-	    return that.styles['road_secondary'];
+	    s = s.concat(that.styles['road_secondary']);
 
 	} else if (feature.get('power') !== undefined || feature.get('barrier') !== undefined) {
 
-	    return [that.styles['hidden']];
-	    
+	    s = s.concat(that.styles['hidden']);
+
         } else if (fGeomType == "LineString") {
-
-            return [that.styles['road1']];
-
+	    
+            s = s.concat(that.styles['road1'](feature));
+	   
         } else {
 	    
-            return [that.styles['hidden']];
-
+            s.concat(that.styles['hidden']);
 	}
+	
+	
+	return s;
     }
 
 
@@ -172,7 +178,9 @@ var AppOffline = function (imgMode) {
 	target: 'map',
 	view: new ol.View({
 	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
-	    zoom: 15
+	    zoom: 15,
+	    minZoom: 14,
+	    maxZoom: 19
 	})
     });
 
@@ -227,6 +235,15 @@ var AppOffline = function (imgMode) {
 	'order': 75
     };
 
+    this.layers['nearest'] = {
+	'layer': new ol.layer.Vector({
+	    source: new ol.source.Vector([]),
+	    title: 'Nearest Layer',
+	    visible: true
+	}),
+	'order': 99
+    };
+
     this.layers['route'] = {
 	'layer': new ol.layer.Vector({
 	    source:  new ol.source.Vector([]),
@@ -254,16 +271,15 @@ var AppOffline = function (imgMode) {
 	'order': 98
     };
 
-    this.layers['osm'] = {
+    this.layers['streetNamesGS'] = {
 	'layer': new ol.layer.Tile({
-	    //source: new ol.source.MapQuest({layer: 'osm'})
 	    source: new ol.source.OSM({
-		url: "http://localhost/tiles/{z}_{x}_{y}.png"
+		url: "ressources/tiles/streetNames-XYZ-format/{z}_{x}_{y}.png"
 	    }),
-	    visible: false,
-	    title: 'OSM Layer'
+	    visible: true,
+	    title: 'OSM Layer Names'
 	}),
-	'order': 0
+	'order': 20
     };
 
     this.addAllLayers();
@@ -287,7 +303,7 @@ var AppOffline = function (imgMode) {
     /**
      * Si il y a une erreur lors du chargement d'une des tiles (elle existe surement pas)
      */
-    this.layers['osm'].layer.getSource().on('tileloaderror', function(event) {
+    this.layers['streetNamesGS'].layer.getSource().on('tileloaderror', function(event) {
 
 	var self = this;
 
@@ -297,12 +313,12 @@ var AppOffline = function (imgMode) {
 	var y = event.tile.getTileCoord()[2];
 
 	// On dit à php d'aller telecharger cette tile
-	$.get("http://localhost/php-test/test2.php?z=" + z + "&x=" + x + "&y=" + y, function(data, status){
+	$.get(PHP_ROOT + "geoWebCache.php?z=" + z + "&x=" + x + "&y=" + y, function(data, status) {
 	    self.changed();
 	});
 
     });
-
+    
     /**
      *  Mise à jour de la map quand on press "enter".
      *  (c'est utile (pour le moment) pour voir si le 'tileloaderror' à bien fonctionné)
@@ -310,11 +326,12 @@ var AppOffline = function (imgMode) {
     $(document).keypress(function(e) {
 	if (e.which == 13) {
 
-	    var s = that.layers['osm'].layer.getSource();
-
+	    var s1 = that.layers['streetNamesGS'].layer.getSource();
+	    
 	    that.map.updateSize();
-	    s.changed();
-	    s.setTileUrlFunction(s.getTileUrlFunction());
+	    s1.changed();
+	    s1.setTileUrlFunction(s1.getTileUrlFunction());
+	    
 	}
     });
 
@@ -407,27 +424,27 @@ var AppOffline = function (imgMode) {
     this.map.getViewport().addEventListener('contextmenu', function (e) {
 
 	e.preventDefault();
+	//ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326')
+	console.log(ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326'));
+	
+	that.layers['nearest'].layer.getSource().clear();
 	
 	//var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
 	var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e))
 
 	var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
 
-	that.layers['route'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
+	that.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
 
 	var edge = that.routing.osmFeatureToEdge(feature2, new_node);
 
-	
-	
-	console.log(edge);
-	
 	var edges = that.routing.splitEdge(new_node, edge);
 	
 	var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
 	var edge2 = (new ol.format.WKT()).readFeature(edges[1][2], that.to3857);
 
-	that.layers['route'].layer.getSource().addFeature(edge1);
-	that.layers['route'].layer.getSource().addFeature(edge2);
+	that.layers['nearest'].layer.getSource().addFeature(edge1);
+	that.layers['nearest'].layer.getSource().addFeature(edge2);
 	
     });
 };
@@ -521,8 +538,6 @@ AppOffline.prototype.getParkingList = function() {
 
     var that = this;
 
-    var start = new Date().getTime();
-
     var l = this.layers['mapVectors'].layer;
     var source = this.imgMode ? l.getSource().getSource() : l.getSource();
     
@@ -543,10 +558,6 @@ AppOffline.prototype.getParkingList = function() {
     
     parkings = this.cache['parkings'];
 
-    var d = new Date().getTime() - start;
-
-    console.log(d);
-    
     return parkings;    
 };
 
@@ -709,12 +720,14 @@ AppOffline.prototype.initStyles = function() {
         })
     });
 
-    this.styles['road1'] = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: "white",
-            width: 3
-        })
-    });
+    this.styles['road1'] = function(feature) {
+	return new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: "white",
+		width: 3
+            })
+	});
+    };
 
     this.styles['road_tram'] = [
 	new ol.style.Style({

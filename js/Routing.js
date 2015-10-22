@@ -166,10 +166,9 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
 
 	var f = (new ol.format.WKT()).readFeature(e[2], this.app.to3857).getGeometry().getCoordinates();
 
-	console.log('length ' + f.length);
 	// on prend les segments un par un
 	for (var i = 0; i < (f.length - 1); i++) {
-	    console.log('ok ' + i);
+
 	    var a = f[i];
 	    var b = f[i + 1];
 
@@ -190,17 +189,11 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
 
 	    // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
 	    
-	    console.log('abs cross: ' + Math.abs(cross));
-	    console.log('distances: ' + dAC + ' ' + dBC + ' ' + dAB);
-	    
 	    if ( Math.abs(cross) < 0.0001 && (dAC <= dAB && dBC <= dAB) ) {
-		//return (f);
 		return e;
 	    }
 	}
     }
-
-    console.log('end');
 }
 
 Routing.prototype.getEdgesFromOsmId = function(osmId) {
