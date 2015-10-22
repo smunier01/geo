@@ -98,7 +98,7 @@ var AppOffline = function (imgMode) {
     var styleFunctionGeojson = function (feature, resolution) {
 
         // Le type [way, node, relation]. On s'en fiche un peu, presque tout ont pour type 'way'
-        var fType = feature.get('id').split('/')[0];
+        //var fType = feature.get('id').split('/')[0];
 
         // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
         var fGeomType = feature.getGeometry().getType();
@@ -133,7 +133,7 @@ var AppOffline = function (imgMode) {
 
 	    s = s.concat(that.styles['road_secondary']);
 
-	} else if (feature.get('highway') == 'primary_link') {
+	} else if (feature.get('highway') == 'primary_link' || feature.get('highway') == 'secondary_link' || feature.get('highway') == 'tertiary_link') {
 
 	    s = s.concat(that.styles['road_secondary']);
 
@@ -149,7 +149,7 @@ var AppOffline = function (imgMode) {
 
 	    s = s.concat(that.styles['road_secondary']);
 
-	} else if (feature.get('power') !== undefined || feature.get('barrier') !== undefined) {
+	} else if (feature.get('power') !== undefined || feature.get('barrier') !== undefined || feature.get('boundary') !== undefined) {
 
 	    s = s.concat(that.styles['hidden']);
 
@@ -161,8 +161,7 @@ var AppOffline = function (imgMode) {
 	    
             s.concat(that.styles['hidden']);
 	}
-	
-	
+
 	return s;
     }
 
@@ -192,21 +191,22 @@ var AppOffline = function (imgMode) {
 	
 	this.layers['mapVectors'] = {
 	    'layer': new ol.layer.Vector({
-		title: 'Vector Layer',
+		title: 'Roads Vector Layer',
 		source: new ol.source.Vector({
-		    url: 'ressources/map.geojson',
-		    format: new ol.format.GeoJSON()
+		    url: 'ressources/lines.geojson',
+		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
 		}),
 		style: styleFunctionGeojson
 	    }),
 	    'order': 10
 	};
+
 	
     } else {
 	
 	this.layers['mapVectors'] = {
 	    'layer': new ol.layer.Image({
-		title: 'Vector Layer',
+		title: 'Roads Vector Layer',
 		source: new ol.source.ImageVector({
 		    source: new ol.source.Vector({
 			url: 'ressources/map.geojson',
@@ -218,10 +218,22 @@ var AppOffline = function (imgMode) {
 	    'order': 10
 	};
     }
+
+    this.layers['buildingsVectors'] = {
+	'layer': new ol.layer.Vector({
+	    title: 'Building Vector Layer',
+	    source: new ol.source.Vector({
+		url: 'ressources/polygons.geojson',
+		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+	    }),
+	    style: styleFunctionGeojson
+	}),
+	'order': 9
+    };
     
-    var key = this.layers['mapVectors'].layer.getSource().on('change', function() {
-	if (that.layers['mapVectors'].layer.getSource().getState() == 'ready') {
-	    that.layers['mapVectors'].layer.getSource().unByKey(key);
+    var key = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
+	if (that.layers['buildingsVectors'].layer.getSource().getState() == 'ready') {
+	    that.layers['buildingsVectors'].layer.getSource().unByKey(key);
 	    that.gui.updateBuildingList(that.getBuildingList());
 	}
     });
@@ -424,9 +436,9 @@ var AppOffline = function (imgMode) {
     this.map.getViewport().addEventListener('contextmenu', function (e) {
 
 	e.preventDefault();
-	//ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326')
-	console.log(ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326'));
 	
+	//ol.proj.transform(that.map.getEventCoordinate(e), 'EPSG:3857', 'EPSG:4326')
+
 	that.layers['nearest'].layer.getSource().clear();
 	
 	//var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
@@ -438,6 +450,7 @@ var AppOffline = function (imgMode) {
 
 	var edge = that.routing.osmFeatureToEdge(feature2, new_node);
 
+	
 	var edges = that.routing.splitEdge(new_node, edge);
 	
 	var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
@@ -463,7 +476,7 @@ AppOffline.prototype.getClosestRoad = function(coord) {
 
 	var dist = (new ol.geom.LineString([v, coord])).getLength();
 
-	if (dist <= min && this.routing.isRouting[p.get('id').split('/')[1]] === true) {
+	if (dist <= min && this.routing.isRouting[p.get('osm_id')] === true) {
 	    min = dist;
 	    minR = p;
 	}
@@ -524,10 +537,6 @@ AppOffline.prototype.getRoadList = function() {
     
     roads = this.cache['roads'];
 
-    var d = new Date().getTime() - start;
-
-    console.log(d);
-
     return roads;
     
 };
@@ -538,7 +547,7 @@ AppOffline.prototype.getParkingList = function() {
 
     var that = this;
 
-    var l = this.layers['mapVectors'].layer;
+    var l = this.layers['buildingsVectors'].layer;
     var source = this.imgMode ? l.getSource().getSource() : l.getSource();
     
     if (this.cache['parkings'] === undefined) {
@@ -624,15 +633,13 @@ AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
 
-    var source = this.imgMode ? this.layers['mapVectors'].layer.getSource().getSource() : this.layers['mapVectors'].layer.getSource();
+    var source = this.imgMode ? this.layers['buildingsVectors'].layer.getSource().getSource() : this.layers['buildingsVectors'].layer.getSource();
     
     source.forEachFeature(function(f) {
-
 
 	if (f.getGeometry().getType() == "Polygon" && f.get('building') != undefined) {
 	    buildings.push(f.getProperties());
 	}
-
 	
     });
 
