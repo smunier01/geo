@@ -42,7 +42,11 @@ var AppOnline = function() {
 	'layer': new ol.layer.Tile({
 	    source: new ol.source.TileWMS({
 		url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
-		params: {'LAYERS': 'planet_osm_polygon', 'TILED': true},
+		params: {
+			'LAYERS': 'planet_osm_polygon', 
+			'TILED': true,
+			//cql_filter : "amenity like 'parking'"
+		},
 
 		serverType: 'geoserver'
 	    }),
@@ -51,12 +55,17 @@ var AppOnline = function() {
 	'order': 3
     };
 
+    console.log(this.layers['buildings']);
+
     // routes
     this.layers['lines'] = {
 	'layer': new ol.layer.Tile({
 	    source: new ol.source.TileWMS({
 		url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
-		params: {'LAYERS': 'planet_osm_line', 'TILED': true},
+		params: {
+			'LAYERS': 'planet_osm_line', 
+			'TILED': true
+		},
 
 		serverType: 'geoserver'
 	    })
@@ -82,9 +91,9 @@ var AppOnline = function() {
 	layers: [],
 	target: 'map',
 	view: new ol.View({
-	    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
-	    zoom: 15
-	})
+		    center: ol.proj.transform([1.9348, 47.8432], 'EPSG:4326', 'EPSG:3857'),
+		    zoom: 15
+		})
     });
 
     this.addAllLayers();
@@ -224,5 +233,11 @@ function sortByKey(array, key) {
     });
 }
 
+/**
+*  @param {Gui}
+*/
+AppOnline.prototype.setGui = function(gui) {
+    this.gui = gui;
+}
 
 
