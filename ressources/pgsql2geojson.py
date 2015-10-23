@@ -27,7 +27,7 @@ def formatGeo(d):
 
 
 # conv
-call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', 'PG:host=localhost dbname=gis2 user=postgres password=', '-sql', "select * from planet_osm_line WHERE osm_id>=0"])
+call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', 'PG:host=localhost dbname=gis2 user=postgres password=', '-sql', "select * from planet_osm_line WHERE osm_id>=0 AND power IS NULL AND barrier IS NULL AND boundary IS NULL"])
 call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', 'PG:host=localhost dbname=gis2 user=postgres password=', '-sql', 'select * from planet_osm_polygon'])
 
 json_data_lines = json.load(open('out_lines.json'))

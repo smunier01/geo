@@ -1,6 +1,7 @@
 /* global ol, Routing */
 /* jshint sub: true */
 
+
 const PHP_ROOT = 'http://localhost/geo/php/';
 
 /**
@@ -47,17 +48,12 @@ var AppOffline = function (imgMode) {
     this.routing = undefined;
 
     /**
-     *  @type {boolean}
-     */
-    this.adminMode = true;
-
-    /**
      *  @type {Object.<string, Array.<ol.Features>>}
      */
     this.cache = [];
 
     /**
-     *  Transforme ol.layer.Vector en ol.layer.Image (surement plus rapide)
+     *  Transforme ol.layer.Vector en ol.layer.Image (surement plus rapide, mais pas certain)
      *  @type {boolean}
      */
     this.imgMode = imgMode;
@@ -68,6 +64,8 @@ var AppOffline = function (imgMode) {
     this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'},
 
     /**
+     *  Reference vers la base de donnée local, permet d'enregistré les modifications en attendant
+     *  de pouvoir les envoyer vers postgis
      *  @type {MyStorage}
      */
     this.storage = new MyStorage();
@@ -101,80 +99,121 @@ var AppOffline = function (imgMode) {
     this.GREY1 = "#CECECE";
 
     /**
-     *
+     *  @type {string}
+     *  @default
      */
-    var styleFunctionGeojson = function (feature, resolution) {
+    this.ROAD_FOOT = "#D19B9B";
 
-        // Le type [way, node, relation]. On s'en fiche un peu, presque tout ont pour type 'way'
-        //var fType = feature.get('id').split('/')[0];
+    /**
+     *  @type {string}
+     *  @default
+     */
+    this.ROAD_CYCLE = "#93CF98";
 
-        // Le type de géométrie [Polygon, MultiPolygon, LineString, Point]
-        var fGeomType = feature.getGeometry().getType();
+    /**
+     *  @type {string}
+     *  @default
+     */
+    this.ROAD_BORDER = "#737373";
+
+    /**
+     *  @type {string}
+     *  @default
+     */
+    this.ROAD_TRAM = "#FFFBBF";
+
+    /**
+     *  @type {string}
+     *  @default
+     */
+    this.ROAD_PRIMARY = "#FAD9B6";
+    
+    /**
+     * Fonction de gestion des styles pour les routes.
+     */
+    var styleFunctionRoads = function (feature, resolution) {
 
 	var s = [];
+
+	var primary = {'primary': 1, 'secondary': 1, 'primary_link': 1, 'secondary_link': 1, 'tertiary_link' : 1, 'trunk': 1, 'trunk_link': 1, 'tertiary': 1};
+
+	var tertiary = {'service': 1};
+
+	var tram = {'tram': 1};
+
+	var foot = {'footway': 1, 'path': 1, 'steps': 1};
+
+	var cycle = {'cycleway': 1};
+
+	var highway = feature.get('highway');
+	var railway = feature.get('railway');
 	
-        if (fGeomType == "Polygon" && feature.get('building') !== undefined) {
-
-            s = s.concat(that.styles['building']);
-
-        } else if (fGeomType == "Polygon" && feature.get('amenity') == "parking") {
-
-            s = s.concat(that.styles['parking']);
-	    
-	} else if (feature.get('highway') == 'footway' || feature.get('highway') == 'path') {
+        if (highway in foot) {
 
 	    s = s.concat(that.styles['road_footway']);
 
-	} else if (feature.get('highway') == 'cycleway') {
+	} else if (highway in cycle) {
 
 	    s = s.concat(that.styles['road_cycleway']);
 	    
-	} else if (feature.get('railway') == 'tram') {
+	} else if (railway in tram) {
 
 	    s = s.concat(that.styles['road_tram']);
 
-	} else if (feature.get('highway') == 'primary') {
+	} else if (highway in primary) {
 
-	    s = s.concat(that.styles['road_secondary']);
+	    s = s.concat(that.styles['road_primary']);
+
+	} else if (highway in tertiary) {
+
+	    s = s.concat(that.styles['road_tertiary']);
 	    
-        } else if (feature.get('highway') == 'secondary') {
-
-	    s = s.concat(that.styles['road_secondary']);
-
-	} else if (feature.get('highway') == 'primary_link' || feature.get('highway') == 'secondary_link' || feature.get('highway') == 'tertiary_link') {
-
-	    s = s.concat(that.styles['road_secondary']);
-
-	} else if (parseInt(feature.get('lanes')) >= 2) {
+	} else {
 	    
-	    s = s.concat(that.styles['road_secondary']);
-	    
-	} else if (feature.get('highway') == 'trunk' || feature.get('highway') == 'trunk_link') {
-
-	    s = s.concat(that.styles['road_secondary']);
-	    
-	} else if (feature.get('highway') == 'tertiary') {
-
-	    s = s.concat(that.styles['road_secondary']);
-
-	} else if (feature.get('power') !== undefined || feature.get('barrier') !== undefined || feature.get('boundary') !== undefined) {
-
-	    s = s.concat(that.styles['hidden']);
-
-        } else if (fGeomType == "LineString") {
-	    
-            s = s.concat(that.styles['road1'](feature));
+            s = s.concat(that.styles['road_normal']);
 	   
-        } else {
-	    
-            s.concat(that.styles['hidden']);
+        }
+	/*
+	if (feature.get('oneway') == 'yes') {
+	    s = s.concat(that.styles['road_oneway']);
 	}
-
+	*/
 	return s;
-    }
+	
+    };
+    
+    /**
+     * Fonction de gestion des styles pour les batiments.
+     */
+    var styleFunctionBuildings = function (feature, resolution) {
 
+	var s = [];
 
-    this.initStyles();
+	if (feature.get('wood') !== undefined || feature.get('landuse') == 'forest' || feature.get('natural') == 'wood' || feature.get('leisure') == 'park') {
+
+	    s = s.concat(that.styles['wood']);
+
+	} else if (feature.get('landuse') == 'grass' || feature.get('leisure') == 'common') {
+
+	    s = s.concat(that.styles['grass']);
+	    
+	} else if (feature.get('landuse') == 'basin') {
+
+	    s = s.concat(that.styles['water']);
+
+	} else if (feature.get('building') !== undefined) {
+
+            s = s.concat(that.styles['building']);
+
+        } else if (feature.get('amenity') == "parking") {
+
+            s = s.concat(that.styles['parking']);
+	    
+	}
+	
+	return s;
+	
+    };
 
     //
     // Map Def
@@ -195,37 +234,17 @@ var AppOffline = function (imgMode) {
     // Sources & Layers
     //
 
-    if (!this.imgMode) {
-	
-	this.layers['mapVectors'] = {
-	    'layer': new ol.layer.Vector({
-		title: 'Roads Vector Layer',
-		source: new ol.source.Vector({
-		    url: 'ressources/lines.geojson',
-		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
-		}),
-		style: styleFunctionGeojson
+    this.layers['roadVectors'] = {
+	'layer': new ol.layer.Vector({
+	    title: 'Roads Vector Layer',
+	    source: new ol.source.Vector({
+		url: 'ressources/lines.geojson',
+		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
 	    }),
-	    'order': 10
-	};
-
-	
-    } else {
-	
-	this.layers['mapVectors'] = {
-	    'layer': new ol.layer.Image({
-		title: 'Roads Vector Layer',
-		source: new ol.source.ImageVector({
-		    source: new ol.source.Vector({
-			url: 'ressources/map.geojson',
-			format: new ol.format.GeoJSON()
-		    }),
-		    style: styleFunctionGeojson
-		})
-	    }),
-	    'order': 10
-	};
-    }
+	    style: styleFunctionRoads
+	}),
+	'order': 10
+    };
 
     this.layers['buildingsVectors'] = {
 	'layer': new ol.layer.Vector({
@@ -234,7 +253,7 @@ var AppOffline = function (imgMode) {
 		url: 'ressources/polygons.geojson',
 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
 	    }),
-	    style: styleFunctionGeojson
+	    style: styleFunctionBuildings
 	}),
 	'order': 9
     };
@@ -250,22 +269,29 @@ var AppOffline = function (imgMode) {
 
 	    // met à jour la liste des batiments dans le menu
 	    that.gui.updateBuildingList(that.getBuildingList());
+
+	    // met à jour les features de la source si il y a des modifs en localStorage
+	    that.updateFeaturesFromStorage(source);
 	}
     });
 
     // callback pour lines.json
-    var key2 = this.layers['mapVectors'].layer.getSource().on('change', function() {
+    var key2 = this.layers['roadVectors'].layer.getSource().on('change', function() {
 
-	var source = that.layers['mapVectors'].layer.getSource();
+	var source = that.layers['roadVectors'].layer.getSource();
 	
 	if (source.getState() == 'ready') {
 
 	    source.unByKey(key2);
 
+	    // met à jour les features de la source si il y a des modifs en localStorage
 	    that.updateFeaturesFromStorage(source);
-	    
+
 	}
+	
     });
+
+    this.initStyles();
 
     this.layers['nodes'] = {
 	'layer': new ol.layer.Vector({
@@ -323,6 +349,14 @@ var AppOffline = function (imgMode) {
 	'order': 20
     };
 
+    this.layers['osm'] = {
+	'layer': new ol.layer.Tile({
+	    source: new ol.source.MapQuest({layer: 'osm'}),
+	    visible: false
+	}),
+	'order': 2
+    };
+    
     this.addAllLayers();
 
     //
@@ -333,6 +367,7 @@ var AppOffline = function (imgMode) {
 
     this.routing.init("ressources/routing.json").then(function() {
 
+	// Met les noeuds du graphe de routing dans le layer 'nodes'
 	that.displayPoints(that.layers['nodes'].layer.getSource(), that.routing.geomNodes);
 
     });
@@ -368,7 +403,7 @@ var AppOffline = function (imgMode) {
 	if (e.which == 13) {
 
 	    var s1 = that.layers['streetNamesGS'].layer.getSource();
-	    
+
 	    that.map.updateSize();
 	    s1.changed();
 	    s1.setTileUrlFunction(s1.getTileUrlFunction());
@@ -490,7 +525,7 @@ var AppOffline = function (imgMode) {
 	
 	that.storage.addToStorage('edit', {'osm_id' : feature2.getId(), 'highway': 'secondary'});
 
-	that.updateFeaturesFromStorage(that.layers['mapVectors'].layer.getSource());
+	that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
 	
 
 	var edges = that.routing.splitEdge(new_node, edge);
@@ -505,7 +540,8 @@ var AppOffline = function (imgMode) {
 };
 
 /**
- * 
+ *  @param {ol.coordinate} coord
+ *  @returns {Object} route le plus proche de coord
  */
 AppOffline.prototype.getClosestRoad = function(coord) {
 
@@ -526,10 +562,11 @@ AppOffline.prototype.getClosestRoad = function(coord) {
     
     return minR;
     
-}
+};
 
 /**
- *  
+ *  @param {ol.coordinate} coord
+ *  @returns {Object} parking le plus proche de coord
  */
 AppOffline.prototype.getClosestParking = function(coord) {
 
@@ -551,6 +588,9 @@ AppOffline.prototype.getClosestParking = function(coord) {
     return minP;
 };
 
+/**
+ *  @returns {Array.<ol.Feature>} liste des routes
+ */
 AppOffline.prototype.getRoadList = function() {
 
     var roads = [];
@@ -563,7 +603,7 @@ AppOffline.prototype.getRoadList = function() {
 	
 	this.cache['roads'] = [];
 
-	var l = this.layers['mapVectors'].layer;
+	var l = this.layers['roadVectors'].layer;
 	var source = this.imgMode ? l.getSource().getSource() : l.getSource();
 
 	source.forEachFeature(function(f) {
@@ -583,14 +623,16 @@ AppOffline.prototype.getRoadList = function() {
     
 };
 
+/**
+ *  @returns {Array.<ol.Feature>} liste des parkings
+ */
 AppOffline.prototype.getParkingList = function() {
 
     var parkings = [];
 
     var that = this;
 
-    var l = this.layers['buildingsVectors'].layer;
-    var source = this.imgMode ? l.getSource().getSource() : l.getSource();
+    var source = this.layers['buildingsVectors'].layer.getSource();
     
     if (this.cache['parkings'] === undefined) {
 	
@@ -669,17 +711,18 @@ AppOffline.prototype.displayPoints = function(source, data) {
 };
 
 /**
- *  @returns {??} liste des batiments
+ *  Retourne la liste des batiments
+ *  @returns {Array.<Object>} liste des batiments
  */
 AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
 
-    var source = this.imgMode ? this.layers['buildingsVectors'].layer.getSource().getSource() : this.layers['buildingsVectors'].layer.getSource();
+    var source = this.layers['buildingsVectors'].layer.getSource();
     
     source.forEachFeature(function(f) {
 
-	if (f.getGeometry().getType() == "Polygon" && f.get('building') != undefined) {
+	if (f.get('building') != undefined) {
 	    buildings.push(f.getProperties());
 	}
 	
@@ -692,17 +735,22 @@ AppOffline.prototype.getBuildingList = function() {
 /**
  *  Met à jour la liste des features en fonction de se qu'il y a en local storage
  *  @param {ol.source.Vector} source source to update
+ *  @returns {Number} nombre de features mis à jour
  */
 AppOffline.prototype.updateFeaturesFromStorage = function(source) {
     
     var featuresToEdit = this.storage.get('edit');
 
+    if (!featuresToEdit) {
+	return 0;
+    }
+    
     if (!(featuresToEdit instanceof Array)) {
 	featuresToEdit = [featuresToEdit];
     }
 
     for (var f of featuresToEdit) {
-	
+
 	var feature = source.getFeatureById(f['osm_id']);
 
 	if (feature) {
@@ -711,8 +759,11 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
 	    }
 	}
     }
-}
+};
 
+/**
+ *
+ */
 AppOffline.prototype.initStyles = function() {
 
     var that = this;
@@ -739,48 +790,73 @@ AppOffline.prototype.initStyles = function() {
 	opacity: 0.8
     });
 
+    this.styles['grass'] = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: "#CCF5BF"
+        }),
+	zIndex: -10
+    });
+
+    this.styles['wood'] = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: "#A1D490"
+        }),
+	zIndex: -9
+    });
+
+    this.styles['water'] = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: "#BFE7F5"
+        })
+    });
+
     this.styles['road_footway'] = new ol.style.Style({
         stroke: new ol.style.Stroke({
-            color: "#D19B9B",
+            color: that.ROAD_FOOT,
             width: 1,
 	    lineDash: [4, 4]
         })
     });
 
-    this.styles['road_primary'] = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: "#D9D9D9",
-            width: 5
-        })
-    });
-
-    this.styles['road_secondary'] = [
+    this.styles['road_primary'] = [
 	new ol.style.Style({
             stroke: new ol.style.Stroke({
-		color: "#737373",
-		width: 4
+		color: that.ROAD_BORDER,
+		width: 5
             }),
-	    zIndex: 8
+	    zIndex: 9
 	}),
 	new ol.style.Style({
             stroke: new ol.style.Stroke({
-		color: "#FAD9B6",
-		width: 3
+		color: that.ROAD_PRIMARY,
+		width: 4
             }),
-	    zIndex: 9
+	    zIndex: 10
 	})
     ];
 
-    this.styles['road_tertiary'] = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: "#FFFFFF",
-            width: 2
-        })
-    });
+    this.styles['road_tertiary'] =[
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: that.ROAD_BORDER,
+		width: 3
+            }),
+	    zIndex: 9
+	}),
+	new ol.style.Style({
+	    
+            stroke: new ol.style.Stroke({
+		color: "white",
+		width: 2
+            }),
+	    zIndex: 10
+	})
+    ];
+
 
     this.styles['road_cycleway'] = new ol.style.Style({
         stroke: new ol.style.Stroke({
-            color: "#93CF98",
+            color: that.ROAD_CYCLE,
             width: 2,
 	    lineDash: [4, 4]
         })
@@ -788,34 +864,45 @@ AppOffline.prototype.initStyles = function() {
 
     this.styles['road_oneway'] = new ol.style.Style({
         stroke: new ol.style.Stroke({
-            color: "#BA3C57",
-            width: 3
-        })
+            color: "red",
+            width: 1
+        }),
+	zIndex: 15
     });
 
-    this.styles['road1'] = function(feature) {
-	return new ol.style.Style({
+    this.styles['road_normal'] = [
+
+	new ol.style.Style({
+            stroke: new ol.style.Stroke({
+		color: that.ROAD_BORDER,
+		width: 5
+            }),
+	    zIndex: 9
+	}),
+	new ol.style.Style({
+	    
             stroke: new ol.style.Stroke({
 		color: "white",
-		width: 3
-            })
-	});
-    };
+		width: 4
+            }),
+	    zIndex: 10
+	})
+    ];
 
     this.styles['road_tram'] = [
 	new ol.style.Style({
             stroke: new ol.style.Stroke({
-		color: "#737373",
-		width: 4
+		color: that.ROAD_BORDER,
+		width: 5
             }),
-	    zIndex: 10
+	    zIndex: 19
 	}),
 	new ol.style.Style({
             stroke: new ol.style.Stroke({
-		color: "#FFFBBF",
-		width: 3
+		color: that.ROAD_TRAM,
+		width: 4
             }),
-	    zIndex: 10
+	    zIndex: 20
 	})
     ];
 	
@@ -850,7 +937,7 @@ AppOffline.prototype.initStyles = function() {
 	}),
 	stroke: new ol.style.Stroke({
 	    color: that.COLOR1,
-	    width: 2
+	    width: 4
 	})
     });
 
@@ -861,7 +948,7 @@ AppOffline.prototype.initStyles = function() {
 */
 AppOffline.prototype.setGui = function(gui) {
     this.gui = gui;
-}
+};
 
 function sortByKey(array, key) {
     return array.sort(function(a, b) {
