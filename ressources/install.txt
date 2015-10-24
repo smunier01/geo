@@ -1,0 +1,53 @@
+Juste pour pas oublier les truc à faire
+
+#########################################
+
+1 -- Creation de la base de données avec les truc openstreetmap
+
+1.1 Création d'une base de données
+
+  > createdb gis
+
+1.2 Activer les extensions postgis
+
+  > psql -d gis
+  > CREATE EXTENSION postgis;
+  > CREATE EXTENSION postgis_topology;
+  > CREATE EXTENSION fuzzystrmatch;
+  > CREATE EXTENSION postgis_tiger_geocoder;
+
+1.3 osm2pgsql
+
+  > osm2pgsql -s -U postgres -d gis /srv/http/www/gis/ressources/map.osm
+
+2 -- Configuration de GeoServer
+
+Add New Store > PostGIS > Publish line & polygons
+
+3 -- pgRouting
+
+3.1 Création d'une table de routing
+
+(c'est surement possible d'utiliser la même table, mais je préfére pas essayer!)
+
+  > createdb routing
+  > psql -d routing
+  > CREATE EXTENSION postgis;
+  > CREATE EXTENSION pgrouting;
+
+3.2 osm2pgrouting
+
+  > osm2pgrouting -file map.osm -conf mapconfig.xml -dbname routing -user postgres -clean
+
+3.3 fonction d'exemple d'utilisation de pgrouting (voir fichier fromAtoB.sql, j'ai recup ça ici : http://workshop.pgrouting.org/chapters/wrapper.html)
+
+  > psql -U postgres -d routing -f ./ressources/fromAtoB.sql
+
+3.4 GeoServer
+
+voir : http://workshop.pgrouting.org/chapters/geoserver.html
+
+
+ 
+
+  

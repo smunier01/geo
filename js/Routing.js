@@ -1,3 +1,4 @@
+/* global ol, Graph, $ */
 
 /**
  * Routing
@@ -49,33 +50,33 @@ Routing.prototype.init = function(file) {
 
     this.graph = new Graph;
 
-    var d = jQuery.Deferred();
+    var d = $.Deferred();
 
     var that = this;
     
     $.getJSON(file).done(function(result) {
 
-	$.each(result, function(i, field) {
+        $.each(result, function(i, field) {
 
-	    // On remplis notre graph pour appliquer les differents algorithmes nécessaire
-	    that.graph.addNode(field.source);
-	    that.graph.addNode(field.target);
-	    // Le graph est orienté, mais nos routes ne le sont pas.
-	    that.graph.addEdge(field.source, field.target, field.length, field.gid);
-	    that.graph.addEdge(field.target, field.source, field.length, field.gid);
-	    
-	    // on enregistre les données géométrique nous intéressant pour l'affichage
-	    that.geomNodes[field.source] = [field.x1, field.y1];
-	    that.geomNodes[field.target] = [field.x2, field.y2];
+            // On remplis notre graph pour appliquer les differents algorithmes nécessaire
+            that.graph.addNode(field.source);
+            that.graph.addNode(field.target);
+            // Le graph est orienté, mais nos routes ne le sont pas.
+            that.graph.addEdge(field.source, field.target, field.length, field.gid);
+            that.graph.addEdge(field.target, field.source, field.length, field.gid);
+            
+            // on enregistre les données géométrique nous intéressant pour l'affichage
+            that.geomNodes[field.source] = [field.x1, field.y1];
+            that.geomNodes[field.target] = [field.x2, field.y2];
 
-	    that.geomRoutes[field.gid] = [field.source, field.target, field.geom, field.osm_id];
+            that.geomRoutes[field.gid] = [field.source, field.target, field.geom, field.osm_id, field.length];
 
-	    that.isRouting[field.osm_id] = true;
-	    
-	});
+            that.isRouting[field.osm_id] = true;
+            
+        });
 
-	d.resolve();
-	
+        d.resolve();
+
     });
 
     return d.promise();
@@ -93,65 +94,64 @@ Routing.prototype.dijkstra = function(start, stop) {
     var visitedNodes = [];
 
     visitedNodes[start] = {
-	"dst" : 0,
-	"father" : null,
-	"path" : null
+        'dst' : 0,
+        'father' : null,
+        'path' : null
     };
 
     do {
-	if( Object.keys(visitedNodes).length == 0){
-	    return [];
-	}
-	var selectedNode;
-	var dst = Infinity;
+        if( Object.keys(visitedNodes).length == 0){
+            return [];
+        }
+        var selectedNode;
+        var dst = Infinity;
 
-	for (node in visitedNodes) {
-	    if (visitedNodes[node].dst < dst) {
-		selectedNode = node;
-		dst = visitedNodes[node].dst;
-	    }
-	}
+        for (var node in visitedNodes) {
+            if (visitedNodes[node].dst < dst) {
+                selectedNode = node;
+                dst = visitedNodes[node].dst;
+            }
+        }
 
-	var neighbors = this.graph.getNode(selectedNode)._outEdges;
+        var neighbors = this.graph.getNode(selectedNode)._outEdges;
 
-	for (neighbor in neighbors) {
-	    
-	    if (neighbor in validatedNodes) {
-		continue;
-	    }
-	    
-	    dst = visitedNodes[selectedNode].dst + neighbors[neighbor].weight;
+        for (var neighbor in neighbors) {
+            
+            if (neighbor in validatedNodes) {
+                continue;
+            }
+            
+            dst = visitedNodes[selectedNode].dst + neighbors[neighbor].weight;
 
-	    if (!(neighbor in visitedNodes)) {
-		
-		visitedNodes[neighbor] = {
-		    "dst" : dst,
-		    "father" : selectedNode,
-		    "path" : neighbors[neighbor].gid
-		};
-	    } else if (visitedNodes[neighbor].dst > dst) {
-		visitedNodes[neighbor] = {
-		    "dst" : dst,
-		    "father" : selectedNode,
-		    "path" : neighbors[neighbor].gid
-		};
-	    }
+            if (!(neighbor in visitedNodes)) {
 
-	}
-	validatedNodes[selectedNode] = visitedNodes[selectedNode];
-	delete visitedNodes[selectedNode];
+                visitedNodes[neighbor] = {
+                    'dst' : dst,
+                    'father' : selectedNode,
+                    'path' : neighbors[neighbor].gid
+                };
+            } else if (visitedNodes[neighbor].dst > dst) {
+                visitedNodes[neighbor] = {
+                    'dst' : dst,
+                    'father' : selectedNode,
+                    'path' : neighbors[neighbor].gid
+                };
+            }
+
+        }
+        validatedNodes[selectedNode] = visitedNodes[selectedNode];
+        delete visitedNodes[selectedNode];
 
     } while (selectedNode != stop);
 
     var path = [];
     selectedNode = stop;
     
-    do{
-	path.unshift(validatedNodes[selectedNode].path);
-	selectedNode = validatedNodes[selectedNode].father;
-	
-    } while(validatedNodes[selectedNode].father != null);
+    do {
+        path.unshift(validatedNodes[selectedNode].path);
+        selectedNode = validatedNodes[selectedNode].father;
 
+    } while(validatedNodes[selectedNode].father != null);
 
     return path;
 };
@@ -164,55 +164,57 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
 
     for (var e of edges) {
 
-	var f = (new ol.format.WKT()).readFeature(e[2], this.app.to3857).getGeometry().getCoordinates();
+        var f = (new ol.format.WKT()).readFeature(e[2], this.app.to3857).getGeometry().getCoordinates();
 
-	// on prend les segments un par un
-	for (var i = 0; i < (f.length - 1); i++) {
+        // on prend les segments un par un
+        for (var i = 0; i < (f.length - 1); i++) {
 
-	    var a = f[i];
-	    var b = f[i + 1];
+            var a = f[i];
+            var b = f[i + 1];
 
-	    // produit croisé pour voir si les segments sont colinéaires
-	    var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+            // produit croisé pour voir si les segments sont colinéaires
+            var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
 
-	    // produit scalaire
-	    var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
+            // produit scalaire
+            var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
 
-	    // distance entre A et C
-	    var dAC = Math.sqrt( (a[0] - c[0]) * (a[0] - c[0]) + (a[1] - c[1]) * (a[1] - c[1]) );
+            // distance entre A et C
+            var dAC = Math.sqrt( (a[0] - c[0]) * (a[0] - c[0]) + (a[1] - c[1]) * (a[1] - c[1]) );
 
-	     // distance entre A et B
-	    var dAB = Math.sqrt( (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) );
+            // distance entre A et B
+            var dAB = Math.sqrt( (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) );
 
-	     // distance entre B et C
-	    var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
+            // distance entre B et C
+            var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
 
-	    // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
-	    if ( Math.abs(cross) < 10.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
-		console.log('ok');
-		return e;
-	    }
-	}
+            // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
+            if ( Math.abs(cross) < 10.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
+                return e;
+            }
+        }
     }
 
     return edges[0];
     
-}
+};
 
+/**
+ *
+ */
 Routing.prototype.getEdgesFromOsmId = function(osmId) {
     var edges = [];
 
     for (var e in this.geomRoutes) {
-	
-	if (this.geomRoutes[e][3] == osmId) {
-	    edges.push(this.geomRoutes[e]);
-	}
+
+        if (this.geomRoutes[e][3] == osmId) {
+            edges.push(this.geomRoutes[e]);
+        }
     }
 
-  
+    
     return edges;
-}
+};
 
 /**
  *  Sépare un arc du graphe en deux arc à partir du noeud
@@ -233,44 +235,44 @@ Routing.prototype.splitEdge = function(node, edge) {
     // on prend les segments un par un
     for (var i = 0; i < f.length - 1; i++) {
 
-	var a = f[i];
-	var b = f[i + 1];
+        var a = f[i];
+        var b = f[i + 1];
 
-	// produit croisé pour voir si les segments sont colinéaires
-	var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+        // produit croisé pour voir si les segments sont colinéaires
+        var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
 
-	// produit scalaire
-	var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
+        // produit scalaire
+        var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
 
-	// distance entre A et C
-	var dAC = Math.sqrt( (a[0] - c[0]) * (a[0] - c[0]) + (a[1] - c[1]) * (a[1] - c[1]) );
+        // distance entre A et C
+        var dAC = Math.sqrt( (a[0] - c[0]) * (a[0] - c[0]) + (a[1] - c[1]) * (a[1] - c[1]) );
 
-	// distance entre A et B
-	var dAB = Math.sqrt( (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) );
+        // distance entre A et B
+        var dAB = Math.sqrt( (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) );
 
-	// distance entre B et C
-	var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
+        // distance entre B et C
+        var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
-	// Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
-	if ( Math.abs(cross) < 10 && (dAC < dAB && dBC < dAB) ) {
+        // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
+        if ( Math.abs(cross) < 10 && (dAC < dAB && dBC < dAB) ) {
 
-	    foundNode = true;
-	    
-	    edge1Geom.push(f[i]);
-	    edge1Geom.push(c);
-	    edge2Geom.push(c);
-	    
-	}
+            foundNode = true;
+            
+            edge1Geom.push(f[i]);
+            edge1Geom.push(c);
+            edge2Geom.push(c);
+            
+        }
 
-	if (!foundNode) {
+        if (!foundNode) {
 
-	    edge1Geom.push(f[i + 1]);
+            edge1Geom.push(f[i + 1]);
 
-	} else {
+        } else {
 
-	    edge2Geom.push(f[i + 1]);
+            edge2Geom.push(f[i + 1]);
 
-	}
+        }
     }
 
     var wkt1 = (new ol.format.WKT()).writeFeature(new ol.Feature(new ol.geom.LineString(edge1Geom)), this.app.to3857);
@@ -282,7 +284,21 @@ Routing.prototype.splitEdge = function(node, edge) {
     var edge2 = [edge[0] + '/' + edge[1], edge[1], wkt2, edge[3]];
     
     return [edge1, edge2];
-}
+};
+
+/**
+ *
+ */
+Routing.prototype.getRouteLength = function(route) {
+
+    var totalLength = 0;
+
+    for (var e of route) {
+        totalLength += this.geomRoutes[e][4];
+    }
+
+    return totalLength;
+};
 
 /*
  * Récupére les informations géometriques d'une route.
@@ -292,34 +308,32 @@ Routing.prototype.splitEdge = function(node, edge) {
 Routing.prototype.getGeometryFromRoute = function(route) {
 
     var features = [];
-    var x1, y1, x2, y2;
+    var x1, y1;
     var routeGeom, edge;
     
     for (var i = 0; i < (route.length); i++) {
 
-	edge = this.geomRoutes[route[i]];
-	
-	x1 = this.geomNodes[edge[0]][0];
-	y1 = this.geomNodes[edge[0]][1];
-	x2 = this.geomNodes[edge[1]][0];
-	y2 = this.geomNodes[edge[1]][1];
-	
-	features.push(new ol.Feature({
-	    'geometry': new ol.geom.Point(
-		ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
-	}));
-	
-	routeGeom = edge[2];
+        edge = this.geomRoutes[route[i]];
 
-	var f = (new ol.format.WKT()).readFeature(routeGeom);
+        x1 = this.geomNodes[edge[0]][0];
+        y1 = this.geomNodes[edge[0]][1];
 
-	f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
-	
-	features.push(f);
+        features.push(new ol.Feature({
+            'geometry': new ol.geom.Point(
+                ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
+        }));
+
+        routeGeom = edge[2];
+
+        var f = (new ol.format.WKT()).readFeature(routeGeom);
+        console.log(f.getGeometry().getCoordinates());
+        f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
+
+        features.push(f);
     }
 
     return features;
-}
+};
 
 
 

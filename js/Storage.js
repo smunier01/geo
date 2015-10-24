@@ -3,8 +3,8 @@
  *
  *  Exemple d'utilisation :
  *
- *    > addToStorage('edit', {'osm_id' : 1, 'highway': 'secondary'});
- *    > addToStorage('edit', {'osm_id' : 2, 'highway': 'primary'});
+ *    > add('edit', {'osm_id' : 1, 'highway': 'secondary'});
+ *    > add('edit', {'osm_id' : 2, 'highway': 'primary'});
  *  
  *  Indiquera que l'attribut 'highway' des objet 1 & 2 doivent être respectivement modifier en
  *  'secondary' & 'primary'
@@ -13,7 +13,7 @@
  * 
  *  returns : [{'osm_id' : 1, 'highway': 'secondary'}, {'osm_id' : 2, 'highway': 'primary'}];
  *
- *  A chaque lancement de l'application, ces données seront appliqué.
+ *  A chaque lancement de l'application, ces modif seront appliqué aux objects OpenLayers.
  *  
  *  On peux ensuite enregistrer ces modification dans la base de données postgis
  * 
@@ -31,37 +31,39 @@ var MyStorage = function() {
  *  Pour le moment seulement 'edit' à été implémenté
  *  @param {Object} data valeur
  */
-MyStorage.prototype.addToStorage = function(key, data) {
+MyStorage.prototype.add = function(key, data) {
+
+    var dataJSON, olddata, newdata;
     
     if (localStorage.getItem(key)) {
 
-	var olddata = JSON.parse(localStorage.getItem(key));
-	var newdata = null;
-	
-	if (olddata instanceof Array){
+        olddata = JSON.parse(localStorage.getItem(key));
+        newdata = null;
+
+        if (olddata instanceof Array){
             olddata.push(data);
             newdata = olddata;
-	} else {
+        } else {
             newdata = [olddata, data];
-	}
-	var dataJSON = JSON.stringify(newdata);
-	localStorage.setItem(key, dataJSON);
+        }
+        dataJSON = JSON.stringify(newdata);
+        localStorage.setItem(key, dataJSON);
     }
     else {
-	var dataJSON = JSON.stringify(data);
-	localStorage.setItem(key, dataJSON);
+        dataJSON = JSON.stringify(data);
+        localStorage.setItem(key, dataJSON);
     }   
 };
 
 /**
- *
+ *  @returns {Array.<Object>} valeur 
  */
 MyStorage.prototype.get = function(key) {
     return JSON.parse(localStorage.getItem(key));
 };
 
 /**
- *  
+ * Enregistre les modif dans la base de données
  */
 MyStorage.prototype.save = function() {
 
@@ -74,4 +76,4 @@ MyStorage.prototype.save = function() {
  */
 MyStorage.prototype.removeUseless = function() {
 
-}
+};
