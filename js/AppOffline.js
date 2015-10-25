@@ -7,7 +7,7 @@ const PHP_ROOT = 'http://localhost/geo/php/';
  *
  * @class
  */
-var AppOffline = function (imgMode) {
+var AppOffline = function () {
 
     var that = this;
 
@@ -49,12 +49,6 @@ var AppOffline = function (imgMode) {
      *  @type {Object.<string, Array.<ol.Features>>}
      */
     this.cache = [];
-
-    /**
-     *  Transforme ol.layer.Vector en ol.layer.Image (surement plus rapide, mais pas certain)
-     *  @type {boolean}
-     */
-    this.imgMode = imgMode;
 
     /**
      *  @type {ol.ProjectionLike}
@@ -599,8 +593,7 @@ AppOffline.prototype.getRoadList = function() {
 
         this.cache['roads'] = [];
 
-        var l = this.layers['roadVectors'].layer;
-        var source = this.imgMode ? l.getSource().getSource() : l.getSource();
+        var source = this.layers['roadVectors'].layer.getSource();
 
         source.forEachFeature(function(f) {
 
@@ -652,6 +645,7 @@ AppOffline.prototype.getParkingList = function() {
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
+ *
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
  */
 AppOffline.prototype.addAllLayers = function() {
@@ -680,6 +674,7 @@ AppOffline.prototype.addAllLayers = function() {
 
 /**
  *  Change la visibilitéé d'un layer
+ *
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
@@ -689,6 +684,7 @@ AppOffline.prototype.setVisible = function(name, value) {
 
 /**
  *  Vide la source et y ajoute la série de points contenu dans data
+ *
  *  @param {ol.source.Vector} source source où afficher les points
  *  @param {Array.<Array.<Number>>} data array contenant la liste des points
  */

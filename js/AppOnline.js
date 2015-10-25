@@ -186,9 +186,7 @@ AppOnline.prototype.getFeaturesFromClick = function(event) {
         }
 
     }
-
-    
-}
+};
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
@@ -212,8 +210,8 @@ AppOnline.prototype.addAllLayers = function() {
 
     sortByKey(tmp, 'order');
 
-    for (var l of tmp) {
-        this.map.addLayer(l.layer);
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
     }
 };
 
@@ -239,6 +237,6 @@ function sortByKey(array, key) {
  */
 AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
-}
+};
 
 

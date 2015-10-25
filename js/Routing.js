@@ -53,25 +53,35 @@ Routing.prototype.init = function(file) {
     var d = $.Deferred();
 
     var that = this;
-    
+
     $.getJSON(file).done(function(result) {
 
         $.each(result, function(i, field) {
 
+            var source = parseInt(field.source);
+            var target = parseInt(field.target);
+            var length = parseFloat(field.length);
+            var gid = parseInt(field.gid);
+            var x1 = parseFloat(field.x1);
+            var x2 = parseFloat(field.x2);
+            var y1 = parseFloat(field.y1);
+            var y2 = parseFloat(field.y2);
+            var osm_id = parseInt(field.osm_id);
+            
             // On remplis notre graph pour appliquer les differents algorithmes nécessaire
-            that.graph.addNode(field.source);
-            that.graph.addNode(field.target);
+            that.graph.addNode(source);
+            that.graph.addNode(target);
             // Le graph est orienté, mais nos routes ne le sont pas.
-            that.graph.addEdge(field.source, field.target, field.length, field.gid);
-            that.graph.addEdge(field.target, field.source, field.length, field.gid);
+            that.graph.addEdge(source, target, length, gid);
+            that.graph.addEdge(target, source, length, gid);
             
             // on enregistre les données géométrique nous intéressant pour l'affichage
-            that.geomNodes[field.source] = [field.x1, field.y1];
-            that.geomNodes[field.target] = [field.x2, field.y2];
+            that.geomNodes[source] = [x1, y1];
+            that.geomNodes[target] = [x2, y2];
 
-            that.geomRoutes[field.gid] = [field.source, field.target, field.geom, field.osm_id, field.length];
+            that.geomRoutes[gid] = [source, target, field.geom, osm_id, length];
 
-            that.isRouting[field.osm_id] = true;
+            that.isRouting[osm_id] = true;
             
         });
 
@@ -326,7 +336,7 @@ Routing.prototype.getGeometryFromRoute = function(route) {
         routeGeom = edge[2];
 
         var f = (new ol.format.WKT()).readFeature(routeGeom);
-        console.log(f.getGeometry().getCoordinates());
+
         f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
 
         features.push(f);
