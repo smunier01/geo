@@ -1,5 +1,5 @@
-Juste pour pas oublier les truc à faire
-
+#########################################
+ Juste pour pas oublier les truc à faire
 #########################################
 
 1 -- Creation de la base de données avec les truc openstreetmap
@@ -48,6 +48,23 @@ Add New Store > PostGIS > Publish line & polygons
 voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
 
- 
+###########################################
+              Truc offline
+###########################################
 
-  
+1 - Génération des fichiers lines.geojson et polygon.geojson
+
+    > ./pgsql2geojson.py -d "PG:host=localhost dbname=gis user=postgres"
+
+    ce script execute la commande suivante puis enleve les valeurs null :
+
+    > ogr2ogr -f GeoJSON out_lines.json "PG:host=localhost dbname=gis user=postgres password=" -sql "select * from planet_osm_line"
+
+2 - Génération de routing.json
+
+    > ./genRouting.py -o ./routing.json -d "PG:host=localhost dbname=routing user=postgres"
+
+    OU
+
+    > ogr2ogr -f CSV out.csv "PG:host=localhost dbname=routing2 user=postgres password=" -sql "select gid, length, x1, y1, x2, y2, osm_id, ST_AsText(the_geom) as geom, source, target from ways"
+    > ./csv2json.py out.csv routing.json

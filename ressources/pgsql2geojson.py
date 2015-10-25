@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 import json
 import copy
 from pprint import pprint
 from subprocess import call
-import subprocess
+import getopt, sys
 
 def _formatGeo(d):
     dd = copy.deepcopy(d)
@@ -25,10 +27,23 @@ def formatGeo(d):
 
     return d
 
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "d:")
+    
+except getopt.GetoptError as err:
+    print(sys.argv[0],'-d <dboptions>')
+    print('example :', sys.argv[0], '-d "PG:host=localhost dbname=routing user=gis password=postgres"')
+    sys.exit(2)
+
+for opt, arg in opts:
+    if opt == "-d":
+        db = arg
+    else:
+        assert False, "unhandled option"
 
 # conv
-call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', 'PG:host=localhost dbname=gis2 user=postgres password=', '-sql', "select * from planet_osm_line WHERE osm_id>=0 AND power IS NULL AND barrier IS NULL AND boundary IS NULL"])
-call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', 'PG:host=localhost dbname=gis2 user=postgres password=', '-sql', 'select * from planet_osm_polygon'])
+call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', db, '-sql', "select * from planet_osm_line WHERE osm_id>=0 AND power IS NULL AND barrier IS NULL AND boundary IS NULL"])
+call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', 'select * from planet_osm_polygon'])
 
 json_data_lines = json.load(open('out_lines.json'))
 json_data_polygons = json.load(open('out_polygons.json'))
