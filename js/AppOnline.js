@@ -169,7 +169,7 @@ AppOnline.prototype.actionClearAll = function() {
 AppOnline.prototype.actionHover = function(evt) {
 
     //
-  
+    return [];
 };
 
 /**

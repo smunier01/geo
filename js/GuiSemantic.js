@@ -148,18 +148,21 @@ GuiSemantic.prototype.init = function() {
     });
 
     $('#map').mouseleave(function() {
+        
         $('#hoverbox').empty();
         $('#hoverbox').hide();
+
     });
 
     this.app.map.on('pointermove', function(evt) {
 
         var objects = that.app.actionHover(evt);
-
+        
         $('#hoverbox').empty();
         $('#hoverbox').hide();
 
-        if (objects) {
+        if (objects.length) {
+
             for (var o of objects) {
                 
                 var div = $('<div><h3>' + o.layerName + '</h3></div>');
