@@ -536,6 +536,15 @@ var AppOffline = function () {
     });
 };
 
+AppOffline.prototype.actionClearAll = function() {
+    this.layers['nearest'].layer.getSource().clear();
+    this.layers['selected'].layer.getSource().clear();
+    this.layers['route'].layer.getSource().clear();
+    this.nodeSelected = [];
+    this.selectedFeature = undefined;
+};
+
+
 /**
  *  Quand la souris bouge sur la map
  */

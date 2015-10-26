@@ -57,8 +57,6 @@ var AppOnline = function() {
         'order': 3
     };
 
-    console.log(this.layers['buildings']);
-
     // routes
     this.layers['lines'] = {
         'layer': new ol.layer.Tile({
@@ -84,6 +82,20 @@ var AppOnline = function() {
         'order': 8
     };
 
+    // ??
+    this.layers['resultPgRouting'] = {
+        'layer' : new ol.layer.Image({
+            source: new ol.source.ImageWMS({
+                url: 'http://' + that.GEO_HOST + '/geoserver/cite/wms',
+                params: {
+                    LAYERS: 'cite:routing2',
+                    FORMAT: 'image/png'
+                }
+            })
+        }),
+        'order': 9
+    };
+
 
     //
     // Map
@@ -100,58 +112,9 @@ var AppOnline = function() {
 
     this.addAllLayers();
 
-    var result;
-    var click = 0;
+    //var result;
+    this.click = 0;
 
-    this.map.on('click', function(event) {
-
-        var params = {
-            LAYERS: 'cite:routing2',
-            FORMAT: 'image/png'
-        };
-
-        var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
-
-        var pointsSrc = that.layers['vector2'].layer.getSource();
-
-        if (click == 0 || click == 2) {
-
-            click = 1;
-
-            pointsSrc.clear();
-
-            that.map.removeLayer(result);
-
-            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(event.coordinate)));
-
-        } else {
-            
-            click = 2;
-            
-            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(event.coordinate)));
-
-            var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
-            var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
-
-            var viewparams = [
-                'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                'x2:' + destCoord[0], 'y2:' + destCoord[1]
-            ];
-            
-            params.viewparams = viewparams.join(';');
-
-            result = new ol.layer.Image({
-                source: new ol.source.ImageWMS({
-                    url: 'http://' + that.GEO_HOST + '/geoserver/cite/wms',
-                    params: params
-                })
-            });
-            
-            that.map.addLayer(result);
-            
-        }
-
-    });
 };
 
 /**
@@ -185,6 +148,121 @@ AppOnline.prototype.getFeaturesFromClick = function(event) {
             });
         }
 
+    }
+};
+
+
+AppOnline.prototype.actionClearAll = function() {
+    /*
+    this.layers['nearest'].layer.getSource().clear();
+    this.layers['selected'].layer.getSource().clear();
+    this.layers['route'].layer.getSource().clear();
+    this.nodeSelected = [];
+    this.selectedFeature = undefined;
+    */
+};
+
+
+/**
+ *  Quand la souris bouge sur la map
+ */
+AppOnline.prototype.actionHover = function(evt) {
+
+    //
+  
+};
+
+/**
+ * Action appelé quand on click sur la map pour selectionner un object
+ *
+ * Cela devrait renvoyer les propriétés d'un feature
+ */
+AppOnline.prototype.actionSelect = function(evt) {
+
+    
+    
+};
+
+/**
+ *  Action appelé quand on click sur le bouton "parking" ou "service -> parking"
+ *
+ *  Logiquement cela devrait rechercher le parking le plus proche de la "position courante
+ */
+AppOnline.prototype.actionParking = function() {
+    
+};
+
+/**
+ *  Quand on click sur le bouton "edit".
+ *  
+ *  
+ */
+AppOnline.prototype.actionEdit = function() {
+    
+    // version mode offline pour exemple d'utilisation
+
+    /*
+    var that = this;
+    var properties = this.selectedFeature.getProperties();
+    
+    return {
+        'object' : {
+            'name' : properties['name'],
+            'services' : properties['services'] || '',
+            'highway' : properties['highway']
+        },
+        'callback': function(result) {
+            result['osm_id'] = properties['osm_id'];
+            that.storage.add('edit', result);
+            that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+        }
+    };
+    */
+};
+
+/**
+ *  Quand on click sur la map dans mode "chemin"
+ *
+ *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
+ *  entre les deux points.
+ */
+AppOnline.prototype.actionPath = function(evt) {
+
+    var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+
+    var pointsSrc = this.layers['vector2'].layer.getSource();
+
+    if (this.click == 0 || this.click == 2) {
+
+        this.click = 1;
+
+        pointsSrc.clear();
+
+        //this.layers['resultPgRouting'].layer.getSource().clear();
+        //this.map.removeLayer(result);
+
+        pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
+
+    } else {
+        
+        this.click = 2;
+        
+        pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
+
+        var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
+        var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
+
+        var viewparams = [
+            'x1:' + startCoord[0], 'y1:' + startCoord[1],
+            'x2:' + destCoord[0], 'y2:' + destCoord[1]
+        ];
+
+        //params.viewparams = viewparams.join(';');
+        
+        var p = this.layers['resultPgRouting'].layer.getSource().getParams();
+        p.viewparams = viewparams.join(';');
+        this.layers['resultPgRouting'].layer.getSource().updateParams(p);
+        
     }
 };
 

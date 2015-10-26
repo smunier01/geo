@@ -26,6 +26,8 @@ GuiSemantic.prototype.init = function() {
 
     var that = this;
 
+    $('.ui.dropdown').dropdown();
+    
     $('.ui.accordion').accordion();
 
     $('.ui.sidebar').sidebar('setting', 'transition', 'push');
@@ -145,6 +147,11 @@ GuiSemantic.prototype.init = function() {
         
     });
 
+    $('#map').mouseleave(function() {
+        $('#hoverbox').empty();
+        $('#hoverbox').hide();
+    });
+
     this.app.map.on('pointermove', function(evt) {
 
         var objects = that.app.actionHover(evt);
@@ -152,7 +159,7 @@ GuiSemantic.prototype.init = function() {
         $('#hoverbox').empty();
         $('#hoverbox').hide();
 
-        if (objects.length) {
+        if (objects) {
             for (var o of objects) {
                 
                 var div = $('<div><h3>' + o.layerName + '</h3></div>');
@@ -171,6 +178,24 @@ GuiSemantic.prototype.init = function() {
                 'left': evt.pixel[0]
             });
         }
+    });
+
+    $('#buildingSearch').bind('keyup', function() {
+        var inputTxt = $('#buildingSearch').val().toLowerCase();
+        $('#buildingList li').each(function(index, element){
+            if(inputTxt.length > 0){
+                if($(element).html().toLowerCase().indexOf(inputTxt) < 0){
+                    $(element).css({display: 'none'});
+                }
+                else{
+                    $(element).css({display: 'list-item'});   
+                }
+            }
+            else{
+                $(element).css({display: 'list-item'});
+            }
+            
+        });
     });
 };
 
@@ -192,9 +217,7 @@ GuiSemantic.prototype.setMode = function(m) {
     
     this.currentMode = m;
 
-    $('#mode-switch-buttons button').each(function() {
-        $(this).removeClass('primary');
-    });
+    this.clearAll();
 
     switch(this.currentMode) {
     case this.modes.PATH:
@@ -214,4 +237,18 @@ GuiSemantic.prototype.setMode = function(m) {
         $('#select-mode-buttons').hide();
     }
 
+};
+
+GuiSemantic.prototype.clearAll = function() {
+
+    $('#mode-switch-buttons button').each(function() {
+        $(this).removeClass('primary');
+    });
+
+    $('#selected-info').empty();
+    
+    $('#hoverbox').empty();
+    $('#hoverbox').hide();
+    
+    this.app.actionClearAll();
 };

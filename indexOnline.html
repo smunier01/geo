@@ -3,8 +3,8 @@
   <head>
     <title>gis openlayers</title>
     <script src="libs/jquery/jquery.min.js"></script>
-    
-    <link rel="stylesheet" href="css/reset.css" type="text/css">
+
+    <!--<link rel="stylesheet" href="css/reset.css" type="text/css">-->
     <link rel="stylesheet" href="libs/semantic-ui/semantic.min.css" type="text/css">
     <link rel="stylesheet" href="css/style.css" type="text/css">
     <link rel="stylesheet" href="libs/openlayers/ol.css" type="text/css">
@@ -16,46 +16,151 @@
     <script src="js/AppOnline.js"></script>
     <script src="js/Graph.js"></script>
     <script src="js/Routing.js"></script>
-    <script src="js/Gui.js"></script>
+    <!--<script src="js/Gui.js"></script>-->
+    <script src="js/GuiSemantic.js"></script>
 
   </head>
   <body>
 
-    <div id="map" class="map"></div>
-    
-    <div id="gui">
+    <div class="box" id="hoverbox"></div>
 
-      <div id="hoverbox">test</div>
-      
-      <div id="content">
+    <div id="modal-edit" class="ui modal">
+      <div class="header">Edit Feature : </div>
+      <div class="content">
+        <!--
+            <div class="ui labeled input fluid">
+              <div class="ui label"> Label </div>
+              <input type="text" placeholder="Enter tags">
+            </div>
+            -->
+      </div>
+      <div class="actions">
+        <div class="ui cancel button">Cancel</div>
+        <div class="ui approve button">OK</div>
+      </div>
+    </div>
+
+    <div class="ui sidebar">
+
+      <div class="ui accordion inverted fluid">
         
-        <h2>Layers</h2>
+        <div class="title fluid"><i class="dropdown icon"></i> Layers</div>
 
-        <div id="layersCheckboxes">
-
-        </div>
-
-        <h2>Buildings</h2>
-
-        <div id="buildingList">
-          <input id="buildingSearch"/>
+        <div id="layersCheckboxes" class="content">
 
         </div>
 
-        <h2>Services</h2>
+        <div class="title"><i class="dropdown icon"></i> Buildings</div>
 
-        <div id="servicesList">
+        <div id="buildingList" class="content">
+          <div class="ui fluid icon input">
+            
+            <input id="buildingSearch" type="text" placeholder="Search...">
+            <i class="search icon"></i>
+            
+          </div>
+        </div>
+
+        <div class="title"> <i class="dropdown icon"></i> Services</div>
+
+        <div id="servicesList" class="content">
 
         </div>
         
       </div>
-      <div id="toggleDisplay"></div>
     </div>
+    
+    <div id="main-content" class="pusher">
 
+      <div class="ui fluid icon input">
+        
+        <button id="sidebar-toggle" class="ui icon button">
+          <i class="sidebar icon"></i>
+        </button>
+        <input type="text" placeholder="Search...">
+        <i class="circular search link icon"></i>
+        
+      </div>
+
+      <div id="map" class="map"></div>
+
+      <div id="mode-switch-buttons" class="ui horizontal list">
+
+        <div class="item">
+          <div class="content">
+            <button id="select-button" class="ui icon labeled button">
+              <i class="write large icon"></i>
+              SELECT
+            </button>
+
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <button id="path-button" class="ui icon labeled button">
+              <i class="location arrow large icon"></i>
+              CHEMIN
+            </button>
+
+          </div>
+        </div>  
+      </div>
+
+      <div id="select-mode-buttons" class="ui horizontal list">
+        <div class="item">
+          <div class="content">
+            <div class="box" id="selected-info"></div>
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <button id="edit-button" class="ui orange icon labeled button">
+              <i class="edit large icon"></i>
+              EDIT
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <div id="path-mode-buttons" class="ui horizontal list">
+        <div class="item">
+          <div class="content">
+            <button id="parking-button" class="ui icon labeled button">
+              <i class="cloud large icon"></i>
+              PARKING
+            </button>
+
+          </div>
+        </div>
+        <div class="item">
+          <div class="content">
+            <button id="service-button" class="ui icon labeled button">
+              <i class="cloud icon"></i>
+              SERVICE
+            </button>
+          </div>
+        </div>
+        <div class="item">
+          <div class="ui right pointing black large label">
+            find
+          </div>
+          <div class="ui action input">
+            <select class="ui selection dropdown">
+              <option selected="" value="articles">Services</option>
+              <option value="parkings">Parkings</option>
+            </select>
+            <div type="submit" class="ui green button">go!</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
     <script>
       var app = new AppOnline();
-      var gui = new Gui(app);
+      var gui = new GuiSemantic(app);
       app.setGui(gui);
+
     </script>
     
   </body>

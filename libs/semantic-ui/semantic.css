@@ -31454,7 +31454,7 @@ a.ui.nag {
   font-size: 1em;
   background: #FFFFFF;
   border: 1px solid rgba(34, 36, 38, 0.15);
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
   box-shadow: 0em 0em 0em 0em transparent inset;
   -webkit-transition: background-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
   transition: background-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
@@ -31487,18 +31487,18 @@ a.ui.nag {
   background: #FFFFFF;
   margin-top: 0.5em;
   width: 18em;
-  border-radius: 4px;
+  border-radius: 0.28571429rem;
   box-shadow: 0px 2px 4px 0px rgba(34, 36, 38, 0.12), 0px 2px 10px 0px rgba(34, 36, 38, 0.08);
   border: 1px solid #D4D4D5;
   z-index: 998;
 }
 
 .ui.search > .results > :first-child {
-  border-radius: 4px 4px 0em 0em;
+  border-radius: 0.28571429rem 0.28571429rem 0em 0em;
 }
 
 .ui.search > .results > :last-child {
-  border-radius: 0em 0em 4px 4px;
+  border-radius: 0em 0em 0.28571429rem 0.28571429rem;
 }
 
 /*--------------
@@ -31511,7 +31511,7 @@ a.ui.nag {
   overflow: hidden;
   font-size: 1em;
   padding: 0.85714286em 1.14285714em;
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
   line-height: 1.33;
   border-bottom: 1px solid rgba(34, 36, 38, 0.1);
 }
@@ -31546,8 +31546,8 @@ a.ui.nag {
 }
 
 .ui.search > .results .result .title {
-  margin: -0.165em 0em 0em;
-  font-family: 'Roboto', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  margin: -0.14285em 0em 0em;
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
   font-weight: bold;
   font-size: 1em;
   color: rgba(0, 0, 0, 0.85);
@@ -31561,7 +31561,7 @@ a.ui.nag {
 
 .ui.search > .results .result .price {
   float: right;
-  color: #4CAF50;
+  color: #21BA45;
 }
 
 /*--------------
@@ -31573,16 +31573,16 @@ a.ui.nag {
 }
 
 .ui.search > .results > .message .header {
-  font-family: 'Roboto', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
   font-size: 1rem;
   font-weight: bold;
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
 }
 
 .ui.search > .results > .message .description {
   margin-top: 0.25rem;
   font-size: 1em;
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
 }
 
 /* View All Results */
@@ -31590,9 +31590,9 @@ a.ui.nag {
 .ui.search > .results > .action {
   display: block;
   border-top: none;
-  background: #F0F0F0;
+  background: #F3F4F5;
   padding: 0.92857143em 1em;
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
   font-weight: bold;
   text-align: center;
 }
@@ -31640,7 +31640,7 @@ a.ui.nag {
   -webkit-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
   border-radius: 500rem;
-  border-color: #9E9E9E transparent transparent;
+  border-color: #767676 transparent transparent;
   border-style: solid;
   border-width: 0.2em;
   box-shadow: 0px 0px 0px 1px transparent;
@@ -31652,7 +31652,7 @@ a.ui.nag {
 
 .ui.search > .results .result:hover,
 .ui.category.search > .results .category .result:hover {
-  background: #FAFAFA;
+  background: #F9FAFB;
 }
 
 .ui.search .action:hover {
@@ -31664,18 +31664,18 @@ a.ui.nag {
 ---------------*/
 
 .ui.category.search > .results .category.active {
-  background: #F0F0F0;
+  background: #F3F4F5;
 }
 
 .ui.category.search > .results .category.active > .name {
-  color: #212121;
+  color: rgba(0, 0, 0, 0.87);
 }
 
 .ui.search > .results .result.active,
 .ui.category.search > .results .category .result.active {
   position: relative;
   border-left-color: rgba(34, 36, 38, 0.1);
-  background: #F0F0F0;
+  background: #F3F4F5;
   box-shadow: none;
 }
 
@@ -31702,7 +31702,7 @@ a.ui.nag {
 /* Category */
 
 .ui.category.search > .results .category {
-  background: #F0F0F0;
+  background: #F3F4F5;
   box-shadow: none;
   border-bottom: 1px solid rgba(34, 36, 38, 0.1);
   -webkit-transition: background 0.1s ease, border-color 0.1s ease;
@@ -31718,11 +31718,11 @@ a.ui.nag {
 /* First / Last */
 
 .ui.category.search > .results .category:first-child .name + .result {
-  border-radius: 0em 4px 0em 0em;
+  border-radius: 0em 0.28571429rem 0em 0em;
 }
 
 .ui.category.search > .results .category:last-child .result:last-child {
-  border-radius: 0em 0em 4px 0em;
+  border-radius: 0em 0em 0.28571429rem 0em;
 }
 
 /* Category Result */
@@ -31746,7 +31746,7 @@ a.ui.nag {
 .ui.category.search > .results .category > .name {
   width: 100px;
   background: transparent;
-  font-family: 'Roboto', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
   font-size: 1em;
   float: 1em;
   float: left;
@@ -31812,6 +31812,10 @@ a.ui.nag {
 .ui.massive.search {
   font-size: 1.71428571em;
 }
+
+/*******************************
+         Theme Overrides
+*******************************/
 
 /*******************************
          Site Overrides
@@ -32070,7 +32074,7 @@ a.ui.nag {
 /* Whole Page */
 
 body.pushable {
-  background: #333333 !important;
+  background: #545454 !important;
 }
 
 /* Page Context */
@@ -32116,7 +32120,7 @@ body.pushable {
 }
 
 body.pushable > .pusher {
-  background: #F9F9F9;
+  background: #FFFFFF;
 }
 
 /* Pusher should inherit background from context */
@@ -32653,6 +32657,10 @@ html.ios body {
   -ms-transform: scale(0.75);
   transform: scale(0.75);
 }
+
+/*******************************
+         Theme Overrides
+*******************************/
 
 /*******************************
          Site Overrides
