@@ -1,4 +1,4 @@
-body, html {
+body, html, #main-content {
   height: 100%;
 }
 
@@ -9,9 +9,13 @@ body, html {
 
 #hoverbox {
     position: fixed;
-    background: white;
-    border: 1px solid #6b6b6b;
+    z-index: 20;
+}
+
+.box {
     padding: 1%;
+    background: white;
+    border: 1px solid #cecece;
 }
 
 #gui {
@@ -43,4 +47,25 @@ body, html {
     padding-top: 1%;
     text-align: center;
     border-bottom: 2px solid #77A5D4;
+}
+
+#mode-switch-buttons {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+#select-mode-buttons {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+#path-mode-buttons {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    z-index: 10;
 }

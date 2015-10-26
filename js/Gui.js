@@ -115,7 +115,7 @@ Gui.prototype.setHoverBoxPosition = function(pos) {
 }
 
 Gui.prototype.refreshSize = function() {
-
+    /*
     $('#gui').css({
 	"height": $(window).height(),
     });
@@ -137,6 +137,7 @@ Gui.prototype.refreshSize = function() {
 	    "right": '0px'
 	});
     }
+    */
 };
 
 

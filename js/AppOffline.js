@@ -62,6 +62,11 @@ var AppOffline = function () {
      */
     this.storage = new MyStorage();
 
+    /**
+     *
+     */
+    this.selectedFeature = undefined;
+    
     //
     // Style
     //
@@ -403,57 +408,57 @@ var AppOffline = function () {
         }
     });
 
-    var nodeSelected = [];
+    this.nodeSelected = [];
 
     /*
       Quand on click deux fois --> dijkstra
+      
+      this.map.on('click', function(evt) {
+
+      var feature = that.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
+      var sourceSelected = that.layers['selected'].layer.getSource();
+      var sourceRoute = that.layers['route'].layer.getSource();
+
+      // openlayers plante si t'ajoute deux fois le même feature
+      for (var f of sourceSelected.getFeatures()) {
+      if (f.get('id') == feature.get('id')) {
+      return false;
+      }
+      }
+
+      if (nodeSelected.length >= 2) {
+      nodeSelected = [];
+      sourceSelected.clear();
+      sourceRoute.clear();
+      }
+
+      nodeSelected.push(feature.get('id'));
+      sourceSelected.addFeature(feature);
+
+      if (nodeSelected.length >= 2) {
+
+      // liste des noeuds du chemin
+      var route = that.routing.dijkstra(nodeSelected[0], nodeSelected[1]);
+
+      // conversion des noeuds en des données geometrique ol3 pour affichage
+      var routeFeatures = that.routing.getGeometryFromRoute(route);
+
+      // affichage de la route
+      sourceRoute.addFeatures(routeFeatures);
+
+      }
+
+      return true;
+      
+      });
     */
-    this.map.on('click', function(evt) {
-
-        var feature = that.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
-        var sourceSelected = that.layers['selected'].layer.getSource();
-        var sourceRoute = that.layers['route'].layer.getSource();
-
-        // openlayers plante si t'ajoute deux fois le même feature
-        for (var f of sourceSelected.getFeatures()) {
-            if (f.get('id') == feature.get('id')) {
-                return false;
-            }
-        }
-
-        if (nodeSelected.length >= 2) {
-            nodeSelected = [];
-            sourceSelected.clear();
-            sourceRoute.clear();
-        }
-
-        nodeSelected.push(feature.get('id'));
-        sourceSelected.addFeature(feature);
-
-        if (nodeSelected.length >= 2) {
-
-            // liste des noeuds du chemin
-            var route = that.routing.dijkstra(nodeSelected[0], nodeSelected[1]);
-
-            // conversion des noeuds en des données geometrique ol3 pour affichage
-            var routeFeatures = that.routing.getGeometryFromRoute(route);
-
-            // affichage de la route
-            sourceRoute.addFeatures(routeFeatures);
-
-        }
-
-        return true;
-        
-    });
-
     /*
       Change la couleur des noeuds au passage de la souris
       &
       Affichage des infos sur les differents objets
     */
     this.map.on('pointermove', function(evt) {
-
+        /*
         var t = true, nbFeatures = 0;
 
         var sourceHover = that.layers['hover'].layer.getSource();
@@ -483,7 +488,7 @@ var AppOffline = function () {
             that.gui.setHoverBoxPosition(evt.pixel);
 
         }
-
+        */
     });
 
     /*
@@ -529,6 +534,157 @@ var AppOffline = function () {
         that.layers['nearest'].layer.getSource().addFeature(edge2);
 
     });
+};
+
+/**
+ *  Quand la souris bouge sur la map
+ */
+AppOffline.prototype.actionHover = function(evt) {
+
+    var that = this, t = true, nbFeatures = 0;
+
+    var sourceHover = that.layers['hover'].layer.getSource();
+
+    sourceHover.clear();
+
+    var infos = [];
+    
+    that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        
+        nbFeatures += 1;
+
+        infos.push({'layerName': layer.get('title'), 'properties': feature.getProperties()});
+        
+        //that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
+        
+        if (t && layer.get('title') == 'Nodes Layer') {
+
+            t = false;
+
+            sourceHover.addFeature(feature);
+
+        }
+        
+    });
+
+    return infos;
+};
+
+AppOffline.prototype.actionSelect = function(evt) {
+
+    var feature = this.layers['roadVectors'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
+
+    
+    this.selectedFeature = feature;
+
+    this.nodeSelected = [];
+    
+    this.layers['nearest'].layer.getSource().clear();
+    this.layers['nearest'].layer.getSource().addFeature(feature);
+
+    return feature.getProperties();
+};
+
+/**
+ *  Cherche le parking le plus proche du noeud actuelement selectionné ou de notre pos courante
+ */
+AppOffline.prototype.actionParking = function() {
+    // if pos courante ??
+    // ...
+
+    var that = this;
+
+
+    if (this.nodeSelected[0]) {
+
+        var coords = this.routing.geomNodes[this.nodeSelected[0]];
+        var feature1 = that.getClosestParking(ol.proj.transform(coords, 'EPSG:4326', 'EPSG:3857'));
+        that.layers['nearest'].layer.getSource().addFeature(feature1);
+        /*
+        that.layers['nearest'].layer.getSource().clear();
+
+        var feature1 = that.getClosestParking(that.map.getEventCoordinate(e));
+
+        var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e));
+
+        var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
+
+        that.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
+
+        var edge = that.routing.osmFeatureToEdge(feature2, new_node);
+
+
+        that.storage.add('edit', {'osm_id' : feature2.getId(), 'highway': 'secondary'});
+
+        that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+
+
+        var edges = that.routing.splitEdge(new_node, edge);
+
+        var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
+        var edge2 = (new ol.format.WKT()).readFeature(edges[1][2], that.to3857);
+
+        that.layers['nearest'].layer.getSource().addFeature(edge1);
+        that.layers['nearest'].layer.getSource().addFeature(edge2);
+        */
+    }
+};
+
+AppOffline.prototype.actionEdit = function() {
+
+    var that = this;
+    var properties = this.selectedFeature.getProperties();
+    
+    return {
+        'object' : {
+            'name' : properties['name'],
+            'services' : properties['services'] || '',
+            'highway' : properties['highway']
+        },
+        'callback': function(result) {
+            result['osm_id'] = properties['osm_id'];
+            that.storage.add('edit', result);
+            that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+        }
+    };
+};
+
+AppOffline.prototype.actionPath = function(evt) {
+    
+    var feature = this.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
+    var sourceSelected = this.layers['selected'].layer.getSource();
+    var sourceRoute = this.layers['route'].layer.getSource();
+
+    // openlayers plante si t'ajoute deux fois le même feature
+    for (var f of sourceSelected.getFeatures()) {
+        if (f.get('id') == feature.get('id')) {
+            return false;
+        }
+    }
+
+    if (this.nodeSelected.length >= 2) {
+        this.nodeSelected = [];
+        sourceSelected.clear();
+        sourceRoute.clear();
+    }
+
+    this.nodeSelected.push(feature.get('id'));
+    sourceSelected.addFeature(feature);
+
+    if (this.nodeSelected.length >= 2) {
+
+        // liste des noeuds du chemin
+        var route = this.routing.dijkstra(this.nodeSelected[0], this.nodeSelected[1]);
+
+        // conversion des noeuds en des données geometrique ol3 pour affichage
+        var routeFeatures = this.routing.getGeometryFromRoute(route);
+
+        // affichage de la route
+        sourceRoute.addFeatures(routeFeatures);
+
+    }
+
+    return true;
 };
 
 /**
