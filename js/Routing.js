@@ -39,6 +39,16 @@ var Routing = function(app) {
      * @type {Array.<Number, boolean>}
      */
     this.isRouting = [];
+
+    /**
+     *     
+     */
+    this.maxGid = 0;
+
+    /**
+     *
+     */
+    this.maxNodeId = 0;
     
 };
 
@@ -67,6 +77,18 @@ Routing.prototype.init = function(file) {
             var y1 = parseFloat(field.y1);
             var y2 = parseFloat(field.y2);
             var osm_id = parseInt(field.osm_id);
+
+            if (source > that.maxNodeId) {
+                that.maxNodeId = source;
+            }
+
+            if (target > that.maxNodeId) {
+                that.maxNodeId = target;
+            }
+
+            if (gid > that.maxGid) {
+                that.maxGid = gid;
+            }
             
             // On remplis notre graph pour appliquer les differents algorithmes nécessaire
             that.graph.addNode(source);
@@ -166,26 +188,84 @@ Routing.prototype.dijkstra = function(start, stop) {
     return path;
 };
 
+Routing.prototype.add = function(field) {
 
-Routing.prototype.osmFeatureToEdge = function(feature, c) {
+    for (var e of field) {
+        this.graph.addNode(e.source);
+        this.graph.addNode(e.target);
 
-    // liste des arcs possible où C peut se trouver
-    var edges = this.getEdgesFromOsmId(parseInt(feature.get('osm_id')));
+        this.graph.addEdge(e.source, e.target, e.length, e.gid);
+        this.graph.addEdge(e.target, e.source, e.length, e.gid);
 
+        this.geomNodes[e.source] = [e.x1, e.y1];
+
+        this.geomRoutes[e.gid] = [e.source, e.target, e.geom, e.osm_id, e.length];
+    }
+    
+};
+
+Routing.prototype.remove = function(id) {
+    this.graph.removeNode(id);
+};
+
+Routing.prototype.getNewGid = function() {
+    this.maxGid += 1;
+    return this.maxGid;
+};
+
+Routing.prototype.getNodeId = function() {
+    this.maxNodeId += 1;
+    return this.maxNodeId;
+};
+
+/**
+ *  'road' est une route OpenLayers/OSM. Dans le graphe de routage, les
+ *  routes sont séparé à chaque intersections, il faut donc trouver le segment
+ *  préci sur lequel notre point se trouve, pas seulement la route.
+ *  Une fois ce  segment trouvé, il faut le séparé en deux routes pour pouvoir
+ *  les ajouter au graphe.
+ */
+Routing.prototype.splitEdge = function(road, point) {
+
+    var c = point;
+    
+    // Liste des routes possible où C peux se trouver
+    var edges = this.getEdgesFromOsmId(parseInt(road.get('osm_id')));
+
+    var edge1Geom, edge2Geom, edge = undefined;
+
+    // Chacune des routes se trouve dans un format LineString.
+    // Elles sont composé de plusieurs sous-segment.
+    // Le premier but est de trouvé le sous-segment où se trouve C.
+    // Le deuxieme but sera de séparé ce sous-segment en deux. Leurs informations seront
+    // misent dans les objets edge1Geom et edge2Geom
     for (var e of edges) {
 
+        // Pas la peine de continuer si un sous-segment à été trouvé
+        if (edge) {
+            break;
+        }
+        
+        edge1Geom = [];
+        edge2Geom = [];
+
+        // Conversion de l'objet LineString dans un format lisible
         var f = (new ol.format.WKT()).readFeature(e[2], this.app.to3857).getGeometry().getCoordinates();
 
-        // on prend les segments un par un
-        for (var i = 0; i < (f.length - 1); i++) {
+        // Logiquement le premier point du premier sous-segment se trouve forcement
+        // sur le premier sous-sous-segment.
+        edge1Geom.push(f[0]);
 
+        // On regarde chaque sous-segment pour voir si C se trouve sur l'un deux.
+        for (var i = 0; i < (f.length - 1); i++) {
+            
             var a = f[i];
             var b = f[i + 1];
 
-            // produit croisé pour voir si les segments sont colinéaires
+            // produit croisé pour voir si les AB et AC sont colinéaires
             var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
 
-            // produit scalaire
+            // produit scalaire (pas utilisé, mais ça pourait être utile)
             var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
 
             // distance entre A et C
@@ -198,15 +278,61 @@ Routing.prototype.osmFeatureToEdge = function(feature, c) {
             var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
 
 
-            // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
+            // Si les segments sont colinéaire et que C se trouve entre A et B
+            // alors C se trouve bien sur le segment AB
             if ( Math.abs(cross) < 10.0 && (dAC <= dAB + 1.0 && dBC <= dAB + 1.0) ) {
-                return e;
+                edge = e;
+                
+                edge1Geom.push(f[i]);
+                edge1Geom.push(c);
+                edge2Geom.push(c);
+            }
+
+            if (!edge) {
+
+                edge1Geom.push(f[i + 1]);
+
+            } else {
+
+                edge2Geom.push(f[i + 1]);
+
             }
         }
     }
 
-    return edges[0];
+    var wkt1 = (new ol.format.WKT()).writeFeature(new ol.Feature(new ol.geom.LineString(edge1Geom)), this.app.to3857);
+
+    var wkt2 = (new ol.format.WKT()).writeFeature(new ol.Feature(new ol.geom.LineString(edge2Geom)), this.app.to3857);
     
+    
+    var newId = this.getNodeId();
+
+    var pos = ol.proj.transform(c, 'EPSG:3857', 'EPSG:4326');
+    
+    var e1 = {
+        'source': newId,
+        'target': edge[0],
+        'geom': wkt1,
+        'osm_id': edge[3],
+        'length': edge[4] / 2,
+        'gid': this.getNewGid(),
+        'x1': pos[0],
+        'y1': pos[1]
+    };
+
+    var e2 = {
+        'source': newId,
+        'target': edge[1],
+        'geom': wkt2,
+        'osm_id': edge[3],
+        'length': edge[4] / 2,
+        'gid': this.getNewGid(),
+        'x1': pos[0],
+        'y1': pos[1]
+    };
+    
+    return [e1, e2];
+
 };
 
 /**
@@ -224,76 +350,6 @@ Routing.prototype.getEdgesFromOsmId = function(osmId) {
 
     
     return edges;
-};
-
-/**
- *  Sépare un arc du graphe en deux arc à partir du noeud
- */
-Routing.prototype.splitEdge = function(node, edge) {
-
-    var f = (new ol.format.WKT()).readFeature(edge[2], this.app.to3857).getGeometry().getCoordinates();
-
-    var c = node;
-
-    var edge1Geom = [];
-    var edge2Geom = [];
-
-    var foundNode = false;
-
-    edge1Geom.push(f[0]);
-    
-    // on prend les segments un par un
-    for (var i = 0; i < f.length - 1; i++) {
-
-        var a = f[i];
-        var b = f[i + 1];
-
-        // produit croisé pour voir si les segments sont colinéaires
-        var cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
-
-        // produit scalaire
-        var dot = (c[0] - a[0]) * (b[0] - a[0]) + (c[1] - a[1]) * (b[1] - a[1]);
-
-        // distance entre A et C
-        var dAC = Math.sqrt( (a[0] - c[0]) * (a[0] - c[0]) + (a[1] - c[1]) * (a[1] - c[1]) );
-
-        // distance entre A et B
-        var dAB = Math.sqrt( (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) );
-
-        // distance entre B et C
-        var dBC = Math.sqrt( (b[0] - c[0]) * (b[0] - c[0]) + (b[1] - c[1]) * (b[1] - c[1]) );
-
-        // Si les segments sont colinéaire et que C se trouve entre A et B au niveau des distances
-        if ( Math.abs(cross) < 10 && (dAC < dAB && dBC < dAB) ) {
-
-            foundNode = true;
-            
-            edge1Geom.push(f[i]);
-            edge1Geom.push(c);
-            edge2Geom.push(c);
-            
-        }
-
-        if (!foundNode) {
-
-            edge1Geom.push(f[i + 1]);
-
-        } else {
-
-            edge2Geom.push(f[i + 1]);
-
-        }
-    }
-
-    var wkt1 = (new ol.format.WKT()).writeFeature(new ol.Feature(new ol.geom.LineString(edge1Geom)), this.app.to3857);
-
-    var wkt2 = (new ol.format.WKT()).writeFeature(new ol.Feature(new ol.geom.LineString(edge2Geom)), this.app.to3857);
-    
-    //[field.source, field.target, field.geom, field.osm_id];
-    var edge1 = [edge[0] + '/' + edge[1], edge[0], wkt1, edge[3]];
-    var edge2 = [edge[0] + '/' + edge[1], edge[1], wkt2, edge[3]];
-    
-    return [edge1, edge2];
 };
 
 /**
@@ -332,7 +388,7 @@ Routing.prototype.getGeometryFromRoute = function(route) {
             'geometry': new ol.geom.Point(
                 ol.proj.transform([x1, y1], 'EPSG:4326', 'EPSG:3857'))
         }));
-
+        
         routeGeom = edge[2];
 
         var f = (new ol.format.WKT()).readFeature(routeGeom);
@@ -340,6 +396,7 @@ Routing.prototype.getGeometryFromRoute = function(route) {
         f.setGeometry(f.getGeometry().transform('EPSG:4326', 'EPSG:3857'));
 
         features.push(f);
+        
     }
 
     return features;

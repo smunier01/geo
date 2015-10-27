@@ -66,6 +66,9 @@ var AppOffline = function () {
      *
      */
     this.selectedFeature = undefined;
+
+
+    this.pointsClicked = [];
     
     //
     // Style
@@ -411,48 +414,6 @@ var AppOffline = function () {
     this.nodeSelected = [];
 
     /*
-      Quand on click deux fois --> dijkstra
-      
-      this.map.on('click', function(evt) {
-
-      var feature = that.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
-      var sourceSelected = that.layers['selected'].layer.getSource();
-      var sourceRoute = that.layers['route'].layer.getSource();
-
-      // openlayers plante si t'ajoute deux fois le même feature
-      for (var f of sourceSelected.getFeatures()) {
-      if (f.get('id') == feature.get('id')) {
-      return false;
-      }
-      }
-
-      if (nodeSelected.length >= 2) {
-      nodeSelected = [];
-      sourceSelected.clear();
-      sourceRoute.clear();
-      }
-
-      nodeSelected.push(feature.get('id'));
-      sourceSelected.addFeature(feature);
-
-      if (nodeSelected.length >= 2) {
-
-      // liste des noeuds du chemin
-      var route = that.routing.dijkstra(nodeSelected[0], nodeSelected[1]);
-
-      // conversion des noeuds en des données geometrique ol3 pour affichage
-      var routeFeatures = that.routing.getGeometryFromRoute(route);
-
-      // affichage de la route
-      sourceRoute.addFeatures(routeFeatures);
-
-      }
-
-      return true;
-      
-      });
-    */
-    /*
       Change la couleur des noeuds au passage de la souris
       &
       Affichage des infos sur les differents objets
@@ -498,41 +459,7 @@ var AppOffline = function () {
 
         e.preventDefault();
 
-        that.layers['nearest'].layer.getSource().clear();
-
-        //var feature1 = that.getClosestParking(that.map.getEventCoordinate(e))
-
-        var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e));
-
-        var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
-
-        that.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
-
-        var edge = that.routing.osmFeatureToEdge(feature2, new_node);
-
-        /*
-          var f = feature2.getProperties();
-
-          delete f['geometry'];
-
-          f['highway'] = 'secondary';
-
-          that.storage.add('edit', f);
-        */
-
-        that.storage.add('edit', {'osm_id' : feature2.getId(), 'highway': 'secondary'});
-
-        that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
-
-
-        var edges = that.routing.splitEdge(new_node, edge);
-
-        var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
-        var edge2 = (new ol.format.WKT()).readFeature(edges[1][2], that.to3857);
-
-        that.layers['nearest'].layer.getSource().addFeature(edge1);
-        that.layers['nearest'].layer.getSource().addFeature(edge2);
-
+       
     });
 };
 
@@ -564,8 +491,6 @@ AppOffline.prototype.actionHover = function(evt) {
 
         infos.push({'layerName': layer.get('title'), 'properties': feature.getProperties()});
         
-        //that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
-        
         if (t && layer.get('title') == 'Nodes Layer') {
 
             t = false;
@@ -579,6 +504,29 @@ AppOffline.prototype.actionHover = function(evt) {
     return infos;
 };
 
+AppOffline.prototype.linkNodeToEdge = function(node, edge) {
+
+    var node = ol.proj.transform(node, 'EPSG:3857', 'EPSG:4326');
+    
+    var feature = new ol.Feature(new ol.geom.LineString([[node[0], node[1]], [edge.x1, edge.y1]]));
+
+    var e = {
+        'source': this.routing.getNodeId(),
+        'target': edge.source,
+        'geom': (new ol.format.WKT()).writeFeature(feature),
+        'osm_id': -1,
+        'length': 1,
+        'gid': this.routing.getNewGid(),
+        'x1': node[0],
+        'y1': node[1]
+    };
+
+    return e;
+};
+
+/**
+ *
+ */
 AppOffline.prototype.actionSelect = function(evt) {
 
     var feature = this.layers['roadVectors'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
@@ -658,43 +606,77 @@ AppOffline.prototype.actionEdit = function() {
     };
 };
 
-AppOffline.prototype.actionPath = function(evt) {
+
+AppOffline.prototype.splitClosestRoad = function(coord) {
+
+    // On récupére la route la plus proche des coordonnées.
+    var road = this.getClosestRoad(coord);
+
+    // On récupére le point de la route le plus proche de nos coords.
+    var point = road.getGeometry().getClosestPoint(coord);
+
+    // 'road' est une route OpenLayers/OSM. Dans le graphe de routage, les
+    // routes sont séparé à chaque intersections, il faut donc trouver le segment
+    // préci sur lequel notre point se trouve, pas seulement la route.
+    // Une fois ce  segment trouvé, il faut le séparé en deux routes pour pouvoir
+    // les ajouter au graphe.
+
+    // edges contient deux sous-routes
+    var edges = this.routing.splitEdge(road, point);
     
-    var feature = this.layers['nodes'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
+    return edges;
+};
+
+/**
+ *
+ */
+AppOffline.prototype.actionPath = function(evt) {
+
     var sourceSelected = this.layers['selected'].layer.getSource();
     var sourceRoute = this.layers['route'].layer.getSource();
 
-    // openlayers plante si t'ajoute deux fois le même feature
-    for (var f of sourceSelected.getFeatures()) {
-        if (f.get('id') == feature.get('id')) {
-            return false;
-        }
-    }
-
-    if (this.nodeSelected.length >= 2) {
-        this.nodeSelected = [];
+    // clear les données si on a déjà afficher un chemin
+    if (this.pointsClicked.length >= 2) {
+        this.pointsClicked = [];
         sourceSelected.clear();
         sourceRoute.clear();
     }
 
-    this.nodeSelected.push(feature.get('id'));
-    sourceSelected.addFeature(feature);
+    this.pointsClicked.push(evt.coordinate);
 
-    if (this.nodeSelected.length >= 2) {
+    sourceSelected.addFeature((new ol.Feature(new ol.geom.Point(evt.coordinate))));
+    
+    // si on était à 1, on affiche le chemin
+    if (this.pointsClicked.length >= 2) {
 
-        // liste des noeuds du chemin
-        var route = this.routing.dijkstra(this.nodeSelected[0], this.nodeSelected[1]);
+        // Sépare la route la plus proche en deux, pour pouvoir les utiliser dans le graphe.
+        var e1 = this.splitClosestRoad(this.pointsClicked[0]);
+        var e2 = this.splitClosestRoad(this.pointsClicked[1]);
 
-        // conversion des noeuds en des données geometrique ol3 pour affichage
+        // On relie le points de depart et le point d'arrivé avec nos nouveaux points
+        var e3 = this.linkNodeToEdge(this.pointsClicked[0], e1[0]);
+        var e4 = this.linkNodeToEdge(this.pointsClicked[1], e2[0]);
+
+        // On les ajoute dans le graphe (temporairement)
+        this.routing.add([e3, e4, e1[0], e1[1], e2[0], e2[1]]);
+
+        // Algorithme du plus court chemin 
+        var route = this.routing.dijkstra(e3.source, e4.source);
+
+        // Conversion de la route en type ol.Feature de OpenLayers.
         var routeFeatures = this.routing.getGeometryFromRoute(route);
 
-        // affichage de la route
+        // Affichage
         sourceRoute.addFeatures(routeFeatures);
 
+        // On retire nos routes temporaire du graphe.
+        this.routing.remove(e1[0].source);
+        this.routing.remove(e2[0].source);
+        this.routing.remove(e3.source);
+        this.routing.remove(e4.source);
     }
-
-    return true;
 };
+
 
 /**
  *  @param {ol.coordinate} coord
