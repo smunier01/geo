@@ -18,6 +18,7 @@ var GuiSemantic = function(app) {
     });
     
     this.init();
+    
     this.setMode(this.modes.SELECT);
     
 };
@@ -26,7 +27,7 @@ GuiSemantic.prototype.init = function() {
 
     var that = this;
 
-    $('.ui.dropdown').dropdown();
+    //$('.ui.dropdown').dropdown();
     
     $('.ui.accordion').accordion();
 
@@ -51,11 +52,24 @@ GuiSemantic.prototype.init = function() {
         }
     });
 
+    var selectService = $('#selectServices').find('select');
+    
+    for (var t of this.app.getServiceList()) {
+        selectService.append('<option value="'+t+'">'+t+'</option>'); 
+    }
+    
+    selectService.dropdown();
+
+    $('#selectServices').find('[type=submit]').on('click', function() {
+        var val = selectService.val();
+        that.app.actionPathService(val);
+    });
+    
     var div;
     
     for (var l in this.app.layers) {
 
-        if ( this.app.layers[l].layer.getVisible() == true ) {
+        if ( this.app.layers[l].layer.getVisible() === true ) {
 
             div = $(
                 '<div><label for="display"' + l + '>' + l + '</label><input type="checkbox" name="' + l + '" id="display' + l + '" checked/></div>'
@@ -89,15 +103,40 @@ GuiSemantic.prototype.init = function() {
         var modalContent = $('#modal-edit .content');
 
         modalContent.empty();
+
+        var servicesDropdown;
+        var servicesValue = [];
         
         for (var key in feature) {
-            var div = $('<div class="ui labeled input fluid">' +
+
+            var div;
+            
+            if (key == 'services') {
+
+                var services = that.app.getServiceList();
+
+                servicesDropdown = $('<select name="services" multiple="" class="ui fluid dropdown"></select>');
+                div = servicesDropdown;
+                servicesValue = feature[key];
+                    
+                for (var s of services) {
+                    div.append('<option value="' + s + '">' + s + '</option>');
+                }
+                
+            } else {
+                
+                div = $('<div class="ui labeled input fluid">' +
                         '<div class="ui label">' + key + '</div>' +
                         '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
                         '</div>'
                        );
+
+            }
             modalContent.append(div);
+
         }
+
+        servicesDropdown.dropdown('set selected', servicesValue);
 
         $('#modal-edit').modal({
 
@@ -107,9 +146,9 @@ GuiSemantic.prototype.init = function() {
                 
                 modalContent.children().each(function() {
 
-                    var input = $(this).find('input');
+                    var o = $(this).find('select').length ? $(this).find('select') : $(this).find('input');
 
-                    obj[input.attr('name')] = input.val();
+                    obj[o.attr('name')] = o.val();
                     
                 });
 

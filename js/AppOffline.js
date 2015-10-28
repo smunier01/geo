@@ -504,26 +504,6 @@ AppOffline.prototype.actionHover = function(evt) {
     return infos;
 };
 
-AppOffline.prototype.linkNodeToEdge = function(node, edge) {
-
-    var node = ol.proj.transform(node, 'EPSG:3857', 'EPSG:4326');
-    
-    var feature = new ol.Feature(new ol.geom.LineString([[node[0], node[1]], [edge.x1, edge.y1]]));
-
-    var e = {
-        'source': this.routing.getNodeId(),
-        'target': edge.source,
-        'geom': (new ol.format.WKT()).writeFeature(feature),
-        'osm_id': -1,
-        'length': 1,
-        'gid': this.routing.getNewGid(),
-        'x1': node[0],
-        'y1': node[1]
-    };
-
-    return e;
-};
-
 /**
  *
  */
@@ -551,11 +531,10 @@ AppOffline.prototype.actionParking = function() {
 
     var that = this;
 
+    if (this.pointsClicked[0]) {
 
-    if (this.nodeSelected[0]) {
 
-        var coords = this.routing.geomNodes[this.nodeSelected[0]];
-        var feature1 = that.getClosestParking(ol.proj.transform(coords, 'EPSG:4326', 'EPSG:3857'));
+        var feature1 = that.getClosestParking(this.pointsClicked[0]);
         that.layers['nearest'].layer.getSource().addFeature(feature1);
         /*
         that.layers['nearest'].layer.getSource().clear();
@@ -595,8 +574,8 @@ AppOffline.prototype.actionEdit = function() {
     return {
         'object' : {
             'name' : properties['name'],
-            'services' : properties['services'] || '',
-            'highway' : properties['highway']
+            'highway' : properties['highway'],
+            'services' : properties['services'] || []
         },
         'callback': function(result) {
             result['osm_id'] = properties['osm_id'];
@@ -627,6 +606,10 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
     return edges;
 };
 
+AppOffline.prototype.getServiceList = function() {
+    return ['parking', 'service1', 'service2', 'service3'];
+};
+
 /**
  *
  */
@@ -654,8 +637,8 @@ AppOffline.prototype.actionPath = function(evt) {
         var e2 = this.splitClosestRoad(this.pointsClicked[1]);
 
         // On relie le points de depart et le point d'arrivé avec nos nouveaux points
-        var e3 = this.linkNodeToEdge(this.pointsClicked[0], e1[0]);
-        var e4 = this.linkNodeToEdge(this.pointsClicked[1], e2[0]);
+        var e3 = this.routing.linkNodeToEdge(this.pointsClicked[0], e1[0]);
+        var e4 = this.routing.linkNodeToEdge(this.pointsClicked[1], e2[0]);
 
         // On les ajoute dans le graphe (temporairement)
         this.routing.add([e3, e4, e1[0], e1[1], e2[0], e2[1]]);
@@ -677,6 +660,26 @@ AppOffline.prototype.actionPath = function(evt) {
     }
 };
 
+/**
+ *
+ *
+ */
+AppOffline.prototype.actionPathService = function(service) {
+
+    if ($.inArray(service, this.getServiceList()) == -1) {
+        return null;
+    }
+
+    if (service == 'parking') {
+
+        return this.actionParking();
+
+    } else {
+
+        // @todo
+
+    }
+};
 
 /**
  *  @param {ol.coordinate} coord

@@ -335,6 +335,26 @@ Routing.prototype.splitEdge = function(road, point) {
 
 };
 
+Routing.prototype.linkNodeToEdge = function(node, edge) {
+
+    node = ol.proj.transform(node, 'EPSG:3857', 'EPSG:4326');
+    
+    var feature = new ol.Feature(new ol.geom.LineString([[node[0], node[1]], [edge.x1, edge.y1]]));
+
+    var e = {
+        'source': this.getNodeId(),
+        'target': edge.source,
+        'geom': (new ol.format.WKT()).writeFeature(feature),
+        'osm_id': -1,
+        'length': 1,
+        'gid': this.getNewGid(),
+        'x1': node[0],
+        'y1': node[1]
+    };
+
+    return e;
+};
+
 /**
  *
  */
