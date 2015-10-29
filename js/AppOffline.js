@@ -509,6 +509,23 @@ AppOffline.prototype.actionHover = function(evt) {
  */
 AppOffline.prototype.actionSelect = function(evt) {
 
+    var that = this;
+    
+    return that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        
+        if (layer.get('title') == 'Building Vector Layer' || layer.get('title') == 'Roads Vector Layer') {
+
+            that.selectedFeature = feature;
+
+            that.layers['nearest'].layer.getSource().clear();
+            that.layers['nearest'].layer.getSource().addFeature(feature);
+            
+            return feature.getProperties();
+
+        }
+        
+    });
+    /*
     var feature = this.layers['roadVectors'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
 
     
@@ -520,6 +537,7 @@ AppOffline.prototype.actionSelect = function(evt) {
     this.layers['nearest'].layer.getSource().addFeature(feature);
 
     return feature.getProperties();
+    */
 };
 
 /**
