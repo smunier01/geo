@@ -227,7 +227,8 @@ var AppOffline = function () {
             zoom: 15,
             minZoom: 14,
             maxZoom: 19
-        })
+        }),
+        controls: []
     });
 
     //
@@ -511,33 +512,23 @@ AppOffline.prototype.actionSelect = function(evt) {
 
     var that = this;
     
-    return that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+    var feature = that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
         
         if (layer.get('title') == 'Building Vector Layer' || layer.get('title') == 'Roads Vector Layer') {
 
-            that.selectedFeature = feature;
-
-            that.layers['nearest'].layer.getSource().clear();
-            that.layers['nearest'].layer.getSource().addFeature(feature);
-            
-            return feature.getProperties();
+            return feature;
 
         }
         
     });
-    /*
-    var feature = this.layers['roadVectors'].layer.getSource().getClosestFeatureToCoordinate(evt.coordinate);
 
-    
     this.selectedFeature = feature;
 
-    this.nodeSelected = [];
-    
     this.layers['nearest'].layer.getSource().clear();
     this.layers['nearest'].layer.getSource().addFeature(feature);
-
+    
     return feature.getProperties();
-    */
+    
 };
 
 /**
@@ -551,36 +542,18 @@ AppOffline.prototype.actionParking = function() {
 
     if (this.pointsClicked[0]) {
 
+        var sourceRoute = this.layers['nearest'].layer.getSource();
+        
+        var parking = that.getClosestParking(this.pointsClicked[0]);
+        var parkingCenter = parking.getGeometry().getInteriorPoint();
+        
+        sourceRoute.addFeature(parking);
+        sourceRoute.addFeature(new ol.Feature(parkingCenter));
 
-        var feature1 = that.getClosestParking(this.pointsClicked[0]);
-        that.layers['nearest'].layer.getSource().addFeature(feature1);
-        /*
-        that.layers['nearest'].layer.getSource().clear();
+        var routeFeatures = this.getRoute(this.pointsClicked[0], point.getCoordinates());
 
-        var feature1 = that.getClosestParking(that.map.getEventCoordinate(e));
-
-        var feature2 = that.getClosestRoad(that.map.getEventCoordinate(e));
-
-        var new_node = feature2.getGeometry().getClosestPoint(that.map.getEventCoordinate(e));
-
-        that.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(new_node)));
-
-        var edge = that.routing.osmFeatureToEdge(feature2, new_node);
-
-
-        that.storage.add('edit', {'osm_id' : feature2.getId(), 'highway': 'secondary'});
-
-        that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
-
-
-        var edges = that.routing.splitEdge(new_node, edge);
-
-        var edge1 = (new ol.format.WKT()).readFeature(edges[0][2], that.to3857);
-        var edge2 = (new ol.format.WKT()).readFeature(edges[1][2], that.to3857);
-
-        that.layers['nearest'].layer.getSource().addFeature(edge1);
-        that.layers['nearest'].layer.getSource().addFeature(edge2);
-        */
+        sourceRoute.addFeatures(routeFeatures);
+        
     }
 };
 
@@ -628,6 +601,37 @@ AppOffline.prototype.getServiceList = function() {
     return ['parking', 'service1', 'service2', 'service3'];
 };
 
+AppOffline.prototype.getRoute = function(p1, p2) {
+
+    // Sépare la route la plus proche en deux, pour pouvoir les utiliser dans le graphe.
+    var e1 = this.splitClosestRoad(p1);
+    var e2 = this.splitClosestRoad(p2);
+
+    // On relie le points de depart et le point d'arrivé avec nos nouveaux points
+    var e3 = this.routing.linkNodeToEdge(p1, e1[0]);
+    var e4 = this.routing.linkNodeToEdge(p2, e2[0]);
+
+    // On les ajoute dans le graphe (temporairement)
+    this.routing.add([e3, e4, e1[0], e1[1], e2[0], e2[1]]);
+
+    // Algorithme du plus court chemin 
+    var route = this.routing.dijkstra(e3.source, e4.source);
+
+    // Conversion de la route en type ol.Feature de OpenLayers.
+    var routeFeatures = this.routing.getGeometryFromRoute(route);
+
+    // Affichage
+    // sourceRoute.addFeatures(routeFeatures);
+
+    // On retire nos routes temporaire du graphe.
+    this.routing.remove(e1[0].source);
+    this.routing.remove(e2[0].source);
+    this.routing.remove(e3.source);
+    this.routing.remove(e4.source);
+
+    return routeFeatures;
+};
+
 /**
  *
  */
@@ -650,31 +654,9 @@ AppOffline.prototype.actionPath = function(evt) {
     // si on était à 1, on affiche le chemin
     if (this.pointsClicked.length >= 2) {
 
-        // Sépare la route la plus proche en deux, pour pouvoir les utiliser dans le graphe.
-        var e1 = this.splitClosestRoad(this.pointsClicked[0]);
-        var e2 = this.splitClosestRoad(this.pointsClicked[1]);
-
-        // On relie le points de depart et le point d'arrivé avec nos nouveaux points
-        var e3 = this.routing.linkNodeToEdge(this.pointsClicked[0], e1[0]);
-        var e4 = this.routing.linkNodeToEdge(this.pointsClicked[1], e2[0]);
-
-        // On les ajoute dans le graphe (temporairement)
-        this.routing.add([e3, e4, e1[0], e1[1], e2[0], e2[1]]);
-
-        // Algorithme du plus court chemin 
-        var route = this.routing.dijkstra(e3.source, e4.source);
-
-        // Conversion de la route en type ol.Feature de OpenLayers.
-        var routeFeatures = this.routing.getGeometryFromRoute(route);
-
-        // Affichage
+        var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+        
         sourceRoute.addFeatures(routeFeatures);
-
-        // On retire nos routes temporaire du graphe.
-        this.routing.remove(e1[0].source);
-        this.routing.remove(e2[0].source);
-        this.routing.remove(e3.source);
-        this.routing.remove(e4.source);
     }
 };
 

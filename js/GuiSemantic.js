@@ -46,12 +46,6 @@ GuiSemantic.prototype.init = function() {
         that.setMode(that.modes.PATH);
     });
 
-    $('#parking-button').click(function() {
-        if (that.currentMode == that.modes.PATH) {
-            that.app.actionParking();
-        }
-    });
-
     var selectService = $('#selectServices').find('select');
     
     for (var t of this.app.getServiceList()) {

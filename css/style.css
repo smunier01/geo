@@ -69,3 +69,10 @@ body, html, #main-content {
     right: 10px;
     z-index: 10;
 }
+
+#top-bar {
+    width: 100%;
+    position: fixed;
+    padding: 10px;
+    z-index: 10;
+}
