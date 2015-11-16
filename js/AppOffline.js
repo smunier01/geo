@@ -268,11 +268,14 @@ var AppOffline = function () {
 
             source.unByKey(key1);
 
+            // met à jour les features de la source si il y a des modifs en localStorage
+            that.updateFeaturesFromStorage(source);
+
             // met à jour la liste des batiments dans le menu
             that.gui.updateBuildingList(that.getBuildingList());
 
-            // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(source);
+            // met à jour la liste des services
+            that.gui.updateServiceList(that.getServiceList());
         }
     });
 
@@ -542,15 +545,20 @@ AppOffline.prototype.actionParking = function() {
 
     if (this.pointsClicked[0]) {
 
-        var sourceRoute = this.layers['nearest'].layer.getSource();
+        this.actionClearAll();
+
+        var sourceRoute = this.layers['route'].layer.getSource();
         
         var parking = that.getClosestParking(this.pointsClicked[0]);
         var parkingCenter = parking.getGeometry().getInteriorPoint();
-        
-        sourceRoute.addFeature(parking);
-        sourceRoute.addFeature(new ol.Feature(parkingCenter));
 
-        var routeFeatures = this.getRoute(this.pointsClicked[0], point.getCoordinates());
+        if (this.pointsClicked[1]) {
+            this.pointsClicked[1] = parkingCenter.getCoordinates();
+        } else {
+            this.pointsClicked.push(parkingCenter.getCoordinates());
+        }
+        
+        var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
 
         sourceRoute.addFeatures(routeFeatures);
         
@@ -561,21 +569,42 @@ AppOffline.prototype.actionEdit = function() {
 
     var that = this;
     var properties = this.selectedFeature.getProperties();
+
+    if (properties['building'] !== undefined) {
+        console.log("hello");
+        properties['services'] = properties['services'] || null;
+    }
+    
+    delete properties['geometry'];
     
     return {
-        'object' : {
-            'name' : properties['name'],
-            'highway' : properties['highway'],
-            'services' : properties['services'] || []
-        },
+        'object' : properties,
         'callback': function(result) {
-            result['osm_id'] = properties['osm_id'];
-            that.storage.add('edit', result);
-            that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+
+            var changed = {};
+
+            // on met à jour seulement les propriétés qui ont été modifié
+            for (var o in result) {
+
+                if (properties[o] !== undefined && (result[o] != properties[o])) {
+                    changed[o] = result[o];
+                }
+            }
+
+            if (Object.keys(changed).length > 0) {
+
+ 
+                changed['osm_id'] = properties['osm_id'];
+                that.storage.add('edit', changed);
+
+                that.cache['services'] = undefined;
+
+                that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+                that.updateFeaturesFromStorage(that.layers['buildingsVectors'].layer.getSource());
+            }
         }
     };
 };
-
 
 AppOffline.prototype.splitClosestRoad = function(coord) {
 
@@ -597,8 +626,37 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
     return edges;
 };
 
+/**
+ *
+ */
 AppOffline.prototype.getServiceList = function() {
-    return ['parking', 'service1', 'service2', 'service3'];
+
+    var services = [];
+    
+    var buildings = this.getBuildingList();
+
+    if (this.cache['services'] === undefined || true) {
+
+        this.cache['services'] = [];
+        
+        for (var b of buildings) {
+
+            
+            for (var s in b.services) {
+                var k = b.services[s];
+
+                if (this.cache['services'][k]) {
+                    this.cache['services'][k] += 1;
+                } else {
+                    this.cache['services'][k] = 1;
+                }
+            }
+            
+        }
+
+    }
+
+    return Object.keys(this.cache['services']);
 };
 
 AppOffline.prototype.getRoute = function(p1, p2) {
@@ -895,7 +953,7 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
     for (var f of featuresToEdit) {
 
         var feature = source.getFeatureById(f['osm_id']);
-
+        
         if (feature) {
             for (var property in f) {
                 feature.set(property, f[property]);

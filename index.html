@@ -36,16 +36,23 @@
     </div>
 
     <div class="ui sidebar">
+  
 
-      <div class="ui accordion inverted fluid">
-        
-        <div class="title fluid"><i class="dropdown icon"></i> Layers</div>
+      <div class="ui accordion inverted fluid vertical menu">
 
-        <div id="layersCheckboxes" class="content">
-
+        <div class="title fluid">
+          <a class="item"><i class="dropdown icon"></i> Layers</a>
         </div>
 
-        <div class="title"><i class="dropdown icon"></i> Buildings</div>
+        <div class="content">
+          <div id="layersCheckboxes" class="ui middle aligned divided list">
+           
+          </div>
+        </div>
+
+        <div class="title">
+          <a class="item"> <i class="dropdown icon"></i> Buildings </a>
+        </div>
 
         <div id="buildingList" class="content">
           <div class="ui fluid icon input">
@@ -56,7 +63,17 @@
           </div>
         </div>
 
-        <div class="title"> <i class="dropdown icon"></i> Services</div>
+        <div class="title">
+          <a class="item"><i class="dropdown icon"></i> Services</a>
+        </div>
+
+        <div id="servicesList" class="content">
+
+        </div>
+
+        <div class="title">
+          <a class="item"><i class="dropdown icon"></i> Synchronisation</a>
+        </div>
 
         <div id="servicesList" class="content">
 

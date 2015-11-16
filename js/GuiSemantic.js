@@ -46,34 +46,31 @@ GuiSemantic.prototype.init = function() {
         that.setMode(that.modes.PATH);
     });
 
-    var selectService = $('#selectServices').find('select');
-    
-    for (var t of this.app.getServiceList()) {
-        selectService.append('<option value="'+t+'">'+t+'</option>'); 
-    }
-    
-    selectService.dropdown();
-
-    $('#selectServices').find('[type=submit]').on('click', function() {
-        var val = selectService.val();
-        that.app.actionPathService(val);
-    });
-    
     var div;
     
     for (var l in this.app.layers) {
 
+        var s = "";
+        
         if ( this.app.layers[l].layer.getVisible() === true ) {
-
-            div = $(
-                '<div><label for="display"' + l + '>' + l + '</label><input type="checkbox" name="' + l + '" id="display' + l + '" checked/></div>'
-            );
-
-        } else {
-            div = $(
-                '<div><label for="display"' + l + '>' + l + '</label><input type="checkbox" name="' + l + '" id="display' + l + '"/></div>'
-            );
+            s = "checked";
         }
+
+
+        div = $(
+            '<div class="item">'+
+                '<div class="right floated content">'+
+                '<div class="ui toggle checkbox">'+
+                '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
+                '<label></label>'+
+                '</div>'+
+                '</div>'+
+                '<div class="content">'+
+                '<label for="display"' + l + '>' + l + '</label>'+
+                '</div>'+
+            '</div>'
+        );
+        
 	
         $('#layersCheckboxes').append(div);
 	
@@ -109,7 +106,7 @@ GuiSemantic.prototype.init = function() {
 
                 var services = that.app.getServiceList();
 
-                servicesDropdown = $('<select name="services" multiple="" class="ui fluid dropdown"></select>');
+                servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                 div = servicesDropdown;
                 servicesValue = feature[key];
                     
@@ -130,8 +127,15 @@ GuiSemantic.prototype.init = function() {
 
         }
 
-        servicesDropdown.dropdown('set selected', servicesValue);
+        if (typeof servicesDropdown != "undefined") {
 
+            servicesDropdown.dropdown({
+                allowAdditions: true
+            });
+            servicesDropdown.dropdown('set selected', servicesValue);
+
+        }
+        
         $('#modal-edit').modal({
 
             onApprove : function() {
@@ -232,6 +236,23 @@ GuiSemantic.prototype.init = function() {
             }
             
         });
+    });
+};
+
+GuiSemantic.prototype.updateServiceList = function(services) {
+    var that = this;
+
+    var selectService = $('#selectServices').find('select');
+    
+    for (var t of services) {
+        selectService.append('<option value="'+t+'">'+t+'</option>'); 
+    }
+    
+    selectService.dropdown();
+
+    $('#selectServices').find('[type=submit]').on('click', function() {
+        var val = selectService.val();
+        that.app.actionPathService(val);
     });
 };
 
