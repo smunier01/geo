@@ -82,7 +82,7 @@ var AppOnline = function() {
         'order': 8
     };
 
-    // ??
+    // 
     this.layers['resultPgRouting'] = {
         'layer' : new ol.layer.Image({
             source: new ol.source.ImageWMS({
@@ -151,8 +151,28 @@ AppOnline.prototype.getFeaturesFromClick = function(event) {
     }
 };
 
+AppOnline.prototype.getBuildingList = function() {
+    var buildings = [{name: 'building1', osm_id: 1}];
+    
+    console.log('getBuildingList');
+    console.log(buildings);
+
+    return buildings;
+};
+
+AppOnline.prototype.getServiceList = function() {
+    var services = ['building'];
+
+    console.log('getServiceList');
+    console.log(services);
+
+    return services;
+    
+};
+
 
 AppOnline.prototype.actionClearAll = function() {
+    console.log('actionClearAll');
     /*
     this.layers['nearest'].layer.getSource().clear();
     this.layers['selected'].layer.getSource().clear();
@@ -164,10 +184,10 @@ AppOnline.prototype.actionClearAll = function() {
 
 
 /**
- *  Quand la souris bouge sur la map
+ *  Quand la souris bouge sur la map, pas forcement utile
  */
 AppOnline.prototype.actionHover = function(evt) {
-
+    console.log('actionHover');
     //
     return [];
 };
@@ -178,18 +198,23 @@ AppOnline.prototype.actionHover = function(evt) {
  * Cela devrait renvoyer les propriétés d'un feature
  */
 AppOnline.prototype.actionSelect = function(evt) {
-
-    
-    
+    console.log('actionSelect');
 };
 
 /**
- *  Action appelé quand on click sur le bouton "parking" ou "service -> parking"
- *
- *  Logiquement cela devrait rechercher le parking le plus proche de la "position courante
+ * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
-AppOnline.prototype.actionParking = function() {
-    
+AppOnline.prototype.actionGoto = function(object) {
+    console.log('actionGoto');
+};
+
+/**
+ *  Action appelé quand on click sur le bouton des services
+ *
+ *  Logiquement cela devrait rechercher le service le plus proche de la position courante
+ */
+AppOnline.prototype.actionPathService = function() {
+    console.log('actionPathService');
 };
 
 /**
@@ -198,12 +223,12 @@ AppOnline.prototype.actionParking = function() {
  *  
  */
 AppOnline.prototype.actionEdit = function() {
-    
+    console.log('actionEdit');
     // version mode offline pour exemple d'utilisation
 
     /*
     var that = this;
-    var properties = this.selectedFeature.getProperties();
+    var properties = this.selectedObject.getProperties();
     
     return {
         'object' : {
@@ -315,6 +340,13 @@ function sortByKey(array, key) {
  */
 AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
+
+    // met à jour la liste des batiments pour le search input
+    this.gui.updateBuildingList(this.getBuildingList());
+
+    // met à jour la liste des services (pour le dropdown en bas à gauche)
+    this.gui.updateServiceList(this.getServiceList());
+    
 };
 
 

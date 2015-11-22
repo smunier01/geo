@@ -12,7 +12,6 @@
     <script src="libs/semantic-ui/semantic.min.js"></script>
     <script src="libs/openlayers/ol.js"></script>
     <script src="js/Storage.js"></script>
-    <script src="js/AppOffline.js"></script>
     <script src="js/AppOnline.js"></script>
     <script src="js/Graph.js"></script>
     <script src="js/Routing.js"></script>
@@ -27,12 +26,7 @@
     <div id="modal-edit" class="ui modal">
       <div class="header">Edit Feature : </div>
       <div class="content">
-        <!--
-            <div class="ui labeled input fluid">
-              <div class="ui label"> Label </div>
-              <input type="text" placeholder="Enter tags">
-            </div>
-            -->
+
       </div>
       <div class="actions">
         <div class="ui cancel button">Cancel</div>
@@ -41,16 +35,23 @@
     </div>
 
     <div class="ui sidebar">
+  
 
-      <div class="ui accordion inverted fluid">
-        
-        <div class="title fluid"><i class="dropdown icon"></i> Layers</div>
+      <div class="ui accordion inverted fluid vertical menu">
 
-        <div id="layersCheckboxes" class="content">
-
+        <div class="title fluid">
+          <a class="item"><i class="dropdown icon"></i> Layers</a>
         </div>
 
-        <div class="title"><i class="dropdown icon"></i> Buildings</div>
+        <div class="content">
+          <div id="layersCheckboxes" class="ui middle aligned divided list">
+           
+          </div>
+        </div>
+
+        <div class="title">
+          <a class="item"> <i class="dropdown icon"></i> Buildings </a>
+        </div>
 
         <div id="buildingList" class="content">
           <div class="ui fluid icon input">
@@ -61,7 +62,17 @@
           </div>
         </div>
 
-        <div class="title"> <i class="dropdown icon"></i> Services</div>
+        <div class="title">
+          <a class="item"><i class="dropdown icon"></i> Services</a>
+        </div>
+
+        <div id="servicesList" class="content">
+
+        </div>
+
+        <div class="title">
+          <a class="item"><i class="dropdown icon"></i> Synchronisation</a>
+        </div>
 
         <div id="servicesList" class="content">
 
@@ -72,16 +83,27 @@
     
     <div id="main-content" class="pusher">
 
-      <div class="ui fluid icon input">
-        
-        <button id="sidebar-toggle" class="ui icon button">
-          <i class="sidebar icon"></i>
-        </button>
-        <input type="text" placeholder="Search...">
-        <i class="circular search link icon"></i>
-        
+      <div id="top-bar">
+        <div class="ui fluid icon input">
+          
+          <button id="sidebar-toggle" class="ui icon button">
+            <i class="sidebar icon"></i>
+          </button>
+          <!--
+          <input type="text" placeholder="Search...">
+          <i class="circular search link icon"></i>
+          -->
+          <div class="ui search full-wide">
+            <div class="ui fluid icon input">
+              <input class="prompt" type="text" placeholder="Search...">
+              <i class="search icon"></i>
+            </div>
+            <div class="full-wide results"></div>
+          </div>
+          
+        </div>
       </div>
-
+      
       <div id="map" class="map"></div>
 
       <div id="mode-switch-buttons" class="ui horizontal list">
@@ -125,30 +147,12 @@
 
       <div id="path-mode-buttons" class="ui horizontal list">
         <div class="item">
-          <div class="content">
-            <button id="parking-button" class="ui icon labeled button">
-              <i class="cloud large icon"></i>
-              PARKING
-            </button>
-
-          </div>
-        </div>
-        <div class="item">
-          <div class="content">
-            <button id="service-button" class="ui icon labeled button">
-              <i class="cloud icon"></i>
-              SERVICE
-            </button>
-          </div>
-        </div>
-        <div class="item">
           <div class="ui right pointing black large label">
             find
           </div>
-          <div class="ui action input">
+          <div id="selectServices" class="ui action input">
             <select class="ui selection dropdown">
-              <option selected="" value="articles">Services</option>
-              <option value="parkings">Parkings</option>
+
             </select>
             <div type="submit" class="ui green button">go!</div>
           </div>

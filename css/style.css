@@ -77,7 +77,15 @@ body, html, #main-content {
     z-index: 10;
 }
 
+.full-wide {
+    width: 100% !important;
+}
+
 .ui.menu .ui.list>.item {
     padding-left: 0.9em;
     padding-right: 0.9em;
+}
+
+.ui.search .prompt {
+    border-radius: 0;
 }
