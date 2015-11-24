@@ -68,3 +68,20 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
     > ogr2ogr -f CSV out.csv "PG:host=localhost dbname=routing2 user=postgres password=" -sql "select gid, length, x1, y1, x2, y2, osm_id, ST_AsText(the_geom) as geom, source, target from ways"
     > ./csv2json.py out.csv routing.json
+
+#############################################
+                Online
+#############################################
+
+Pour activer jsonp :
+  Rajouter dans geoserver/webapps/WEB-INF/web.xml 
+      <context-param>
+          <param-name>ENABLE_JSONP</param-name>
+          <param-value>true</param-value>
+      </context-param>
+
+  Closest parking SQL : 
+    SELECT * 
+      FROM planet_osm_polygon
+      WHERE amenity='parking'
+      ORDER BY ST_Distance(planet_osm_polygon.way, (ST_SetSRID(ST_MakePoint(%x%, %y%), 900913))) LIMIT 1;

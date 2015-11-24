@@ -5,26 +5,27 @@
  *
  * @class
  */
-var AppOnline = function() {
+ var AppOnline = function() {
 
     var that = this;
     
     /**
      * @type {string} 
      */
-    this.GEO_HOST = 'localhost:8080';
+     this.GEO_HOST = 'localhost:8080';
 
     /**
      *  Reference à l'objet map d'openlayer
      *  @type {ol.Map}
      */
-    this.map = undefined;
+     this.map = undefined;
+     this.posActu = undefined;
 
     /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
      */ 
-    this.layers = [];
+     this.layers = [];
 
 
     // fond osm
@@ -96,6 +97,35 @@ var AppOnline = function() {
         'order': 9
     };
 
+     this.layers['closestParking'] = {
+        'layer': new ol.layer.Tile({
+            source: new ol.source.TileWMS({
+                url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
+                params: {
+                     LAYERS: 'sf:closestParking', 
+                     FORMAT: 'image/png'
+                },
+                serverType: 'geoserver'
+            })
+        }),
+        'order': 10
+    };
+
+    this.layers['closestParkingTest'] = {
+        'layer': new ol.layer.Tile({
+            source: new ol.source.TileWMS({
+                url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
+                params: {
+                     LAYERS: 'sf:closestParking', 
+                     FORMAT: 'image/png'
+                },
+                serverType: 'geoserver',
+                viewparams: 'x:1.939558982849121;y:47.846545947203'
+            })
+        }),
+        'order': 10
+    };
+
 
     //
     // Map
@@ -120,15 +150,16 @@ var AppOnline = function() {
 /**
  * ??
  */
-AppOnline.prototype.getFeaturesFromClick = function(event) {
-    
+ AppOnline.prototype.getFeaturesFromClick = function(event) {
+
     var viewResolution = (this.map.getView().getResolution());
 
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl(
         event.coordinate, viewResolution, 'EPSG:3857',
 
         {'INFO_FORMAT': 'text/javascript'}
-    );
+        );
+    console.log("URL : " + url);
     
     if (url) {
 
@@ -137,15 +168,15 @@ AppOnline.prototype.getFeaturesFromClick = function(event) {
 
                 url: url,
                 dataType: 'jsonp',
-                jsonpCallback: 'parseResponse'
+                //jsonpCallback: 'parseResponse'
 
             }).then(function(response) {
                 /*
                   vectorSource.clear();
                   vectorSource.addFeatures(geojsonFormat.readFeatures(response));
-                  console.log(geojsonFormat.readFeatures(response));
-                */
-            });
+                  console.log(geojsonFormat.readFeatures(response));*/
+
+              });
         }
 
     }
@@ -166,7 +197,7 @@ AppOnline.prototype.actionClearAll = function() {
 /**
  *  Quand la souris bouge sur la map
  */
-AppOnline.prototype.actionHover = function(evt) {
+ AppOnline.prototype.actionHover = function(evt) {
 
     //
     return [];
@@ -177,19 +208,70 @@ AppOnline.prototype.actionHover = function(evt) {
  *
  * Cela devrait renvoyer les propriétés d'un feature
  */
-AppOnline.prototype.actionSelect = function(evt) {
+ AppOnline.prototype.actionSelect = function(evt) {
+    console.log(ol.proj.toLonLat(this.map.getCoordinateFromPixel(evt.pixel)));
 
+    var viewResolution = (this.map.getView().getResolution());
+    var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
+        'INFO_FORMAT': 'text/javascript'
+    });
+
+    if(url){
+        $.ajax({
+            url: url,
+            dataType: 'jsonp'
+        });
+    }
+
+    var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+
+        console.log("Feature : " + feature);
+        
+    });
     
     
 };
+
+function parseResponse(data){
+    var features = data.features;
+    for (var i = features.length - 1; i >= 0; i--) {
+        console.log(features[i]);
+    };
+}
 
 /**
  *  Action appelé quand on click sur le bouton "parking" ou "service -> parking"
  *
  *  Logiquement cela devrait rechercher le parking le plus proche de la "position courante
  */
-AppOnline.prototype.actionParking = function() {
-    
+ AppOnline.prototype.actionParking = function() {
+    // var hazardWMSLayer = new OpenLayers.Layer.WMS(
+    //     "Wenchuan Intensities (WMS)",
+    //     "http://mysite.org/geoserver/wms",
+    //     {
+    //         layers: "wenchuanintensityquery2",
+    //         transparent:true,
+    //         viewparams:'minweight:5'
+    //     },
+    //     {
+    //         opacity:0.5,
+    //         singleTile:true
+    //     }
+    //     );
+    console.log('ActionParking');
+    if(this.posActu){
+        var coords = ol.proj.toLonLat(this.posActu);
+
+        var viewparams = ['x:' + coords[0], 'y:' + coords[1]];
+
+        var p = this.layers['closestParking'].layer.getSource().getParams();
+        p.viewparams = viewparams.join(';');
+        console.log(p.viewparams);
+        this.layers['closestParking'].layer.getSource().updateParams(p);
+
+        
+        // this.map.addLayer(closestParkingLayer);
+    }
 };
 
 /**
@@ -197,8 +279,8 @@ AppOnline.prototype.actionParking = function() {
  *  
  *  
  */
-AppOnline.prototype.actionEdit = function() {
-    
+ AppOnline.prototype.actionEdit = function() {
+
     // version mode offline pour exemple d'utilisation
 
     /*
@@ -226,7 +308,7 @@ AppOnline.prototype.actionEdit = function() {
  *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
  *  entre les deux points.
  */
-AppOnline.prototype.actionPath = function(evt) {
+ AppOnline.prototype.actionPath = function(evt) {
 
     var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
 
@@ -235,6 +317,7 @@ AppOnline.prototype.actionPath = function(evt) {
     if (this.click == 0 || this.click == 2) {
 
         this.click = 1;
+        this.posActu = evt.coordinate;
 
         pointsSrc.clear();
 
@@ -244,7 +327,7 @@ AppOnline.prototype.actionPath = function(evt) {
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
 
     } else {
-        
+
         this.click = 2;
         
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
@@ -253,8 +336,8 @@ AppOnline.prototype.actionPath = function(evt) {
         var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
         var viewparams = [
-            'x1:' + startCoord[0], 'y1:' + startCoord[1],
-            'x2:' + destCoord[0], 'y2:' + destCoord[1]
+        'x1:' + startCoord[0], 'y1:' + startCoord[1],
+        'x2:' + destCoord[0], 'y2:' + destCoord[1]
         ];
 
         //params.viewparams = viewparams.join(';');
@@ -266,11 +349,29 @@ AppOnline.prototype.actionPath = function(evt) {
     }
 };
 
+AppOnline.prototype.actionPathService = function(service) {
+
+    // if ($.inArray(service, this.getServiceList()) == -1) {
+    //     return null;
+    // }
+    console.log("actionPathService");
+
+    if (service == 'parking') {
+
+        return this.actionParking();
+
+    } else {
+
+        // @todo
+
+    }
+};
+
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
- */
-AppOnline.prototype.addAllLayers = function() {
+   */
+   AppOnline.prototype.addAllLayers = function() {
 
     this.map.getLayers().clear();
 
@@ -298,7 +399,7 @@ AppOnline.prototype.addAllLayers = function() {
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
-AppOnline.prototype.setVisible = function(name, value) {
+ AppOnline.prototype.setVisible = function(name, value) {
     this.layers[name].layer.setVisible(value);
 };
 
@@ -313,7 +414,7 @@ function sortByKey(array, key) {
 /**
  *  @param {Gui}
  */
-AppOnline.prototype.setGui = function(gui) {
+ AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 };
 
