@@ -275,7 +275,9 @@ var AppOffline = function () {
             that.gui.updateBuildingList(that.getBuildingList());
 
             // met à jour la liste des services
-            that.gui.updateServiceList(that.getServiceList());
+            that.getServiceList(function(services) {
+                that.gui.updateServiceList(services);
+            });
         }
     });
 
@@ -629,7 +631,7 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
 /**
  *
  */
-AppOffline.prototype.getServiceList = function() {
+AppOffline.prototype.getServiceList = function(v) {
 
     var services = [];
     
@@ -656,8 +658,8 @@ AppOffline.prototype.getServiceList = function() {
         }
 
     }
-
-    return Object.keys(this.cache['services']);
+    console.log(v);
+    v(Object.keys(this.cache['services']));
 };
 
 /*
@@ -756,11 +758,11 @@ AppOffline.prototype.actionGoto = function(object) {
  *
  */
 AppOffline.prototype.actionPathService = function(service) {
-
+    /*
     if ($.inArray(service, this.getServiceList()) == -1) {
         return null;
     }
-
+    */
     if (service == 'parking') {
 
         return this.actionParking();
