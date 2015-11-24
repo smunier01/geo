@@ -234,7 +234,7 @@ var AppOffline = function () {
     //
     // Sources & Layers
     //
-
+    /*
     this.layers['roadVectors'] = {
         'layer': new ol.layer.Vector({
             title: 'Roads Vector Layer',
@@ -246,7 +246,22 @@ var AppOffline = function () {
         }),
         'order': 10
     };
-
+    */
+    this.layers['roadVectors'] = {
+ 	'layer': new ol.layer.Image({
+            title: 'Roads Vector Layer',
+ 	    source: new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/lines.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: styleFunctionRoads
+ 	    })
+ 	}),
+ 	'order': 10
+    };
+    
+    /*
     this.layers['buildingsVectors'] = {
         'layer': new ol.layer.Vector({
             title: 'Building Vector Layer',
@@ -257,6 +272,20 @@ var AppOffline = function () {
             style: styleFunctionBuildings
         }),
         'order': 9
+    };
+    */
+    this.layers['buildingsVectors'] = {
+ 	'layer': new ol.layer.Image({
+            title: 'Building Vector Layer',
+ 	    source: new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/polygons.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: styleFunctionBuildings
+ 	    })
+ 	}),
+ 	'order': 9
     };
     
     // callback pour buildings.json
@@ -482,7 +511,7 @@ AppOffline.prototype.actionClearAll = function() {
  *  Quand la souris bouge sur la map
  */
 AppOffline.prototype.actionHover = function(evt) {
-
+    /*
     var that = this, t = true, nbFeatures = 0;
 
     var sourceHover = that.layers['hover'].layer.getSource();
@@ -508,6 +537,7 @@ AppOffline.prototype.actionHover = function(evt) {
     });
 
     return infos;
+    */
 };
 
 /**
@@ -746,9 +776,24 @@ AppOffline.prototype.actionGoto = function(object) {
     var coords = feature.getGeometry().getInteriorPoint().getCoordinates();
 
     this.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(coords)));
+
+    var pan = ol.animation.pan({
+        duration: 2000,
+        source: this.map.getView().getCenter()
+    });
     
-    this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(19);
+    var zoom = ol.animation.zoom({
+        resolution: this.map.getView().getResolution(),
+        duration: 2000
+    });
+    
+    this.map.beforeRender(pan, zoom);
+    
+    this.map.getView().setCenter(coords, 18);
+    this.map.getView().setZoom(18);
+    
+    //this.map.getView().setCenter(coords);
+    //this.map.getView().setZoom(19);
     
     return 1;
 };

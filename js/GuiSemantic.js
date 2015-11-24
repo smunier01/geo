@@ -194,7 +194,7 @@ GuiSemantic.prototype.init = function() {
         $('#hoverbox').hide();
 
     });
-
+    
     this.app.map.on('pointermove', function(evt) {
 
         var objects = that.app.actionHover(evt);
@@ -223,7 +223,7 @@ GuiSemantic.prototype.init = function() {
             });
         }
     });
-
+    
     $('#buildingSearch').bind('keyup', function() {
         var inputTxt = $('#buildingSearch').val().toLowerCase();
         $('#buildingList li').each(function(index, element){
