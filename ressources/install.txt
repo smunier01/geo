@@ -100,6 +100,9 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
         Valeur par defaut : 'parking'
         Regex : vide (Je suis nul en regexp :D 'faudrait en faire une pour accepter que les mots + espace + chiffre)
 
+       Actualiser -> cocher osm_id comme identifiant
+       change way SRID en 900913
+       
       et publier normalement (emprise basés sur les données etc...)
 
   3 - Services
