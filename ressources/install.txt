@@ -99,3 +99,10 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
       et publier normalement (emprise basés sur les données etc...)
 
+  3 - Services
+    SQL : 
+      - update planet_osm_polygon set service='parking' where osm_id in (select osm_id from planet_osm_polygon where amenity='parking');
+      - update planet_osm_polygon set service='restaurant' where osm_id in (select osm_id from planet_osm_polygon where amenity='restaurant');
+      - update planet_osm_polygon set service='bibliotheque' where osm_id in (select osm_id from planet_osm_polygon where amenity='library');
+
+

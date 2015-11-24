@@ -193,9 +193,22 @@ AppOnline.prototype.getBuildingList = function() {
 
 AppOnline.prototype.getServiceList = function() {
     var services = ['parking'];
-
-    console.log('getServiceList');
-    console.log(services);
+    $.ajax({
+        url: 'php/manageServices.php',
+        type: 'POST',
+        data: {
+            action: 'getListServices'
+        },
+        async: false
+    })
+    .done(function(res) {
+        console.log("success");
+        services = $.parseJSON(res);
+    })
+    
+    
+    // console.log('getServiceList');
+    // console.log(services);
 
     return services;
     

@@ -33,4 +33,12 @@ class DB {
 
         return json_encode($result);
     }
+
+    function getListServices() {
+        $stmt = $this->db->prepare("Select distinct service from planet_osm_polygon where service != '' order by service ");
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+
+        return $res;
+    }
 }
