@@ -5,9 +5,10 @@
  *
  * @class
  */
+ var that;
  var AppOnline = function() {
 
-    var that = this;
+    that = this;
     
     /**
      * @type {string} 
@@ -26,8 +27,24 @@
      *  @type {Object.<string, ol.layer.Vector>}
      */ 
      this.layers = [];
+     this.styles=[];
+
+     this.GREY1 = '#CECECE';
+     this.COLOR1 = '#E86FB0';
 
 
+     this.styles['nodeSelected'] = new ol.style.Style({
+        image: new ol.style.Circle({
+            fill: new ol.style.Fill({
+                color: that.GREY1
+            }),
+            stroke: new ol.style.Stroke({
+                color: that.COLOR1,
+                width: 2
+            }),
+            radius: 5
+        })
+    });
     // fond osm
     this.layers['osm'] = {
         'layer': new ol.layer.Tile({
@@ -116,14 +133,23 @@
             source: new ol.source.TileWMS({
                 url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
                 params: {
-                 LAYERS: 'sf:closestService', 
-                 FORMAT: 'image/png'
-             },
-             serverType: 'geoserver',
-             visibility:false
-         })
+                   LAYERS: 'sf:closestService', 
+                   FORMAT: 'image/png'
+               },
+               serverType: 'geoserver',
+               visibility:false
+           })
         }),
         'order': 10
+    };
+
+    this.layers['hover'] = {
+        'layer': new ol.layer.Vector({
+            source: new ol.source.Vector([]),
+            style: that.styles['nodeSelected'],
+            title: 'Hover Layer'
+        }),
+        'order': 100
     };
 
 
@@ -246,8 +272,20 @@ AppOnline.prototype.actionClearAll = function() {
  AppOnline.prototype.actionHover = function(evt) {
 
     console.log('actionHover');
-    //
-    return [];
+    var viewResolution = (this.map.getView().getResolution());
+    var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
+        'INFO_FORMAT': 'text/javascript'
+    });
+
+    console.log(url);
+
+    if(url){
+        $.ajax({
+            url: url+"&format_options=callback:showFeaturesHoverBuildings",
+            dataType: 'jsonp'
+
+        });
+    }
 };
 
 /**
@@ -267,19 +305,20 @@ AppOnline.prototype.actionClearAll = function() {
 
     if(url){
         $.ajax({
-            url: url,
+            url: url+"&format_options=callback:parseResponse",
             dataType: 'jsonp'
+
         });
     }
 
-    var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+    // var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
 
-        console.log("Feature : " + feature);
-        
-    });
-    
+    //     console.log("Feature : " + feature);
 
-    console.log('actionSelect');
+    // });
+
+
+console.log('actionSelect');
 };
 
 /**
@@ -294,6 +333,29 @@ function parseResponse(data){
     for (var i = features.length - 1; i >= 0; i--) {
         console.log(features[i]);
     };
+}
+
+function showFeaturesHoverBuildings(data){
+    var nbFeatures = 0;
+
+    var sourceHover = that.layers['hover'].layer.getSource();
+
+    sourceHover.clear();
+
+    var infos = [];
+    if(data.features != undefined){
+        var features = data.features;
+        for (var i = features.length - 1; i >= 0; i--) {
+            infos.push({
+                'layerName': 'buildings',
+                'properties': features[i].properties
+            });
+            sourceHover.addFeature(features[i]);
+            console.log(features[i].properties);
+        };
+    }
+
+    return infos;
 }
 
 /**
@@ -435,29 +497,29 @@ AppOnline.prototype.actionPathService = function(service) {
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-   */
-   AppOnline.prototype.addAllLayers = function() {
+     */
+     AppOnline.prototype.addAllLayers = function() {
 
-    this.map.getLayers().clear();
+        this.map.getLayers().clear();
 
-    var tmp = [];
+        var tmp = [];
 
-    for (var key in this.layers) {
+        for (var key in this.layers) {
 
-        if (this.layers.hasOwnProperty(key)) {
-            var l = this.layers[key];
+            if (this.layers.hasOwnProperty(key)) {
+                var l = this.layers[key];
 
-            tmp.push(l);
+                tmp.push(l);
+            }
+
         }
 
-    }
+        sortByKey(tmp, 'order');
 
-    sortByKey(tmp, 'order');
-
-    for (var ff of tmp) {
-        this.map.addLayer(ff.layer);
-    }
-};
+        for (var ff of tmp) {
+            this.map.addLayer(ff.layer);
+        }
+    };
 
 /**
  *  Change la visibilitéé d'un layer

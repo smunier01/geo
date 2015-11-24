@@ -202,7 +202,7 @@ GuiSemantic.prototype.init = function() {
         $('#hoverbox').empty();
         $('#hoverbox').hide();
 
-        if (objects.length) {
+        if (objects && objects.length) {
 
             for (var o of objects) {
                 
