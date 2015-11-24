@@ -995,6 +995,9 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
             }
         }
     }
+
+    // on met à jour l'affichage dans l'interface graphique
+    this.gui.updateSyncInfos(featuresToEdit);
 };
 
 /**

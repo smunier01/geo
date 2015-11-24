@@ -239,6 +239,22 @@ GuiSemantic.prototype.init = function() {
     });
 };
 
+GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
+
+    var that = this;
+    
+    if (this.app instanceof AppOffline) {
+
+        // le nombre de changes actuallement en local storage
+        $('#syncInfos').find('.detail').html(localChanges.length);
+
+        // event quand on click sur "save". Envois les données à la bdd.
+        $('#syncInfos').find('a').on('click', function() {
+            that.storage.save();
+        });
+    }
+};
+
 GuiSemantic.prototype.updateServiceList = function(services) {
     var that = this;
 
