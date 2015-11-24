@@ -111,17 +111,17 @@
     //     'order': 10
     // };
 
-    this.layers['closestParking'] = {
+    this.layers['closestService'] = {
         'layer': new ol.layer.Tile({
             source: new ol.source.TileWMS({
                 url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
                 params: {
-                   LAYERS: 'sf:closestParking', 
-                   FORMAT: 'image/png'
-               },
-               serverType: 'geoserver',
-               visibility:false
-           })
+                 LAYERS: 'sf:closestService', 
+                 FORMAT: 'image/png'
+             },
+             serverType: 'geoserver',
+             visibility:false
+         })
         }),
         'order': 10
     };
@@ -195,7 +195,7 @@ AppOnline.prototype.getBuildingList = function() {
         var results = $.parseJSON(res);
         buildings = results;
         console.log(results);
-    
+
         // $('#testSearch').search({
         //     source: $.parseJSON(tmp),
         //     searchFields : ['name'],
@@ -204,8 +204,8 @@ AppOnline.prototype.getBuildingList = function() {
         //         title: 'name'
         //     }
         // });
-    
-    });
+
+});
 
 
     console.log('getBuildingList');
@@ -319,12 +319,12 @@ console.log('ActionParking');
 if(this.posActu){
     var coords = ol.proj.toLonLat(this.posActu);
 
-    var viewparams = ['x:' + coords[0], 'y:' + coords[1]];
+    var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
 
-    var p = this.layers['closestParking'].layer.getSource().getParams();
+    var p = this.layers['closestService'].layer.getSource().getParams();
     p.viewparams = viewparams.join(';');
     console.log(p.viewparams);
-    this.layers['closestParking'].layer.getSource().updateParams(p);
+    this.layers['closestService'].layer.getSource().updateParams(p);
 
 
         // this.map.addLayer(closestParkingLayer);
@@ -407,49 +407,57 @@ if(this.posActu){
 };
 
 AppOnline.prototype.actionPathService = function(service) {
+    var that = this;
+    var callback = function(serviceListe){
+        if ($.inArray(service, serviceListe) == -1) {
+            return null;
+        }
+        
+        console.log(that);
+        if(that.posActu){
+            console.log("actionPathService");
+            var coords = ol.proj.toLonLat(that.posActu);
 
-    // if ($.inArray(service, this.getServiceList()) == -1) {
-    //     return null;
-    // }
-    console.log("actionPathService");
+            var viewparams = ['x:' + coords[0], 'y:' + coords[1], "sname:'" + service + "'"];
 
-    if (service == 'parking') {
+            var p = that.layers['closestService'].layer.getSource().getParams();
+            p.viewparams = viewparams.join(';');
+            console.log(p.viewparams);
+            that.layers['closestService'].layer.getSource().updateParams(p);
+         // this.map.addLayer(closestParkingLayer);
+     }
+ };
 
-        return this.actionParking();
+ this.getServiceList(callback);
 
-    } else {
-
-        // @todo
-
-    }
 };
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+   */
+   AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer
