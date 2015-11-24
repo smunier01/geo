@@ -210,8 +210,7 @@ AppOnline.prototype.getServiceList = function() {
     // console.log('getServiceList');
     // console.log(services);
 
-    return services;
-    
+    return services;   
 };
 
 

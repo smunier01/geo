@@ -80,10 +80,15 @@ body, html, #main-content {
 .full-wide {
     width: 100% !important;
 }
-
+/*
 .ui.menu .ui.list>.item {
     padding-left: 0.9em;
     padding-right: 0.9em;
+}
+*/
+.sidebar .content {
+    padding-left: 0.9em !important;
+    padding-right: 0.9em !important;
 }
 
 .ui.search .prompt {

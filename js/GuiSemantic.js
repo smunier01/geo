@@ -100,31 +100,35 @@ GuiSemantic.prototype.init = function() {
         
         for (var key in feature) {
 
-            var div;
-            
             if (key == 'services') {
-                
-                var services = that.app.getServiceList();
 
-                servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
-                div = servicesDropdown;
-                servicesValue = feature[key];
+                var a = function(services) {
+
+                    servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
+                    var div = servicesDropdown;
+                    servicesValue = feature[key];
                     
-                for (var s of services) {
-                    div.append('<option value="' + s + '">' + s + '</option>');
-                }
+                    for (var s of services) {
+                        div.append('<option value="' + s + '">' + s + '</option>');
+                    }
+
+                    modalContent.append(div);
+                    
+                };
+
+                that.app.getServiceList(a);
                 
             } else {
                 
-                div = $('<div class="ui labeled input fluid">' +
+                var div = $('<div class="ui labeled input fluid">' +
                         '<div class="ui label">' + key + '</div>' +
                         '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
                         '</div>'
                        );
 
-            }
-            modalContent.append(div);
+                modalContent.append(div);
 
+            }
         }
 
         if (typeof servicesDropdown != "undefined") {
@@ -237,6 +241,22 @@ GuiSemantic.prototype.init = function() {
             
         });
     });
+};
+
+GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
+
+    var that = this;
+    
+    if (this.app instanceof AppOffline) {
+
+        // le nombre de changes actuallement en local storage
+        $('#syncInfos').find('.detail').html(localChanges.length);
+
+        // event quand on click sur "save". Envois les données à la bdd.
+        $('#syncInfos').find('a').on('click', function() {
+            that.storage.save();
+        });
+    }
 };
 
 GuiSemantic.prototype.updateServiceList = function(services) {
