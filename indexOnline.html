@@ -1,171 +1,175 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>gis openlayers</title>
-    <script src="libs/jquery/jquery.min.js"></script>
+<head>
+  <title>gis openlayers</title>
+  <script src="libs/jquery/jquery.min.js"></script>
 
-    <!--<link rel="stylesheet" href="css/reset.css" type="text/css">-->
-    <link rel="stylesheet" href="libs/semantic-ui/semantic.min.css" type="text/css">
-    <link rel="stylesheet" href="css/style.css" type="text/css">
-    <link rel="stylesheet" href="libs/openlayers/ol.css" type="text/css">
+  <!--<link rel="stylesheet" href="css/reset.css" type="text/css">-->
+  <link rel="stylesheet" href="libs/semantic-ui/semantic.min.css" type="text/css">
+  <link rel="stylesheet" href="css/style.css" type="text/css">
+  <link rel="stylesheet" href="libs/openlayers/ol.css" type="text/css">
 
-    <script src="libs/semantic-ui/semantic.min.js"></script>
-    <script src="libs/openlayers/ol.js"></script>
-    <script src="js/Storage.js"></script>
-    <script src="js/AppOnline.js"></script>
-    <script src="js/Graph.js"></script>
-    <script src="js/Routing.js"></script>
-    <!--<script src="js/Gui.js"></script>-->
-    <script src="js/GuiSemantic.js"></script>
+  <script src="libs/semantic-ui/semantic.min.js"></script>
+  <script src="libs/openlayers/ol.js"></script>
+  <script src="js/Storage.js"></script>
+  <script src="js/AppOnline.js"></script>
+  <script src="js/Graph.js"></script>
+  <script src="js/Routing.js"></script>
+  <!--<script src="js/Gui.js"></script>-->
+  <script src="js/GuiSemantic.js"></script>
 
-  </head>
-  <body>
+</head>
+<body>
 
-    <div class="box" id="hoverbox"></div>
 
-    <div id="modal-edit" class="ui modal">
-      <div class="header">Edit Feature : </div>
+
+  <div class="box" id="hoverbox"></div>
+
+  <div id="modal-edit" class="ui modal">
+    <div class="header">Edit Feature : </div>
+    <div class="content">
+
+    </div>
+    <div class="actions">
+      <div class="ui cancel button">Cancel</div>
+      <div class="ui approve button">OK</div>
+    </div>
+  </div>
+
+  <div class="ui sidebar">
+
+
+    <div class="ui accordion inverted fluid vertical menu">
+
+      <div class="title fluid">
+        <a class="item"><i class="dropdown icon"></i> Layers</a>
+      </div>
+
       <div class="content">
+        <div id="layersCheckboxes" class="ui middle aligned divided list">
 
+        </div>
       </div>
-      <div class="actions">
-        <div class="ui cancel button">Cancel</div>
-        <div class="ui approve button">OK</div>
+
+      <div class="title">
+        <a class="item"> <i class="dropdown icon"></i> Buildings </a>
       </div>
-    </div>
 
-    <div class="ui sidebar">
-  
-
-      <div class="ui accordion inverted fluid vertical menu">
-
-        <div class="title fluid">
-          <a class="item"><i class="dropdown icon"></i> Layers</a>
-        </div>
-
-        <div class="content">
-          <div id="layersCheckboxes" class="ui middle aligned divided list">
-           
-          </div>
-        </div>
-
-        <div class="title">
-          <a class="item"> <i class="dropdown icon"></i> Buildings </a>
-        </div>
-
-        <div id="buildingList" class="content">
-          <div class="ui fluid icon input">
-            
-            <input id="buildingSearch" type="text" placeholder="Search...">
+      <div id="buildingList" class="content">
+        <div class="ui search" id="testSearch">
+          <div class="ui left icon input">
+            <input class="prompt" type="text" placeholder="Rechercher un batiment">
             <i class="search icon"></i>
-            
           </div>
         </div>
-
-        <div class="title">
-          <a class="item"><i class="dropdown icon"></i> Services</a>
-        </div>
-
-        <div id="servicesList" class="content">
-
-        </div>
-
-        <div class="title">
-          <a class="item"><i class="dropdown icon"></i> Synchronisation</a>
-        </div>
-
-        <div id="servicesList" class="content">
-
-        </div>
-        
       </div>
-    </div>
-    
-    <div id="main-content" class="pusher">
 
-      <div id="top-bar">
-        <div class="ui fluid icon input">
-          
-          <button id="sidebar-toggle" class="ui icon button">
-            <i class="sidebar icon"></i>
-          </button>
+      <div class="title">
+        <a class="item"><i class="dropdown icon"></i> Services</a>
+      </div>
+
+      <div id="servicesList" class="content">
+
+      </div>
+
+      <div class="title">
+        <a class="item"><i class="dropdown icon"></i> Synchronisation</a>
+      </div>
+
+      <div id="servicesList" class="content">
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="main-content" class="pusher">
+
+    <div id="top-bar">
+      <div class="ui fluid icon input">
+
+        <button id="sidebar-toggle" class="ui icon button">
+          <i class="sidebar icon"></i>
+        </button>
           <!--
           <input type="text" placeholder="Search...">
           <i class="circular search link icon"></i>
-          -->
-          <div class="ui search full-wide">
-            <div class="ui fluid icon input">
-              <input class="prompt" type="text" placeholder="Search...">
-              <i class="search icon"></i>
-            </div>
-            <div class="full-wide results"></div>
+        -->
+        <div class="ui search full-wide">
+          <div class="ui fluid icon input">
+            <input class="prompt" type="text" placeholder="Search...">
+            <i class="search icon"></i>
           </div>
-          
-        </div>
-      </div>
-      
-      <div id="map" class="map"></div>
-
-      <div id="mode-switch-buttons" class="ui horizontal list">
-
-        <div class="item">
-          <div class="content">
-            <button id="select-button" class="ui icon labeled button">
-              <i class="write large icon"></i>
-              SELECT
-            </button>
-
-          </div>
-        </div>
-        <div class="item">
-          <div class="content">
-            <button id="path-button" class="ui icon labeled button">
-              <i class="location arrow large icon"></i>
-              CHEMIN
-            </button>
-
-          </div>
-        </div>  
-      </div>
-
-      <div id="select-mode-buttons" class="ui horizontal list">
-        <div class="item">
-          <div class="content">
-            <div class="box" id="selected-info"></div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="content">
-            <button id="edit-button" class="ui orange icon labeled button">
-              <i class="edit large icon"></i>
-              EDIT
-            </button>
-
-          </div>
-        </div>
-      </div>
-
-      <div id="path-mode-buttons" class="ui horizontal list">
-        <div class="item">
-          <div class="ui right pointing black large label">
-            find
-          </div>
-          <div id="selectServices" class="ui action input">
-            <select class="ui selection dropdown">
-
-            </select>
-            <div type="submit" class="ui green button">go!</div>
-          </div>
+          <div class="full-wide results"></div>
         </div>
 
       </div>
     </div>
-    <script>
-      var app = new AppOnline();
-      var gui = new GuiSemantic(app);
-      app.setGui(gui);
 
-    </script>
+    <div id="map" class="map"></div>
+
+    <div id="mode-switch-buttons" class="ui horizontal list">
+
+      <div class="item">
+        <div class="content">
+          <button id="select-button" class="ui icon labeled button">
+            <i class="write large icon"></i>
+            SELECT
+          </button>
+
+        </div>
+      </div>
+      <div class="item">
+        <div class="content">
+          <button id="path-button" class="ui icon labeled button">
+            <i class="location arrow large icon"></i>
+            CHEMIN
+          </button>
+
+        </div>
+      </div>  
+    </div>
+
+    <div id="select-mode-buttons" class="ui horizontal list">
+      <div class="item">
+        <div class="content">
+          <div class="box" id="selected-info"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="content">
+          <button id="edit-button" class="ui orange icon labeled button">
+            <i class="edit large icon"></i>
+            EDIT
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="path-mode-buttons" class="ui horizontal list">
+      <div class="item">
+        <div class="ui right pointing black large label">
+          find
+        </div>
+        <div id="selectServices" class="ui action input">
+          <select class="ui selection dropdown">
+
+          </select>
+          <div type="submit" class="ui green button">go!</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <script>
+    var app = new AppOnline();
+    var gui = new GuiSemantic(app);
+    app.setGui(gui);
+
     
-  </body>
+
+  </script>
+
+</body>
 </html>

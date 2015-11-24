@@ -1,9 +1,9 @@
 <?php
 	include_once('dbconnect.php');
 
-	if(isset($_POST['action']) && !empty($_POST['action'])){
+	if(isset($_GET['action']) && !empty($_GET['action'])){
 		$db = new DB();
-		switch ($_POST['action']) {
+		switch ($_GET['action']) {
 			case 'getListServices':
 				$services = $db->getListServices();
 				$arrayRes = [];
@@ -12,7 +12,16 @@
 				}
 				echo json_encode($arrayRes);
 				break;
-			
+
+			case 'getListBuildings':
+				$buildings = $db->getListBuildings();
+				$arrayRes = [];
+				// foreach ($services as $key => $value) {
+				// 	array_push($arrayRes, $value['name']);
+				// }
+				print_r(json_encode($buildings));
+				break;
+
 			default:
 				# code...
 				break;

@@ -41,4 +41,12 @@ class DB {
 
         return $res;
     }
+
+    function getListBuildings(){
+        $stmt = $this->db->prepare("Select name from planet_osm_polygon where building = 'yes' and name <> '' and name is not null");
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+
+        return $res;
+    }
 }

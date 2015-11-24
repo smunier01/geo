@@ -116,12 +116,12 @@
             source: new ol.source.TileWMS({
                 url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
                 params: {
-                     LAYERS: 'sf:closestParking', 
-                     FORMAT: 'image/png'
-                },
-                serverType: 'geoserver',
-                visibility:false
-            })
+                   LAYERS: 'sf:closestParking', 
+                   FORMAT: 'image/png'
+               },
+               serverType: 'geoserver',
+               visibility:false
+           })
         }),
         'order': 10
     };
@@ -185,6 +185,29 @@
 AppOnline.prototype.getBuildingList = function() {
     var buildings = [{name: 'building1', osm_id: 1}];
     
+    $.ajax({
+        url: 'php/manageServices.php',
+        type: 'GET',
+        data: {action: 'getListBuildings'},
+        async: false
+    })
+    .done(function(res) {
+        var results = $.parseJSON(res);
+        buildings = results;
+        console.log(results);
+    
+        // $('#testSearch').search({
+        //     source: $.parseJSON(tmp),
+        //     searchFields : ['name'],
+        //     searchFullText: true,
+        //     fileds: {
+        //         title: 'name'
+        //     }
+        // });
+    
+    });
+
+
     console.log('getBuildingList');
     console.log(buildings);
 
@@ -192,24 +215,16 @@ AppOnline.prototype.getBuildingList = function() {
 };
 
 AppOnline.prototype.getServiceList = function(v) {
-    // var services = ['parking'];
     $.ajax({
         url: 'php/manageServices.php',
-        type: 'POST',
+        type: 'GET',
         data: {
             action: 'getListServices'
         },
         success: function(res){
-            console.log("success");
             v($.parseJSON(res));
         }
-    });
-    
-    
-    // console.log('getServiceList');
-    // console.log(services);
-
-    // return services;   
+    });  
 };
 
 
@@ -240,7 +255,7 @@ AppOnline.prototype.actionClearAll = function() {
  *
  * Cela devrait renvoyer les propriétés d'un feature
  */
-AppOnline.prototype.actionSelect = function(evt) {
+ AppOnline.prototype.actionSelect = function(evt) {
     console.log(ol.proj.toLonLat(this.map.getCoordinateFromPixel(evt.pixel)));
 
     var viewResolution = (this.map.getView().getResolution());
@@ -270,7 +285,7 @@ AppOnline.prototype.actionSelect = function(evt) {
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
-AppOnline.prototype.actionGoto = function(object) {
+ AppOnline.prototype.actionGoto = function(object) {
     console.log('actionGoto');
 };
 
@@ -286,7 +301,7 @@ function parseResponse(data){
  *
  *  Logiquement cela devrait rechercher le service le plus proche de la position courante
  */
-AppOnline.prototype.actionParking = function() {
+ AppOnline.prototype.actionParking = function() {
     // var hazardWMSLayer = new OpenLayers.Layer.WMS(
     //     "Wenchuan Intensities (WMS)",
     //     "http://mysite.org/geoserver/wms",
@@ -300,18 +315,18 @@ AppOnline.prototype.actionParking = function() {
     //         singleTile:true
     //     }
     //     );
-    console.log('ActionParking');
-    if(this.posActu){
-        var coords = ol.proj.toLonLat(this.posActu);
+console.log('ActionParking');
+if(this.posActu){
+    var coords = ol.proj.toLonLat(this.posActu);
 
-        var viewparams = ['x:' + coords[0], 'y:' + coords[1]];
+    var viewparams = ['x:' + coords[0], 'y:' + coords[1]];
 
-        var p = this.layers['closestParking'].layer.getSource().getParams();
-        p.viewparams = viewparams.join(';');
-        console.log(p.viewparams);
-        this.layers['closestParking'].layer.getSource().updateParams(p);
+    var p = this.layers['closestParking'].layer.getSource().getParams();
+    p.viewparams = viewparams.join(';');
+    console.log(p.viewparams);
+    this.layers['closestParking'].layer.getSource().updateParams(p);
 
-        
+
         // this.map.addLayer(closestParkingLayer);
     }
 };
@@ -412,29 +427,29 @@ AppOnline.prototype.actionPathService = function(service) {
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-   */
-   AppOnline.prototype.addAllLayers = function() {
+     */
+     AppOnline.prototype.addAllLayers = function() {
 
-    this.map.getLayers().clear();
+        this.map.getLayers().clear();
 
-    var tmp = [];
+        var tmp = [];
 
-    for (var key in this.layers) {
+        for (var key in this.layers) {
 
-        if (this.layers.hasOwnProperty(key)) {
-            var l = this.layers[key];
+            if (this.layers.hasOwnProperty(key)) {
+                var l = this.layers[key];
 
-            tmp.push(l);
+                tmp.push(l);
+            }
+
         }
 
-    }
+        sortByKey(tmp, 'order');
 
-    sortByKey(tmp, 'order');
-
-    for (var ff of tmp) {
-        this.map.addLayer(ff.layer);
-    }
-};
+        for (var ff of tmp) {
+            this.map.addLayer(ff.layer);
+        }
+    };
 
 /**
  *  Change la visibilitéé d'un layer
@@ -464,8 +479,8 @@ function sortByKey(array, key) {
 
     // met à jour la liste des services (pour le dropdown en bas à gauche)
     this.getServiceList(function(services) {
-                this.gui.updateServiceList(services);
-            });
+        this.gui.updateServiceList(services);
+    });
     
 };
 
