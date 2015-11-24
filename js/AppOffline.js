@@ -635,9 +635,10 @@ AppOffline.prototype.getServiceList = function() {
     
     var buildings = this.getBuildingList();
 
-    if (this.cache['services'] === undefined || true) {
+    if (this.cache['services'] === undefined) {
 
         this.cache['services'] = [];
+        this.cache['services']['parking'] = 1;
         
         for (var b of buildings) {
 
@@ -659,6 +660,9 @@ AppOffline.prototype.getServiceList = function() {
     return Object.keys(this.cache['services']);
 };
 
+/*
+ *
+ */
 AppOffline.prototype.getRoute = function(p1, p2) {
 
     // Sépare la route la plus proche en deux, pour pouvoir les utiliser dans le graphe.
@@ -716,6 +720,35 @@ AppOffline.prototype.actionPath = function(evt) {
         
         sourceRoute.addFeatures(routeFeatures);
     }
+};
+
+AppOffline.prototype.actionGoto = function(object) {
+
+    var feature;
+
+    var sourceBuildings = this.layers['buildingsVectors'].layer.getSource();
+    var sourceRoads = this.layers['roadVectors'].layer.getSource();
+
+    if (object.id) {
+        feature = sourceBuildings.getFeatureById(object.id);
+    }
+    
+    if (!feature) {
+        feature = sourceRoads.getFeatureById(object.id);
+    }
+
+    if (!feature) {
+        return -1;
+    }
+    
+    var coords = feature.getGeometry().getInteriorPoint().getCoordinates();
+
+    this.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(coords)));
+    
+    this.map.getView().setCenter(coords);
+    this.map.getView().setZoom(19);
+    
+    return 1;
 };
 
 /**
@@ -777,6 +810,8 @@ AppOffline.prototype.getClosestParking = function(coord) {
 
         var v = p.getGeometry().getClosestPoint(coord);
 
+        console.log(v);
+        
         var dist = (new ol.geom.LineString([v, coord])).getLength();
 
         if (dist <= min) {

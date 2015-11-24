@@ -103,7 +103,7 @@ GuiSemantic.prototype.init = function() {
             var div;
             
             if (key == 'services') {
-
+                
                 var services = that.app.getServiceList();
 
                 servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
@@ -258,16 +258,37 @@ GuiSemantic.prototype.updateServiceList = function(services) {
 
 GuiSemantic.prototype.updateBuildingList = function(buildings) {
 
+    var content = [];
+    var that = this;
+    
+    $.each(buildings, function(index, value){
+        if(value.name !== undefined){
+            content.push({title: value.name, id: value.osm_id});
+        }
+    });
+
+    $('.ui.search')
+        .search({
+            source: content,
+            onSelect: function(result, response) {
+                that.app.actionGoto(result);
+            }
+        })
+    ;
+
+    /*
     var $buildingList = $('#buildingList');
     var list = '<ul>';
+
     $.each(buildings, function(index, value){
         if(value.name != undefined){
             list += '<li>' + value.name + '</li>';  
         }
     });
+    
     list += '</ul>';
     $buildingList.append(list);
-
+    */
 };
 
 GuiSemantic.prototype.setMode = function(m) {

@@ -83,7 +83,7 @@
         'order': 8
     };
 
-    // ??
+    // 
     this.layers['resultPgRouting'] = {
         'layer' : new ol.layer.Image({
             source: new ol.source.ImageWMS({
@@ -182,8 +182,28 @@
     }
 };
 
+AppOnline.prototype.getBuildingList = function() {
+    var buildings = [{name: 'building1', osm_id: 1}];
+    
+    console.log('getBuildingList');
+    console.log(buildings);
+
+    return buildings;
+};
+
+AppOnline.prototype.getServiceList = function() {
+    var services = ['building'];
+
+    console.log('getServiceList');
+    console.log(services);
+
+    return services;
+    
+};
+
 
 AppOnline.prototype.actionClearAll = function() {
+    console.log('actionClearAll');
     /*
     this.layers['nearest'].layer.getSource().clear();
     this.layers['selected'].layer.getSource().clear();
@@ -195,10 +215,11 @@ AppOnline.prototype.actionClearAll = function() {
 
 
 /**
- *  Quand la souris bouge sur la map
+ *  Quand la souris bouge sur la map, pas forcement utile
  */
  AppOnline.prototype.actionHover = function(evt) {
 
+    console.log('actionHover');
     //
     return [];
 };
@@ -208,7 +229,7 @@ AppOnline.prototype.actionClearAll = function() {
  *
  * Cela devrait renvoyer les propriétés d'un feature
  */
- AppOnline.prototype.actionSelect = function(evt) {
+AppOnline.prototype.actionSelect = function(evt) {
     console.log(ol.proj.toLonLat(this.map.getCoordinateFromPixel(evt.pixel)));
 
     var viewResolution = (this.map.getView().getResolution());
@@ -229,7 +250,15 @@ AppOnline.prototype.actionClearAll = function() {
         
     });
     
-    
+
+    console.log('actionSelect');
+};
+
+/**
+ * Action appelé quand on recherche un batiment / route dans la barre de recherche
+ */
+AppOnline.prototype.actionGoto = function(object) {
+    console.log('actionGoto');
 };
 
 function parseResponse(data){
@@ -240,11 +269,11 @@ function parseResponse(data){
 }
 
 /**
- *  Action appelé quand on click sur le bouton "parking" ou "service -> parking"
+ *  Action appelé quand on click sur le bouton des services
  *
- *  Logiquement cela devrait rechercher le parking le plus proche de la "position courante
+ *  Logiquement cela devrait rechercher le service le plus proche de la position courante
  */
- AppOnline.prototype.actionParking = function() {
+AppOnline.prototype.actionPathService = function() {
     // var hazardWMSLayer = new OpenLayers.Layer.WMS(
     //     "Wenchuan Intensities (WMS)",
     //     "http://mysite.org/geoserver/wms",
@@ -258,7 +287,7 @@ function parseResponse(data){
     //         singleTile:true
     //     }
     //     );
-    console.log('ActionParking');
+    console.log('ActionPathService');
     if(this.posActu){
         var coords = ol.proj.toLonLat(this.posActu);
 
@@ -280,12 +309,12 @@ function parseResponse(data){
  *  
  */
  AppOnline.prototype.actionEdit = function() {
-
+    console.log('actionEdit');
     // version mode offline pour exemple d'utilisation
 
     /*
     var that = this;
-    var properties = this.selectedFeature.getProperties();
+    var properties = this.selectedObject.getProperties();
     
     return {
         'object' : {
@@ -416,6 +445,13 @@ function sortByKey(array, key) {
  */
  AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
+
+    // met à jour la liste des batiments pour le search input
+    this.gui.updateBuildingList(this.getBuildingList());
+
+    // met à jour la liste des services (pour le dropdown en bas à gauche)
+    this.gui.updateServiceList(this.getServiceList());
+    
 };
 
 
