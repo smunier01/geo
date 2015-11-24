@@ -191,26 +191,25 @@ AppOnline.prototype.getBuildingList = function() {
     return buildings;
 };
 
-AppOnline.prototype.getServiceList = function() {
-    var services = ['parking'];
+AppOnline.prototype.getServiceList = function(v) {
+    // var services = ['parking'];
     $.ajax({
         url: 'php/manageServices.php',
         type: 'POST',
         data: {
             action: 'getListServices'
         },
-        async: false
-    })
-    .done(function(res) {
-        console.log("success");
-        services = $.parseJSON(res);
-    })
+        success: function(res){
+            console.log("success");
+            v($.parseJSON(res));
+        }
+    });
     
     
     // console.log('getServiceList');
     // console.log(services);
 
-    return services;   
+    // return services;   
 };
 
 
@@ -464,7 +463,9 @@ function sortByKey(array, key) {
     this.gui.updateBuildingList(this.getBuildingList());
 
     // met à jour la liste des services (pour le dropdown en bas à gauche)
-    this.gui.updateServiceList(this.getServiceList());
+    this.getServiceList(function(services) {
+                this.gui.updateServiceList(services);
+            });
     
 };
 
