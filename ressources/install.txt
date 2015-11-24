@@ -73,15 +73,29 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
                 Online
 #############################################
 
-Pour activer jsonp :
-  Rajouter dans geoserver/webapps/WEB-INF/web.xml 
-      <context-param>
-          <param-name>ENABLE_JSONP</param-name>
-          <param-value>true</param-value>
-      </context-param>
+  1 - Pour activer jsonp :
+    Rajouter dans geoserver/webapps/WEB-INF/web.xml 
+        <context-param>
+            <param-name>ENABLE_JSONP</param-name>
+            <param-value>true</param-value>
+        </context-param>
 
-  Closest parking SQL : 
-    SELECT * 
-      FROM planet_osm_polygon
-      WHERE amenity='parking'
-      ORDER BY ST_Distance(planet_osm_polygon.way, (ST_SetSRID(ST_MakePoint(%x%, %y%), 900913))) LIMIT 1;
+  2 - SQL View pour parking le plus proche : 
+      geoserver->couche->new->gis->Configurer une nouvelle vue SQL
+      nom : closestParking
+      directive : 
+        SELECT * 
+          FROM planet_osm_polygon
+          WHERE amenity='parking'
+          ORDER BY ST_Distance(planet_osm_polygon.way, ST_Transform(ST_SetSRID(ST_MakePoint(%x%, %y%), 4326), 900913)) LIMIT 1
+
+      Deviner les params SQL
+      x : 
+        Valeur par defaut : 0
+        Regex : ^[\d\.\+-eE]+$
+      y : 
+        Valeur par defaut : 0
+        Regex : ^[\d\.\+-eE]+$
+
+      et publier normalement (emprise basés sur les données etc...)
+

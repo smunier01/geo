@@ -97,21 +97,21 @@
         'order': 9
     };
 
-     this.layers['closestParking'] = {
-        'layer': new ol.layer.Tile({
-            source: new ol.source.TileWMS({
-                url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
-                params: {
-                     LAYERS: 'sf:closestParking', 
-                     FORMAT: 'image/png'
-                },
-                serverType: 'geoserver'
-            })
-        }),
-        'order': 10
-    };
+    //  this.layers['closestParking'] = {
+    //     'layer': new ol.layer.Tile({
+    //         source: new ol.source.TileWMS({
+    //             url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
+    //             params: {
+    //                  LAYERS: 'sf:closestParking', 
+    //                  FORMAT: 'image/png'
+    //             },
+    //             serverType: 'geoserver'
+    //         })
+    //     }),
+    //     'order': 10
+    // };
 
-    this.layers['closestParkingTest'] = {
+    this.layers['closestParking'] = {
         'layer': new ol.layer.Tile({
             source: new ol.source.TileWMS({
                 url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
@@ -120,7 +120,7 @@
                      FORMAT: 'image/png'
                 },
                 serverType: 'geoserver',
-                viewparams: 'x:1.939558982849121;y:47.846545947203'
+                visibility:false
             })
         }),
         'order': 10
@@ -192,7 +192,7 @@ AppOnline.prototype.getBuildingList = function() {
 };
 
 AppOnline.prototype.getServiceList = function() {
-    var services = ['building'];
+    var services = ['parking'];
 
     console.log('getServiceList');
     console.log(services);
@@ -237,6 +237,8 @@ AppOnline.prototype.actionSelect = function(evt) {
         'INFO_FORMAT': 'text/javascript'
     });
 
+    console.log(url);
+
     if(url){
         $.ajax({
             url: url,
@@ -273,7 +275,7 @@ function parseResponse(data){
  *
  *  Logiquement cela devrait rechercher le service le plus proche de la position courante
  */
-AppOnline.prototype.actionPathService = function() {
+AppOnline.prototype.actionParking = function() {
     // var hazardWMSLayer = new OpenLayers.Layer.WMS(
     //     "Wenchuan Intensities (WMS)",
     //     "http://mysite.org/geoserver/wms",
@@ -287,7 +289,7 @@ AppOnline.prototype.actionPathService = function() {
     //         singleTile:true
     //     }
     //     );
-    console.log('ActionPathService');
+    console.log('ActionParking');
     if(this.posActu){
         var coords = ol.proj.toLonLat(this.posActu);
 
