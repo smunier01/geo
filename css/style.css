@@ -99,7 +99,9 @@ body, html, #main-content {
 .cardContainer{
     position: fixed;
     right: 5px;
-    bottom: 5px;
+    bottom: 55px;
+    display: none;
+    visibility: hidden;
 }
 
 #main-test {

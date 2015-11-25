@@ -184,8 +184,8 @@ AppOnline.prototype.getFeaturesFromClick = function(event) {
         event.coordinate, viewResolution, 'EPSG:3857',
 
         {'INFO_FORMAT': 'text/javascript'}
+
     );
-    console.log("URL : " + url);
     
     if (url) {
 
@@ -216,26 +216,16 @@ AppOnline.prototype.getBuildingList = function() {
         type: 'GET',
         data: {action: 'getListBuildings'},
         async: false
-    })
-        .done(function(res) {
-            var results = $.parseJSON(res);
-            buildings = results;
-            console.log(results);
+    }).done(function(res) {
+        var results = $.parseJSON(res);
+        buildings = results;
+        // console.log(results);
 
-            // $('#testSearch').search({
-            //     source: $.parseJSON(tmp),
-            //     searchFields : ['name'],
-            //     searchFullText: true,
-            //     fileds: {
-            //         title: 'name'
-            //     }
-            // });
-
-        });
+    });
 
 
     console.log('getBuildingList');
-    console.log(buildings);
+    //console.log(buildings);
 
     return buildings;
 };
@@ -270,14 +260,14 @@ AppOnline.prototype.actionClearAll = function() {
  *  Quand la souris bouge sur la map, pas forcement utile
  */
 AppOnline.prototype.actionHover = function(evt) {
-
+    /*
     console.log('actionHover');
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
         'INFO_FORMAT': 'text/javascript'
     });
 
-    console.log(url);
+    //console.log(url);
 
     if(url){
         $.ajax({
@@ -285,7 +275,7 @@ AppOnline.prototype.actionHover = function(evt) {
             dataType: 'jsonp'
 
         });
-    }
+    }*/
 };
 
 /**
@@ -293,21 +283,23 @@ AppOnline.prototype.actionHover = function(evt) {
  *
  * Cela devrait renvoyer les propriétés d'un feature
  */
-AppOnline.prototype.actionSelect = function(evt) {
-    console.log(ol.proj.toLonLat(this.map.getCoordinateFromPixel(evt.pixel)));
+
+AppOnline.prototype.actionSelect = function(evt, callback) {
 
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
         'INFO_FORMAT': 'text/javascript'
     });
 
-    console.log(url);
 
-    if(url){
+    if (url) {
         $.ajax({
-            url: url+"&format_options=callback:parseResponse",
-            dataType: 'jsonp'
-
+            jsonpCallback: 'getJson',
+            url: url+"&format_options=callback:getJson",
+            dataType: 'jsonp',
+            success: function (data, status) {
+                callback(data.features);   
+            }
         });
     }
 
@@ -318,7 +310,7 @@ AppOnline.prototype.actionSelect = function(evt) {
     // });
 
 
-    console.log('actionSelect');
+    console.log('actionSelectaa');
 };
 
 /**
@@ -329,16 +321,31 @@ AppOnline.prototype.actionGoto = function(object) {
 };
 
 function parseResponse(data){
-    console.log("parseResponse");
+    //console.log("parseResponse");
     var features = data.features;
-    for (var i = features.length - 1; i >= 0; i--) {
-        console.log(features[i]);
-    };
+    //for (var i = features.length - 1; i >= 0; i--) {
+        //console.log(features[i]);
+    //};
     if(features.length > 0){
+        var $cardContainer = $('.cardContainer');
+        $cardContainer.find('#batName').text(features[0].properties.name!=null?features[0].properties.name:features[0].properties.service);
+        $cardContainer.find('#batService').text(features[0].properties.service);
+        var coordsBat = [];
+
+        var functionTmp = $.proxy(function(){
+            this.actionPath(coordsBat, true);
+        }, that);
+        coordsBat['coordinate'] = features[0].geometry.coordinates[0][0];
+        $cardContainer.find('#batItineraire').click(functionTmp);
         if($('.cardContainer').hasClass('hidden')){
             $('.cardContainer').transition('vertical flip');
         }
-        
+    }
+
+    else{
+        if(! $('.cardContainer').hasClass('hidden')){
+            $('.cardContainer').transition('vertical flip');
+        }
     }
 }
 
@@ -358,12 +365,13 @@ function showFeaturesHoverBuildings(data){
                 'layerName': 'buildings',
                 'properties': features[i].properties
             });
+
             //sourceHover.addFeature(new ol.Feature(features[i]));
             console.log(new ol.Feature(features[i]));
         }
     }
-
-    return infos;
+    return ['e'];
+    // return infos;
 }
 
 /**
@@ -393,10 +401,9 @@ AppOnline.prototype.actionParking = function() {
 
         var p = this.layers['closestService'].layer.getSource().getParams();
         p.viewparams = viewparams.join(';');
-        console.log(p.viewparams);
+        //console.log(p.viewparams);
         this.layers['closestService'].layer.getSource().updateParams(p);
-
-
+        
         // this.map.addLayer(closestParkingLayer);
     }
 };
@@ -435,25 +442,32 @@ AppOnline.prototype.actionEdit = function() {
  *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
  *  entre les deux points.
  */
-AppOnline.prototype.actionPath = function(evt) {
+AppOnline.prototype.actionPath = function(evt, redirect) {
 
     var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
-
     var pointsSrc = this.layers['vector2'].layer.getSource();
+    redirect==undefined?false:redirect;
 
-    if (this.click == 0 || this.click == 2) {
+
+
+    if (this.click == 0 || (this.click == 2 && !redirect)) {
+        //Efface le routing au cas où qqch est deja affiché
+        var p = this.layers['resultPgRouting'].layer.getSource().getParams();
+        p.viewparams = [];
+        this.layers['resultPgRouting'].layer.getSource().updateParams(p);
 
         this.click = 1;
         this.posActu = evt.coordinate;
 
         pointsSrc.clear();
 
-        //this.layers['resultPgRouting'].layer.getSource().clear();
-        //this.map.removeLayer(result);
-
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
 
     } else {
+        if(redirect){
+            pointsSrc.clear();
+            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(this.posActu)));
+        }
 
         this.click = 2;
         
@@ -472,7 +486,6 @@ AppOnline.prototype.actionPath = function(evt) {
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = viewparams.join(';');
         this.layers['resultPgRouting'].layer.getSource().updateParams(p);
-        
     }
 };
 
@@ -483,7 +496,7 @@ AppOnline.prototype.actionPathService = function(service) {
             return null;
         }
         
-        console.log(that);
+        //console.log(that);
         if(that.posActu){
             console.log("actionPathService");
             var coords = ol.proj.toLonLat(that.posActu);
@@ -492,7 +505,7 @@ AppOnline.prototype.actionPathService = function(service) {
 
             var p = that.layers['closestService'].layer.getSource().getParams();
             p.viewparams = viewparams.join(';');
-            console.log(p.viewparams);
+            //console.log(p.viewparams);
             that.layers['closestService'].layer.getSource().updateParams(p);
             // this.map.addLayer(closestParkingLayer);
         }
