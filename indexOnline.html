@@ -17,6 +17,7 @@
   <script src="js/Routing.js"></script>
   <!--<script src="js/Gui.js"></script>-->
   <script src="js/GuiSemantic.js"></script>
+  <meta charset="UTF-8"/>
 
 </head>
 <body>
@@ -108,6 +109,34 @@
 
     <div id="map" class="map"></div>
 
+    <div class="cardContainer">
+      <div class="ui card centered">
+        <div class="content">
+
+          <div class="right floated meta">
+            <a id="closeCard"><i class="close icon"></i></a>
+          </div>
+          Restaurants Universitaires - Le Forum - Le Bistro
+        </div>
+        <div class="image">
+          <img>
+        </div>
+        <div class="content">
+          <i class="info icon"></i>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sit amet sodales risus, eget pretium nibh. Nunc vel neque in ante ultrices accumsan non nec risus. Nam tincidunt sem vel cursus molestie. Sed placerat sit amet metus in lobortis. Suspendisse sapien libero
+        </div>
+        <div class="extra content">
+          Service : Restaurant
+          <span class="right floated">
+            <a>
+              Itineraire
+              <i class="share icon"></i>
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+
     <div id="mode-switch-buttons" class="ui horizontal list">
 
       <div class="item">
@@ -136,7 +165,7 @@
           <div class="box" id="selected-info"></div>
         </div>
       </div>
-      <div class="item">
+      <!-- <div class="item">
         <div class="content">
           <button id="edit-button" class="ui orange icon labeled button">
             <i class="edit large icon"></i>
@@ -144,7 +173,7 @@
           </button>
 
         </div>
-      </div>
+      </div> -->
     </div>
 
     <div id="path-mode-buttons" class="ui horizontal list">
@@ -167,7 +196,11 @@
     var gui = new GuiSemantic(app);
     app.setGui(gui);
 
-    
+    $('#closeCard').click(function(){
+      $(this).closest('.cardContainer').transition('vertical flip');
+    });
+
+
 
   </script>
 

@@ -329,10 +329,17 @@ console.log('actionSelect');
 };
 
 function parseResponse(data){
+    console.log("parseResponse");
     var features = data.features;
     for (var i = features.length - 1; i >= 0; i--) {
         console.log(features[i]);
     };
+    if(features.length > 0){
+        if($('.cardContainer').hasClass('hidden')){
+            $('.cardContainer').transition('vertical flip');
+        }
+        
+    }
 }
 
 function showFeaturesHoverBuildings(data){
