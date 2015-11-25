@@ -84,10 +84,10 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
       geoserver->couche->new->gis->Configurer une nouvelle vue SQL
       nom : closestService
       directive : 
-        SELECT * 
-          FROM planet_osm_polygon
-          WHERE service like '%' || %sname% || '%'
+        select * from planet_osm_polygon where osm_id in 
+        (select services_batiments.id_batiment from services join services_batiments on (services_batiments.id_service = services.id) where services.name=%sname%)
           ORDER BY ST_Distance(planet_osm_polygon.way, ST_Transform(ST_SetSRID(ST_MakePoint(%x%, %y%), 4326), 900913)) LIMIT 1
+
 
       Deviner les params SQL
       x : 
@@ -107,8 +107,25 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
   3 - Services
     SQL : 
+      //--------------------------PLUS MAINTENANT--------------------------
       - update planet_osm_polygon set service='parking' where osm_id in (select osm_id from planet_osm_polygon where amenity='parking');
       - update planet_osm_polygon set service='restaurant' where osm_id in (select osm_id from planet_osm_polygon where amenity='restaurant');
       - update planet_osm_polygon set service='bibliotheque' where osm_id in (select osm_id from planet_osm_polygon where amenity='library');
+      //--------------------------PLUS MAINTENANT--------------------------
 
+      - Create table services (
+        id BIGSERIAL PRIMARY KEY NOT NULL, 
+        name TEXT NOT NULL,
+        url TEXT);
 
+      - Create table services_batiments(
+        id BIGSERIAL PRIMARY KEY NOT NULL, 
+        id_service BIGINT NOT NULL,
+        id_batiment BIGINT NOT NULL);
+
+      - insert into services (name) values('parking');
+      - insert into services (name) values('bibliotheque');
+      - insert into services (name) values('parking'); 
+
+      - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = services.name);
+      - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = 'library');
