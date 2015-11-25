@@ -31,11 +31,15 @@ GuiSemantic.prototype.init = function() {
     
     $('.ui.accordion').accordion();
 
-    $('.ui.sidebar').sidebar('setting', 'transition', 'push');
+    $('#bottom-bar')
+        .sidebar('setting', 'transition', 'push')
+        .sidebar('setting', { dimPage: false });
+    
+    $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
     $('#sidebar-toggle').click(function(e){
         e.preventDefault();
-        $('.ui.sidebar').sidebar('toggle');
+        $('#left-sidebar').sidebar('toggle');
     });
 
     $('#select-button').click(function() {
@@ -169,15 +173,17 @@ GuiSemantic.prototype.init = function() {
             var object = that.app.actionSelect(evt);
 
             if (object) {
-                
-                $('#selected-info').show();
+                $('#bottom-bar').sidebar('toggle');
+                //$('#selected-info').show();
                 
                 for (var o in object) {
                     $('#selected-info').append('<div>' + o + ':' + object[o] + '</div>');
                 }
 
             } else {
-                $('#selected-info').hide();
+                
+                //$('#selected-info').hide();
+
             }
             
         } else if (that.currentMode == that.modes.PATH) {

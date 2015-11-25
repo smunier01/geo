@@ -1,5 +1,6 @@
 body, html, #main-content {
-  height: 100%;
+    height: 100%;
+    background: #E0DFDF;
 }
 
 #map {
@@ -99,4 +100,15 @@ body, html, #main-content {
     position: fixed;
     right: 5px;
     bottom: 5px;
+}
+
+#main-test {
+    height: 100%;
+    width: 80%;
+    margin: auto;
+    font-size: 2.0em;
+}
+
+#main-test a {
+    display: block;
 }
