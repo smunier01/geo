@@ -94,3 +94,9 @@ body, html, #main-content {
 .ui.search .prompt {
     border-radius: 0;
 }
+
+.cardContainer{
+    position: fixed;
+    right: 5px;
+    bottom: 5px;
+}
