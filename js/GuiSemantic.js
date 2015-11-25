@@ -31,11 +31,15 @@ GuiSemantic.prototype.init = function() {
     
     $('.ui.accordion').accordion();
 
-    $('.ui.sidebar').sidebar('setting', 'transition', 'push');
+    $('#bottom-bar')
+        .sidebar('setting', 'transition', 'push')
+        .sidebar('setting', { dimPage: false });
+    
+    $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
     $('#sidebar-toggle').click(function(e){
         e.preventDefault();
-        $('.ui.sidebar').sidebar('toggle');
+        $('#left-sidebar').sidebar('toggle');
     });
 
     $('#select-button').click(function() {
@@ -165,20 +169,31 @@ GuiSemantic.prototype.init = function() {
         
         if (that.currentMode == that.modes.SELECT) {
 
-            $('#selected-info').empty();
-            var object = that.app.actionSelect(evt);
+            var object = that.app.actionSelect(evt, function(features) {
 
-            if (object) {
-                
-                $('#selected-info').show();
-                
-                for (var o in object) {
-                    $('#selected-info').append('<div>' + o + ':' + object[o] + '</div>');
+                if (features.length > 0) {
+                    var data = features[0];
+                    var cardContainer = $('.cardContainer');
+                    cardContainer.find('#batName').text(data.properties.name !== null ? data.properties.name : data.properties.service);
+                    cardContainer.find('#batService').text(data.properties.service);
+
+                    var coordsBat = [];
+                    coordsBat['coordinate'] = data.geometry.coordinates[0][0];
+                    
+                    cardContainer.find('#batItineraire').click(function() {
+                        that.app.actionPath(coordsBat, true);
+                    });
+                    
+                    if ($('.cardContainer').hasClass('hidden')){
+                        $('.cardContainer').transition('vertical flip');
+                    }
+                } else {
+                    if(! $('.cardContainer').hasClass('hidden')){
+                        $('.cardContainer').transition('vertical flip');
+                    }
                 }
 
-            } else {
-                $('#selected-info').hide();
-            }
+            });
             
         } else if (that.currentMode == that.modes.PATH) {
 
@@ -194,7 +209,7 @@ GuiSemantic.prototype.init = function() {
         $('#hoverbox').hide();
 
     });
-
+    
     this.app.map.on('pointermove', function(evt) {
 
         var objects = that.app.actionHover(evt);
@@ -223,7 +238,7 @@ GuiSemantic.prototype.init = function() {
             });
         }
     });
-
+    
     $('#buildingSearch').bind('keyup', function() {
         var inputTxt = $('#buildingSearch').val().toLowerCase();
         $('#buildingList li').each(function(index, element){

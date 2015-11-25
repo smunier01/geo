@@ -234,7 +234,7 @@ var AppOffline = function () {
     //
     // Sources & Layers
     //
-
+    /*
     this.layers['roadVectors'] = {
         'layer': new ol.layer.Vector({
             title: 'Roads Vector Layer',
@@ -246,7 +246,22 @@ var AppOffline = function () {
         }),
         'order': 10
     };
-
+    */
+    this.layers['roadVectors'] = {
+ 	'layer': new ol.layer.Image({
+            title: 'Roads Vector Layer',
+ 	    source: new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/lines.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: styleFunctionRoads
+ 	    })
+ 	}),
+ 	'order': 10
+    };
+    
+    /*
     this.layers['buildingsVectors'] = {
         'layer': new ol.layer.Vector({
             title: 'Building Vector Layer',
@@ -258,11 +273,25 @@ var AppOffline = function () {
         }),
         'order': 9
     };
+    */
+    this.layers['buildingsVectors'] = {
+ 	'layer': new ol.layer.Image({
+            title: 'Building Vector Layer',
+ 	    source: new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/polygons.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: styleFunctionBuildings
+ 	    })
+ 	}),
+ 	'order': 9
+    };
     
     // callback pour buildings.json
     var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
 
-        var source = that.layers['buildingsVectors'].layer.getSource();
+        var source = that.layers['buildingsVectors'].layer.getSource().getSource();
 
         if (source.getState() == 'ready') {
 
@@ -284,7 +313,7 @@ var AppOffline = function () {
     // callback pour lines.json
     var key2 = this.layers['roadVectors'].layer.getSource().on('change', function() {
 
-        var source = that.layers['roadVectors'].layer.getSource();
+        var source = that.layers['roadVectors'].layer.getSource().getSource();
 
         if (source.getState() == 'ready') {
 
@@ -482,7 +511,7 @@ AppOffline.prototype.actionClearAll = function() {
  *  Quand la souris bouge sur la map
  */
 AppOffline.prototype.actionHover = function(evt) {
-
+    /*
     var that = this, t = true, nbFeatures = 0;
 
     var sourceHover = that.layers['hover'].layer.getSource();
@@ -508,6 +537,7 @@ AppOffline.prototype.actionHover = function(evt) {
     });
 
     return infos;
+    */
 };
 
 /**
@@ -573,7 +603,6 @@ AppOffline.prototype.actionEdit = function() {
     var properties = this.selectedFeature.getProperties();
 
     if (properties['building'] !== undefined) {
-        console.log("hello");
         properties['services'] = properties['services'] || null;
     }
     
@@ -601,8 +630,8 @@ AppOffline.prototype.actionEdit = function() {
 
                 that.cache['services'] = undefined;
 
-                that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
-                that.updateFeaturesFromStorage(that.layers['buildingsVectors'].layer.getSource());
+                that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource().getSource());
+                that.updateFeaturesFromStorage(that.layers['buildingsVectors'].layer.getSource().getSource());
             }
         }
     };
@@ -728,8 +757,8 @@ AppOffline.prototype.actionGoto = function(object) {
 
     var feature;
 
-    var sourceBuildings = this.layers['buildingsVectors'].layer.getSource();
-    var sourceRoads = this.layers['roadVectors'].layer.getSource();
+    var sourceBuildings = this.layers['buildingsVectors'].layer.getSource().getSource();
+    var sourceRoads = this.layers['roadVectors'].layer.getSource().getSource();
 
     if (object.id) {
         feature = sourceBuildings.getFeatureById(object.id);
@@ -746,9 +775,24 @@ AppOffline.prototype.actionGoto = function(object) {
     var coords = feature.getGeometry().getInteriorPoint().getCoordinates();
 
     this.layers['nearest'].layer.getSource().addFeature(new ol.Feature(new ol.geom.Point(coords)));
+
+    var pan = ol.animation.pan({
+        duration: 2000,
+        source: this.map.getView().getCenter()
+    });
     
-    this.map.getView().setCenter(coords);
-    this.map.getView().setZoom(19);
+    var zoom = ol.animation.zoom({
+        resolution: this.map.getView().getResolution(),
+        duration: 2000
+    });
+    
+    this.map.beforeRender(pan, zoom);
+    
+    this.map.getView().setCenter(coords, 18);
+    this.map.getView().setZoom(18);
+    
+    //this.map.getView().setCenter(coords);
+    //this.map.getView().setZoom(19);
     
     return 1;
 };
@@ -812,8 +856,6 @@ AppOffline.prototype.getClosestParking = function(coord) {
 
         var v = p.getGeometry().getClosestPoint(coord);
 
-        console.log(v);
-        
         var dist = (new ol.geom.LineString([v, coord])).getLength();
 
         if (dist <= min) {
@@ -838,7 +880,7 @@ AppOffline.prototype.getRoadList = function() {
 
         this.cache['roads'] = [];
 
-        var source = this.layers['roadVectors'].layer.getSource();
+        var source = this.layers['roadVectors'].layer.getSource().getSource();
 
         source.forEachFeature(function(f) {
 
@@ -866,7 +908,7 @@ AppOffline.prototype.getParkingList = function() {
 
     var that = this;
 
-    var source = this.layers['buildingsVectors'].layer.getSource();
+    var source = this.layers['buildingsVectors'].layer.getSource().getSource();
     
     if (this.cache['parkings'] === undefined) {
 
@@ -955,7 +997,7 @@ AppOffline.prototype.getBuildingList = function() {
 
     var buildings = [];
 
-    var source = this.layers['buildingsVectors'].layer.getSource();
+    var source = this.layers['buildingsVectors'].layer.getSource().getSource();
     
     source.forEachFeature(function(f) {
 

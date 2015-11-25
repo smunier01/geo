@@ -5,35 +5,35 @@
  *
  * @class
  */
- var that;
- var AppOnline = function() {
+var that;
+var AppOnline = function() {
 
     that = this;
     
     /**
      * @type {string} 
      */
-     this.GEO_HOST = 'localhost:8080';
+    this.GEO_HOST = 'localhost:8080';
 
     /**
      *  Reference à l'objet map d'openlayer
      *  @type {ol.Map}
      */
-     this.map = undefined;
-     this.posActu = undefined;
+    this.map = undefined;
+    this.posActu = undefined;
 
     /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
      */ 
-     this.layers = [];
-     this.styles=[];
+    this.layers = [];
+    this.styles=[];
 
-     this.GREY1 = '#CECECE';
-     this.COLOR1 = '#E86FB0';
+    this.GREY1 = '#CECECE';
+    this.COLOR1 = '#E86FB0';
 
 
-     this.styles['nodeSelected'] = new ol.style.Style({
+    this.styles['nodeSelected'] = new ol.style.Style({
         image: new ol.style.Circle({
             fill: new ol.style.Fill({
                 color: that.GREY1
@@ -133,12 +133,12 @@
             source: new ol.source.TileWMS({
                 url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
                 params: {
-                   LAYERS: 'sf:closestService', 
-                   FORMAT: 'image/png'
-               },
-               serverType: 'geoserver',
-               visibility:false
-           })
+                    LAYERS: 'sf:closestService', 
+                    FORMAT: 'image/png'
+                },
+                serverType: 'geoserver',
+                visibility:false
+            })
         }),
         'order': 10
     };
@@ -176,7 +176,7 @@
 /**
  * ??
  */
- AppOnline.prototype.getFeaturesFromClick = function(event) {
+AppOnline.prototype.getFeaturesFromClick = function(event) {
 
     var viewResolution = (this.map.getView().getResolution());
 
@@ -184,8 +184,8 @@
         event.coordinate, viewResolution, 'EPSG:3857',
 
         {'INFO_FORMAT': 'text/javascript'}
-        );
-    //console.log("URL : " + url);
+
+    );
     
     if (url) {
 
@@ -202,7 +202,7 @@
                   vectorSource.addFeatures(geojsonFormat.readFeatures(response));
                   console.log(geojsonFormat.readFeatures(response));*/
 
-              });
+            });
         }
 
     }
@@ -216,22 +216,12 @@ AppOnline.prototype.getBuildingList = function() {
         type: 'GET',
         data: {action: 'getListBuildings'},
         async: false
-    })
-    .done(function(res) {
+    }).done(function(res) {
         var results = $.parseJSON(res);
         buildings = results;
-       // console.log(results);
+        // console.log(results);
 
-        // $('#testSearch').search({
-        //     source: $.parseJSON(tmp),
-        //     searchFields : ['name'],
-        //     searchFullText: true,
-        //     fileds: {
-        //         title: 'name'
-        //     }
-        // });
-
-});
+    });
 
 
     console.log('getBuildingList');
@@ -257,11 +247,11 @@ AppOnline.prototype.getServiceList = function(v) {
 AppOnline.prototype.actionClearAll = function() {
     console.log('actionClearAll');
     /*
-    this.layers['nearest'].layer.getSource().clear();
-    this.layers['selected'].layer.getSource().clear();
-    this.layers['route'].layer.getSource().clear();
-    this.nodeSelected = [];
-    this.selectedFeature = undefined;
+      this.layers['nearest'].layer.getSource().clear();
+      this.layers['selected'].layer.getSource().clear();
+      this.layers['route'].layer.getSource().clear();
+      this.nodeSelected = [];
+      this.selectedFeature = undefined;
     */
 };
 
@@ -269,8 +259,8 @@ AppOnline.prototype.actionClearAll = function() {
 /**
  *  Quand la souris bouge sur la map, pas forcement utile
  */
- AppOnline.prototype.actionHover = function(evt) {
-
+AppOnline.prototype.actionHover = function(evt) {
+    /*
     console.log('actionHover');
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
@@ -285,7 +275,7 @@ AppOnline.prototype.actionClearAll = function() {
             dataType: 'jsonp'
 
         });
-    }
+    }*/
 };
 
 /**
@@ -293,21 +283,23 @@ AppOnline.prototype.actionClearAll = function() {
  *
  * Cela devrait renvoyer les propriétés d'un feature
  */
- AppOnline.prototype.actionSelect = function(evt) {
-    //console.log(ol.proj.toLonLat(this.map.getCoordinateFromPixel(evt.pixel)));
+
+AppOnline.prototype.actionSelect = function(evt, callback) {
 
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
         'INFO_FORMAT': 'text/javascript'
     });
 
-    //console.log(url);
 
-    if(url){
+    if (url) {
         $.ajax({
-            url: url+"&format_options=callback:parseResponse",
-            dataType: 'jsonp'
-
+            jsonpCallback: 'getJson',
+            url: url+"&format_options=callback:getJson",
+            dataType: 'jsonp',
+            success: function (data, status) {
+                callback(data.features);   
+            }
         });
     }
 
@@ -318,22 +310,22 @@ AppOnline.prototype.actionClearAll = function() {
     // });
 
 
-console.log('actionSelect');
+    console.log('actionSelectaa');
 };
 
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
- AppOnline.prototype.actionGoto = function(object) {
+AppOnline.prototype.actionGoto = function(object) {
     console.log('actionGoto');
 };
 
 function parseResponse(data){
-    console.log("parseResponse");
+    //console.log("parseResponse");
     var features = data.features;
-    for (var i = features.length - 1; i >= 0; i--) {
+    //for (var i = features.length - 1; i >= 0; i--) {
         //console.log(features[i]);
-    };
+    //};
     if(features.length > 0){
         var $cardContainer = $('.cardContainer');
         $cardContainer.find('#batName').text(features[0].properties.name!=null?features[0].properties.name:features[0].properties.service);
@@ -358,6 +350,7 @@ function parseResponse(data){
 }
 
 function showFeaturesHoverBuildings(data){
+    
     var nbFeatures = 0;
 
     var sourceHover = that.layers['hover'].layer.getSource();
@@ -372,9 +365,10 @@ function showFeaturesHoverBuildings(data){
                 'layerName': 'buildings',
                 'properties': features[i].properties
             });
-            sourceHover.addFeature(features[i]);
-            //console.log(features[i].properties);
-        };
+
+            //sourceHover.addFeature(new ol.Feature(features[i]));
+            console.log(new ol.Feature(features[i]));
+        }
     }
     return ['e'];
     // return infos;
@@ -385,7 +379,7 @@ function showFeaturesHoverBuildings(data){
  *
  *  Logiquement cela devrait rechercher le service le plus proche de la position courante
  */
- AppOnline.prototype.actionParking = function() {
+AppOnline.prototype.actionParking = function() {
     // var hazardWMSLayer = new OpenLayers.Layer.WMS(
     //     "Wenchuan Intensities (WMS)",
     //     "http://mysite.org/geoserver/wms",
@@ -399,18 +393,17 @@ function showFeaturesHoverBuildings(data){
     //         singleTile:true
     //     }
     //     );
-console.log('ActionParking');
-if(this.posActu){
-    var coords = ol.proj.toLonLat(this.posActu);
+    console.log('ActionParking');
+    if(this.posActu){
+        var coords = ol.proj.toLonLat(this.posActu);
 
-    var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
+        var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
 
-    var p = this.layers['closestService'].layer.getSource().getParams();
-    p.viewparams = viewparams.join(';');
-    //console.log(p.viewparams);
-    this.layers['closestService'].layer.getSource().updateParams(p);
-
-
+        var p = this.layers['closestService'].layer.getSource().getParams();
+        p.viewparams = viewparams.join(';');
+        //console.log(p.viewparams);
+        this.layers['closestService'].layer.getSource().updateParams(p);
+        
         // this.map.addLayer(closestParkingLayer);
     }
 };
@@ -420,26 +413,26 @@ if(this.posActu){
  *  
  *  
  */
- AppOnline.prototype.actionEdit = function() {
+AppOnline.prototype.actionEdit = function() {
     console.log('actionEdit');
     // version mode offline pour exemple d'utilisation
 
     /*
-    var that = this;
-    var properties = this.selectedObject.getProperties();
-    
-    return {
-        'object' : {
-            'name' : properties['name'],
-            'services' : properties['services'] || '',
-            'highway' : properties['highway']
-        },
-        'callback': function(result) {
-            result['osm_id'] = properties['osm_id'];
-            that.storage.add('edit', result);
-            that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
-        }
-    };
+      var that = this;
+      var properties = this.selectedObject.getProperties();
+      
+      return {
+      'object' : {
+      'name' : properties['name'],
+      'services' : properties['services'] || '',
+      'highway' : properties['highway']
+      },
+      'callback': function(result) {
+      result['osm_id'] = properties['osm_id'];
+      that.storage.add('edit', result);
+      that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
+      }
+      };
     */
 };
 
@@ -449,7 +442,7 @@ if(this.posActu){
  *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
  *  entre les deux points.
  */
- AppOnline.prototype.actionPath = function(evt, redirect) {
+AppOnline.prototype.actionPath = function(evt, redirect) {
 
     var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
     var pointsSrc = this.layers['vector2'].layer.getSource();
@@ -484,8 +477,8 @@ if(this.posActu){
         var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
         var viewparams = [
-        'x1:' + startCoord[0], 'y1:' + startCoord[1],
-        'x2:' + destCoord[0], 'y2:' + destCoord[1]
+            'x1:' + startCoord[0], 'y1:' + startCoord[1],
+            'x2:' + destCoord[0], 'y2:' + destCoord[1]
         ];
 
         //params.viewparams = viewparams.join(';');
@@ -514,47 +507,47 @@ AppOnline.prototype.actionPathService = function(service) {
             p.viewparams = viewparams.join(';');
             //console.log(p.viewparams);
             that.layers['closestService'].layer.getSource().updateParams(p);
-         // this.map.addLayer(closestParkingLayer);
-     }
- };
+            // this.map.addLayer(closestParkingLayer);
+        }
+    };
 
- this.getServiceList(callback);
+    this.getServiceList(callback);
 
 };
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+ */
+AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
- AppOnline.prototype.setVisible = function(name, value) {
+AppOnline.prototype.setVisible = function(name, value) {
     this.layers[name].layer.setVisible(value);
 };
 
@@ -569,7 +562,7 @@ function sortByKey(array, key) {
 /**
  *  @param {Gui}
  */
- AppOnline.prototype.setGui = function(gui) {
+AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 
     // met à jour la liste des batiments pour le search input
