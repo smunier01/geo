@@ -60,6 +60,8 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
     > ogr2ogr -f GeoJSON out_lines.json "PG:host=localhost dbname=gis user=postgres password=" -sql "select * from planet_osm_line"
 
+    > SELECT * FROM planet_osm_polygon as a left join (SELECT DISTINCT osm_id, array_to_string(array_agg(DISTINCT CONCAT(s.id,',',s.name,',',s.url)), ';') FROM (planet_osm_polygon left join services_batiments on osm_id=id_batiment) left join services as s on s.id=id_service GROUP BY osm_id) as b on a.osm_id=b.osm_id
+
 2 - Génération de routing.json
 
     > ./genRouting.py -o ./routing.json -d "PG:host=localhost dbname=routing user=postgres"
@@ -125,7 +127,9 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
 
       - insert into services (name) values('parking');
       - insert into services (name) values('bibliotheque');
-      - insert into services (name) values('parking'); 
+      - insert into services (name) values('restaurant'); 
 
       - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = services.name);
       - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = 'library');
+
+select * from planet_osm_polygon left join (select * from services_batiments left join services on osm_id=id_batiment) as b on osm_id=b.id_batiment;
