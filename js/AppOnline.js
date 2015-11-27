@@ -146,10 +146,10 @@
 
     this.layers['closestService'] = {
         'layer': new ol.layer.Vector({
-           source: new ol.source.Vector({
+         source: new ol.source.Vector({
             style: that.styles['nodeSelected'],
         })
-       }),
+     }),
         'order': 11
     };
 
@@ -334,15 +334,15 @@ AppOnline.prototype.actionClearAll = function() {
                             callback([feature.getProperties()]); 
                         }
                     });
-                }
-                else{
-                    callback(data.features);
-                }
-                
-                  
-            }
-        });
-    }
+}
+else{
+    callback(data.features);
+}
+
+
+}
+});
+}
 
     // var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
 
@@ -561,70 +561,92 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         name: data.features[0].properties.name, 
                         properties: data.features[0].properties
                     });
-                    feature.getProperties().properties.service = service;
+                    console.log(data.features[0]);
+                    var osmId = data.features[0].id.split('.');
+                    osmId = osmId[osmId.length-1];
+                    $.ajax({
+                        url: 'php/manageServices.php',
+                        type: 'GET',
+                        data: {
+                            action: 'getServiceFromOsmId',
+                            osmId: osmId
+                        },
+                        success: function(res){
+                            var services = '';
+                            res = $.parseJSON(res);
 
-                    that.layers['closestService'].layer.getSource().addFeature(feature);
+                            for (var i = res.length - 1; i >= 0; i--) {
+                                services += res[i].name + "," + res[i].url;
+                                if(i > 0)
+                                    services += ";";
+                            };
+                            feature.getProperties().properties.service = services;
+                            console.log(services);
 
-                    if(that.posActu){
-                        var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
-                        var pointsSrc = that.layers['vector2'].layer.getSource();
-                        
-                        pointsSrc.clear();
-                        pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.posActu)));
+                            that.layers['closestService'].layer.getSource().addFeature(feature);
+
+                            if(that.posActu){
+                                var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+                                var pointsSrc = that.layers['vector2'].layer.getSource();
+
+                                pointsSrc.clear();
+                                pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.posActu)));
 
 
-                        that.click = 2;
+                                that.click = 2;
 
-                        pointsSrc.addFeature(new ol.Feature(feature.getGeometry().getInteriorPoint()));
+                                pointsSrc.addFeature(new ol.Feature(feature.getGeometry().getInteriorPoint()));
 
-                        var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
-                        var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
+                                var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
+                                var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
-                        var viewparams = [
-                        'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                        'x2:' + destCoord[0], 'y2:' + destCoord[1]
-                        ];
+                                var viewparams = [
+                                'x1:' + startCoord[0], 'y1:' + startCoord[1],
+                                'x2:' + destCoord[0], 'y2:' + destCoord[1]
+                                ];
 
-                        var p = that.layers['resultPgRouting'].layer.getSource().getParams();
-                        p.viewparams = viewparams.join(';');
-                        that.layers['resultPgRouting'].layer.getSource().updateParams(p);
-                    }
-                    callbackFinal(feature.getProperties());
+                                var p = that.layers['resultPgRouting'].layer.getSource().getParams();
+                                p.viewparams = viewparams.join(';');
+                                that.layers['resultPgRouting'].layer.getSource().updateParams(p);
+                            }
+                            callbackFinal(feature.getProperties());
+                        }
+                    });
                 }
             });
-}
-};
+        }
+    };
 
-this.getServiceList(callback);
+    this.getServiceList(callback);
 
 };
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+   */
+   AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer

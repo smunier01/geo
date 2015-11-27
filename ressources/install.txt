@@ -130,6 +130,6 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
       - insert into services (name) values('restaurant'); 
 
       - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = services.name);
-      - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = 'library');
+      - insert into services_batiments(id_service, id_batiment) select services.id,planet_osm_polygon.osm_id from planet_osm_polygon join services on (planet_osm_polygon.amenity = 'library' and services.name='bibliotheque');
 
 select * from planet_osm_polygon left join (select * from services_batiments left join services on osm_id=id_batiment) as b on osm_id=b.id_batiment;
