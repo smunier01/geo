@@ -179,7 +179,7 @@ GuiSemantic.prototype.init = function() {
                     cardContainer.find('#batService').text(data.properties.service);
 
                     var coordsBat = [];
-                    coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates()[0][0];
+                    coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
                     
                     cardContainer.find('#batItineraire').click(function() {
                         that.app.actionPath(coordsBat, true);

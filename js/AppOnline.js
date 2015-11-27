@@ -235,8 +235,6 @@ AppOnline.prototype.getBuildingList = function() {
 
     });
 
-
-    console.log('getBuildingList');
     //console.log(buildings);
 
     return buildings;
@@ -310,7 +308,6 @@ AppOnline.prototype.actionClearAll = function() {
             url: url+"&format_options=callback:getJson",
             dataType: 'jsonp',
             success: function (data, status) {
-                console.log(data);
                 if(data.features.length > 0){
                     $.ajax({
                         url: 'php/manageServices.php',
@@ -334,7 +331,6 @@ AppOnline.prototype.actionClearAll = function() {
                                 name: data.features[0].properties.name,
                                 properties: data.features[0].properties
                             });
-                            console.log(feature.getProperties());
                             callback([feature.getProperties()]); 
                         }
                     });
@@ -355,7 +351,6 @@ AppOnline.prototype.actionClearAll = function() {
     // });
 
 
-console.log('actionSelectaa');
 };
 
 /**
@@ -412,7 +407,6 @@ function showFeaturesHoverBuildings(data){
             });
 
             //sourceHover.addFeature(new ol.Feature(features[i]));
-            console.log(new ol.Feature(features[i]));
         }
     }
     return ['e'];
@@ -438,7 +432,6 @@ function showFeaturesHoverBuildings(data){
     //         singleTile:true
     //     }
     //     );
-console.log('ActionParking');
 if(this.posActu){
     var coords = ol.proj.toLonLat(this.posActu);
 
@@ -544,7 +537,6 @@ AppOnline.prototype.actionPathService = function(service) {
         
         //console.log(that);
         if(that.posActu){
-            console.log("actionPathService");
             var coords = ol.proj.toLonLat(that.posActu);
             var viewparams = ['x:' + coords[0], 'y:' + coords[1], "sname:'" + service + "'"];
             // var p = that.layers['closestService'].layer.getSource().getParams();
@@ -569,7 +561,6 @@ AppOnline.prototype.actionPathService = function(service) {
 
                     });
                     that.layers['test'].layer.getSource().addFeature(feature);
-                    console.log(feature.getGeometry().getCoordinates()[0]);
 
                     if(that.posActu){
                         var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
