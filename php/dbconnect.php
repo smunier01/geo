@@ -49,4 +49,12 @@ class DB {
 
         return $res;
     }
+
+    function getServiceFromOsmId($osmId){
+        $stmt = $this->db->prepare("select services.name from services join services_batiments on (services.id = services_batiments.id_service) where services_batiments.id_batiment = 39569048");
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+        
+        return $res;
+    }
 }

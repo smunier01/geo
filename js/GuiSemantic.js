@@ -174,11 +174,12 @@ GuiSemantic.prototype.init = function() {
                 if (features.length > 0) {
                     var data = features[0];
                     var cardContainer = $('.cardContainer');
-                    cardContainer.find('#batName').text(data.properties.name !== null ? data.properties.name : data.properties.service);
+                    // console.log(data.getProperties());
+                    cardContainer.find('#batName').text(data.properties.name != null ? data.properties.name : data.properties.service);
                     cardContainer.find('#batService').text(data.properties.service);
 
                     var coordsBat = [];
-                    coordsBat['coordinate'] = data.geometry.coordinates[0][0];
+                    coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates()[0][0];
                     
                     cardContainer.find('#batItineraire').click(function() {
                         that.app.actionPath(coordsBat, true);

@@ -22,6 +22,15 @@
 				print_r(json_encode($buildings));
 				break;
 
+			case 'getServiceFromOsmId':
+				$services = $db->getServiceFromOsmId($_GET['osmId']);
+				$arrayRes = [];
+				// foreach ($services as $key => $value) {
+				// 	array_push($arrayRes, $value['name']);
+				// }
+				print_r(json_encode($services));
+				break;
+
 			default:
 				# code...
 				break;

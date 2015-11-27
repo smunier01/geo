@@ -310,7 +310,40 @@ AppOnline.prototype.actionClearAll = function() {
             url: url+"&format_options=callback:getJson",
             dataType: 'jsonp',
             success: function (data, status) {
-                callback(data.features);   
+                console.log(data);
+                if(data.features.length > 0){
+                    $.ajax({
+                        url: 'php/manageServices.php',
+                        type: 'GET',
+                        data: {
+                            action: 'getServiceFromOsmId',
+                            osmId : data.features[0].properties.osm_id
+                        },
+                        success: function(res){
+                            var services = '';
+                            res = $.parseJSON(res);
+
+                            for (var i = res.length - 1; i >= 0; i--) {
+                                services += res[i].name;
+                                if(i > 0)
+                                    services += ", ";
+                            };
+                            data.features[0].properties.service = services;
+                            feature = new ol.Feature({
+                                geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
+                                name: data.features[0].properties.name,
+                                properties: data.features[0].properties
+                            });
+                            console.log(feature.getProperties());
+                            callback([feature.getProperties()]); 
+                        }
+                    });
+                }
+                else{
+                    callback(data.features);
+                }
+                
+                  
             }
         });
     }
