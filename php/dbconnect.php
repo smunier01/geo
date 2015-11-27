@@ -51,10 +51,11 @@ class DB {
     }
 
     function getServiceFromOsmId($osmId){
-        $stmt = $this->db->prepare("select services.name from services join services_batiments on (services.id = services_batiments.id_service) where services_batiments.id_batiment = 39569048");
+        $stmt = $this->db->prepare("select services.name, services.url from services join services_batiments on (services.id = services_batiments.id_service) where services_batiments.id_batiment = :osmId");
+        $stmt->bindParam(':osmId', $osmId, PDO::PARAM_INT);
         $stmt->execute();
         $res = $stmt->fetchAll();
-        
+
         return $res;
     }
 }

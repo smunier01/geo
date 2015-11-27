@@ -128,23 +128,23 @@
     //     'order': 10
     // };
 
+    // this.layers['closestService'] = {
+    //     'layer': new ol.layer.Tile({
+    //         source: new ol.source.TileWMS({
+    //             url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
+    //             params: {
+    //                 LAYERS: 'sf:closestService', 
+    //                 //FORMAT: 'image/png'
+    //             },
+    //             serverType: 'geoserver',
+    //             //visibility:false
+    //         })
+    //     }),
+    //     'order': 10
+    // };
+
+
     this.layers['closestService'] = {
-        'layer': new ol.layer.Tile({
-            source: new ol.source.TileWMS({
-                url: 'http://' + this.GEO_HOST + '/geoserver/wms/cite',
-                params: {
-                    LAYERS: 'sf:closestService', 
-                    //FORMAT: 'image/png'
-                },
-                serverType: 'geoserver',
-                //visibility:false
-            })
-        }),
-        'order': 10
-    };
-
-
-    this.layers['test'] = {
         'layer': new ol.layer.Vector({
            source: new ol.source.Vector({
             style: that.styles['nodeSelected'],
@@ -321,9 +321,9 @@ AppOnline.prototype.actionClearAll = function() {
                             res = $.parseJSON(res);
 
                             for (var i = res.length - 1; i >= 0; i--) {
-                                services += res[i].name;
+                                services += res[i].name + "," + res[i].url;
                                 if(i > 0)
-                                    services += ", ";
+                                    services += ";";
                             };
                             data.features[0].properties.service = services;
                             feature = new ol.Feature({
@@ -499,6 +499,7 @@ if(this.posActu){
         this.posActu = evt.coordinate;
 
         pointsSrc.clear();
+        this.layers['closestService'].layer.getSource().clear();
 
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
 
@@ -554,7 +555,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                 jsonpCallback: 'getJson',
 
                 success: function(data, status){
-                    that.layers['test'].layer.getSource().clear();
+                    that.layers['closestService'].layer.getSource().clear();
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
                         name: data.features[0].properties.name, 
@@ -562,7 +563,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                     });
                     feature.getProperties().properties.service = service;
 
-                    that.layers['test'].layer.getSource().addFeature(feature);
+                    that.layers['closestService'].layer.getSource().addFeature(feature);
 
                     if(that.posActu){
                         var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
