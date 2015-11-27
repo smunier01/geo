@@ -268,8 +268,29 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
-        cardContainer.find('#batName').text(data.name != null ? data.name : data.services);
-        cardContainer.find('#batService').text(data.services);
+
+        var servicesAndUrl = data.services.split(';');
+        var servicesUrl = [];
+        var servicesName = [];
+
+        for (var i = servicesAndUrl.length - 1; i >= 0; i--) {
+            var tmp = servicesAndUrl[i].split(",");
+            servicesName.push(tmp[0]);
+            servicesUrl.push(tmp[1]==="null"?null:tmp[1]);
+        }
+
+        cardContainer.find('#batName').text(data.name != null ? data.name : "Sans nom");
+        cardContainer.find('#batService').text(servicesName.join(','));
+        var descUrl = '';
+        for (var i = 0; i < servicesUrl.length; i++) {
+            if(servicesUrl[i] != null)
+                descUrl += '<li><a href="' + servicesUrl[i] + '">Lien ver ' + servicesName[i] + '</a></li>';
+        };
+        if(descUrl !== '')
+            cardContainer.find('.batDesc').html('<ul>' + descUrl + '</ul>');
+        else{
+            cardContainer.find('.batDesc').html('Aucune information disponible');
+        }
 
         cardContainer.find('#batItineraire').click(function() {
             that.app.actionPath(coordsBat, true);
