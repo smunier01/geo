@@ -543,7 +543,7 @@ AppOffline.prototype.actionHover = function(evt) {
 /**
  *
  */
-AppOffline.prototype.actionSelect = function(evt) {
+AppOffline.prototype.actionSelect = function(evt, callback) {
 
     var that = this;
     
@@ -562,7 +562,7 @@ AppOffline.prototype.actionSelect = function(evt) {
     this.layers['nearest'].layer.getSource().clear();
     this.layers['nearest'].layer.getSource().addFeature(feature);
     
-    return feature.getProperties();
+    callback(feature.getProperties());
     
 };
 
@@ -662,6 +662,8 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
  */
 AppOffline.prototype.getServiceList = function(v) {
 
+    var that = this;
+    
     var services = [];
     
     var buildings = this.getBuildingList();
@@ -670,24 +672,30 @@ AppOffline.prototype.getServiceList = function(v) {
 
         this.cache['services'] = [];
         this.cache['services']['parking'] = 1;
-        
-        for (var b of buildings) {
 
-            
-            for (var s in b.services) {
-                var k = b.services[s];
+        var source = this.layers['buildingsVectors'].layer.getSource().getSource();
+    
+        source.forEachFeature(function(f) {
 
-                if (this.cache['services'][k]) {
-                    this.cache['services'][k] += 1;
+            var b = f.getProperties();
+
+            var services = (b.services).split(';');
+
+            for (var s of services) {
+
+                var k = s.split(',')[1];
+
+                if (that.cache['services'][k]) {
+                    that.cache['services'][k] += 1;
                 } else {
-                    this.cache['services'][k] = 1;
+                    that.cache['services'][k] = 1;
                 }
             }
-            
-        }
 
+        });
+       
     }
-    console.log(v);
+    console.log(this.cache['services']);
     v(Object.keys(this.cache['services']));
 };
 
@@ -813,7 +821,28 @@ AppOffline.prototype.actionPathService = function(service) {
 
     } else {
 
-        // @todo
+        var that = this;
+
+        if (this.pointsClicked[0]) {
+
+            this.actionClearAll();
+
+            var sourceRoute = this.layers['route'].layer.getSource();
+            
+            var serv = that.getClosestService(service, this.pointsClicked[0]);
+            var center = serv.getGeometry().getInteriorPoint();
+
+            if (this.pointsClicked[1]) {
+                this.pointsClicked[1] = center.getCoordinates();
+            } else {
+                this.pointsClicked.push(center.getCoordinates());
+            }
+            
+            var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+
+            sourceRoute.addFeatures(routeFeatures);
+            
+        }
 
     }
 };
@@ -864,6 +893,52 @@ AppOffline.prototype.getClosestParking = function(coord) {
         }
     }
     
+    return minP;
+};
+
+/**
+ *  @param {ol.coordinate} coord
+ *  @returns {Object} parking le plus proche de coord
+ */
+AppOffline.prototype.getClosestService = function(service, coord) {
+
+    var min = Infinity;
+    var minP = undefined;
+
+    var that = this;
+
+    var source = this.layers['buildingsVectors'].layer.getSource().getSource();
+    
+    source.forEachFeature(function(f) {
+
+        if (f.get('services').indexOf(service) > -1) {
+
+            var v = f.getGeometry().getClosestPoint(coord);
+
+            var dist = (new ol.geom.LineString([v, coord])).getLength();
+
+            if (dist <= min) {
+                min = dist;
+                minP = f;
+            }
+
+        }
+    });
+    
+
+    /*
+    for (var p of this.getParkingList()) {
+
+        var v = p.getGeometry().getClosestPoint(coord);
+
+        var dist = (new ol.geom.LineString([v, coord])).getLength();
+
+        if (dist <= min) {
+            min = dist;
+            minP = p;
+        }
+    }
+    */
     return minP;
 };
 
