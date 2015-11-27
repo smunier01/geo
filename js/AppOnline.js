@@ -5,35 +5,35 @@
  *
  * @class
  */
- var that;
- var AppOnline = function() {
+var that;
+var AppOnline = function() {
 
     that = this;
     
     /**
      * @type {string} 
      */
-     this.GEO_HOST = 'localhost:8080';
+    this.GEO_HOST = 'localhost:8080';
 
     /**
      *  Reference à l'objet map d'openlayer
      *  @type {ol.Map}
      */
-     this.map = undefined;
-     this.posActu = undefined;
+    this.map = undefined;
+    this.posActu = undefined;
 
     /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
      */ 
-     this.layers = [];
-     this.styles=[];
+    this.layers = [];
+    this.styles=[];
 
-     this.GREY1 = '#CECECE';
-     this.COLOR1 = '#E86FB0';
+    this.GREY1 = '#CECECE';
+    this.COLOR1 = '#E86FB0';
 
 
-     this.styles['nodeSelected'] = new ol.style.Style({
+    this.styles['nodeSelected'] = new ol.style.Style({
         image: new ol.style.Circle({
             fill: new ol.style.Fill({
                 color: that.GREY1
@@ -146,10 +146,10 @@
 
     this.layers['closestService'] = {
         'layer': new ol.layer.Vector({
-         source: new ol.source.Vector({
-            style: that.styles['nodeSelected'],
-        })
-     }),
+            source: new ol.source.Vector({
+                style: that.styles['nodeSelected'],
+            })
+        }),
         'order': 11
     };
 
@@ -188,7 +188,7 @@
 /**
  * ??
  */
- AppOnline.prototype.getFeaturesFromClick = function(event) {
+AppOnline.prototype.getFeaturesFromClick = function(event) {
 
     var viewResolution = (this.map.getView().getResolution());
 
@@ -197,7 +197,7 @@
 
         {'INFO_FORMAT': 'text/javascript'}
 
-        );
+    );
     
     if (url) {
 
@@ -214,7 +214,7 @@
                   vectorSource.addFeatures(geojsonFormat.readFeatures(response));
                   console.log(geojsonFormat.readFeatures(response));*/
 
-              });
+            });
         }
 
     }
@@ -262,30 +262,30 @@ AppOnline.prototype.actionClearAll = function() {
       this.layers['route'].layer.getSource().clear();
       this.nodeSelected = [];
       this.selectedFeature = undefined;
-      */
-  };
+    */
+};
 
 
 /**
  *  Quand la souris bouge sur la map, pas forcement utile
  */
- AppOnline.prototype.actionHover = function(evt) {
+AppOnline.prototype.actionHover = function(evt) {
     /*
-    console.log('actionHover');
-    var viewResolution = (this.map.getView().getResolution());
-    var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
-        'INFO_FORMAT': 'text/javascript'
-    });
+      console.log('actionHover');
+      var viewResolution = (this.map.getView().getResolution());
+      var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
+      'INFO_FORMAT': 'text/javascript'
+      });
 
-    //console.log(url);
+      //console.log(url);
 
-    if(url){
-        $.ajax({
-            url: url+"&format_options=callback:showFeaturesHoverBuildings",
-            dataType: 'jsonp'
+      if(url){
+      $.ajax({
+      url: url+"&format_options=callback:showFeaturesHoverBuildings",
+      dataType: 'jsonp'
 
-        });
-}*/
+      });
+      }*/
 };
 
 /**
@@ -294,7 +294,7 @@ AppOnline.prototype.actionClearAll = function() {
  * Cela devrait renvoyer les propriétés d'un feature
  */
 
- AppOnline.prototype.actionSelect = function(evt, callback) {
+AppOnline.prototype.actionSelect = function(evt, callback) {
 
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
@@ -308,7 +308,7 @@ AppOnline.prototype.actionClearAll = function() {
             url: url+"&format_options=callback:getJson",
             dataType: 'jsonp',
             success: function (data, status) {
-                if(data.features.length > 0){
+                if(data.features.length > 0) {
                     $.ajax({
                         url: 'php/manageServices.php',
                         type: 'GET',
@@ -334,41 +334,27 @@ AppOnline.prototype.actionClearAll = function() {
                             callback(feature.getProperties()); 
                         }
                     });
-<<<<<<< HEAD
-                    
-                } else{
+                } else {
                     callback(false);
                 }
                 
-                  
+                
             }
         });
     }
-=======
-}
-else{
-    callback(data.features);
-}
-
-
-}
-});
-}
->>>>>>> c993369a9eb1f2653f8d4f6225a3752ee6e4980d
-
-    // var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-
-    //     console.log("Feature : " + feature);
-
-    // });
-
-
 };
+
+
+// var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+
+//     console.log("Feature : " + feature);
+
+// });
 
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
- AppOnline.prototype.actionGoto = function(object) {
+AppOnline.prototype.actionGoto = function(object) {
     console.log('actionGoto');
 };
 
@@ -430,7 +416,7 @@ function showFeaturesHoverBuildings(data){
  *
  *  Logiquement cela devrait rechercher le service le plus proche de la position courante
  */
- AppOnline.prototype.actionParking = function() {
+AppOnline.prototype.actionParking = function() {
     // var hazardWMSLayer = new OpenLayers.Layer.WMS(
     //     "Wenchuan Intensities (WMS)",
     //     "http://mysite.org/geoserver/wms",
@@ -444,13 +430,13 @@ function showFeaturesHoverBuildings(data){
     //         singleTile:true
     //     }
     //     );
-if(this.posActu){
-    var coords = ol.proj.toLonLat(this.posActu);
+    if(this.posActu){
+        var coords = ol.proj.toLonLat(this.posActu);
 
-    var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
+        var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
 
-    var p = this.layers['closestService'].layer.getSource().getParams();
-    p.viewparams = viewparams.join(';');
+        var p = this.layers['closestService'].layer.getSource().getParams();
+        p.viewparams = viewparams.join(';');
         //console.log(p.viewparams);
         this.layers['closestService'].layer.getSource().updateParams(p);
         
@@ -464,7 +450,7 @@ if(this.posActu){
  *  
  *  
  */
- AppOnline.prototype.actionEdit = function() {
+AppOnline.prototype.actionEdit = function() {
     console.log('actionEdit');
     // version mode offline pour exemple d'utilisation
 
@@ -484,8 +470,8 @@ if(this.posActu){
       that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
       }
       };
-      */
-  };
+    */
+};
 
 /**
  *  Quand on click sur la map dans mode "chemin"
@@ -493,7 +479,7 @@ if(this.posActu){
  *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
  *  entre les deux points.
  */
- AppOnline.prototype.actionPath = function(evt, redirect) {
+AppOnline.prototype.actionPath = function(evt, redirect) {
 
     var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
     var pointsSrc = this.layers['vector2'].layer.getSource();
@@ -529,8 +515,8 @@ if(this.posActu){
         var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
         var viewparams = [
-        'x1:' + startCoord[0], 'y1:' + startCoord[1],
-        'x2:' + destCoord[0], 'y2:' + destCoord[1]
+            'x1:' + startCoord[0], 'y1:' + startCoord[1],
+            'x2:' + destCoord[0], 'y2:' + destCoord[1]
         ];
 
         //params.viewparams = viewparams.join(';');
@@ -573,9 +559,6 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         name: data.features[0].properties.name, 
                         properties: data.features[0].properties
                     });
-<<<<<<< HEAD
-                    feature.getProperties().properties.services = service;
-=======
                     console.log(data.features[0]);
                     var osmId = data.features[0].id.split('.');
                     osmId = osmId[osmId.length-1];
@@ -595,11 +578,10 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                                 if(i > 0)
                                     services += ";";
                             };
-                            feature.getProperties().properties.service = services;
+                            feature.getProperties().properties.services = services;
                             console.log(services);
 
                             that.layers['closestService'].layer.getSource().addFeature(feature);
->>>>>>> c993369a9eb1f2653f8d4f6225a3752ee6e4980d
 
                             if(that.posActu){
                                 var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
@@ -617,8 +599,8 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                                 var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
                                 var viewparams = [
-                                'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                                'x2:' + destCoord[0], 'y2:' + destCoord[1]
+                                    'x1:' + startCoord[0], 'y1:' + startCoord[1],
+                                    'x2:' + destCoord[0], 'y2:' + destCoord[1]
                                 ];
 
                                 var p = that.layers['resultPgRouting'].layer.getSource().getParams();
@@ -640,8 +622,8 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-   */
-   AppOnline.prototype.addAllLayers = function() {
+ */
+AppOnline.prototype.addAllLayers = function() {
 
     this.map.getLayers().clear();
 
@@ -669,7 +651,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
- AppOnline.prototype.setVisible = function(name, value) {
+AppOnline.prototype.setVisible = function(name, value) {
     this.layers[name].layer.setVisible(value);
 };
 
@@ -684,7 +666,7 @@ function sortByKey(array, key) {
 /**
  *  @param {Gui}
  */
- AppOnline.prototype.setGui = function(gui) {
+AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 
     // met à jour la liste des batiments pour le search input

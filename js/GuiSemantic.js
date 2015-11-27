@@ -259,13 +259,11 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
 GuiSemantic.prototype.updateCardInfos = function(data){
 
-    console.log(data);
-    
     var that = this;
     
     if(data){
         var coordsBat = [];
-        
+
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
