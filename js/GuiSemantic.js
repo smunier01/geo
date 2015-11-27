@@ -264,14 +264,14 @@ GuiSemantic.prototype.updateCardInfos = function(data){
     
     var that = this;
 
-    if (this.app instanceof AppOnline) {
-        var g = data.geometry;
-        data = data.properties;
-        data.geometry = g;
-    }
+    if (data){
 
-
-    if(data){
+        if (this.app instanceof AppOnline) {
+            var g = data.geometry;
+            data = data.properties;
+            data.geometry = g;
+        }
+        
         var coordsBat = [];
 
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
