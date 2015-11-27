@@ -528,7 +528,7 @@ if(this.posActu){
     }
 };
 
-AppOnline.prototype.actionPathService = function(service) {
+AppOnline.prototype.actionPathService = function(service, callbackFinal) {
     var that = this;
     var callback = function(serviceListe){
         if ($.inArray(service, serviceListe) == -1) {
@@ -557,9 +557,11 @@ AppOnline.prototype.actionPathService = function(service) {
                     that.layers['test'].layer.getSource().clear();
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
-                        name: data.features[0].properties.name
-
+                        name: data.features[0].properties.name, 
+                        properties: data.features[0].properties
                     });
+                    feature.getProperties().properties.service = service;
+
                     that.layers['test'].layer.getSource().addFeature(feature);
 
                     if(that.posActu){
@@ -586,6 +588,7 @@ AppOnline.prototype.actionPathService = function(service) {
                         p.viewparams = viewparams.join(';');
                         that.layers['resultPgRouting'].layer.getSource().updateParams(p);
                     }
+                    callbackFinal(feature.getProperties());
                 }
             });
 }

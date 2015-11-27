@@ -5,7 +5,7 @@
  *
  *  @class
  */
-var GuiSemantic = function(app) {
+ var GuiSemantic = function(app) {
 
     this.app = app;
 
@@ -32,8 +32,8 @@ GuiSemantic.prototype.init = function() {
     $('.ui.accordion').accordion();
 
     $('#bottom-bar')
-        .sidebar('setting', 'transition', 'push')
-        .sidebar('setting', { dimPage: false });
+    .sidebar('setting', 'transition', 'push')
+    .sidebar('setting', { dimPage: false });
     
     $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
@@ -63,21 +63,21 @@ GuiSemantic.prototype.init = function() {
 
         div = $(
             '<div class="item">'+
-                '<div class="right floated content">'+
-                '<div class="ui toggle checkbox">'+
-                '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
-                '<label></label>'+
-                '</div>'+
-                '</div>'+
-                '<div class="content">'+
-                '<label for="display"' + l + '>' + l + '</label>'+
-                '</div>'+
+            '<div class="right floated content">'+
+            '<div class="ui toggle checkbox">'+
+            '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
+            '<label></label>'+
+            '</div>'+
+            '</div>'+
+            '<div class="content">'+
+            '<label for="display"' + l + '>' + l + '</label>'+
+            '</div>'+
             '</div>'
-        );
+            );
         
-	
+
         $('#layersCheckboxes').append(div);
-	
+
     }
 
     // quand on click sur une des check box, on passe le layer correspondant en visible/non-visible
@@ -123,12 +123,12 @@ GuiSemantic.prototype.init = function() {
                 that.app.getServiceList(a);
                 
             } else {
-                
+
                 var div = $('<div class="ui labeled input fluid">' +
-                        '<div class="ui label">' + key + '</div>' +
-                        '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
-                        '</div>'
-                       );
+                    '<div class="ui label">' + key + '</div>' +
+                    '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
+                    '</div>'
+                    );
 
                 modalContent.append(div);
 
@@ -165,98 +165,80 @@ GuiSemantic.prototype.init = function() {
         
     });
 
-    this.app.map.on('click', function(evt) {
-        
-        if (that.currentMode == that.modes.SELECT) {
+this.app.map.on('click', function(evt) {
 
-            var object = that.app.actionSelect(evt, function(features) {
+    if (that.currentMode == that.modes.SELECT) {
 
-                if (features.length > 0) {
-                    var data = features[0];
-                    var cardContainer = $('.cardContainer');
-                    // console.log(data.getProperties());
-                    cardContainer.find('#batName').text(data.properties.name != null ? data.properties.name : data.properties.service);
-                    cardContainer.find('#batService').text(data.properties.service);
+        var object = that.app.actionSelect(evt, function(features) {
 
-                    var coordsBat = [];
-                    coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
-                    
-                    cardContainer.find('#batItineraire').click(function() {
-                        that.app.actionPath(coordsBat, true);
-                    });
-                    
-                    if ($('.cardContainer').hasClass('hidden')){
-                        $('.cardContainer').transition('vertical flip');
-                    }
-                } else {
-                    if(! $('.cardContainer').hasClass('hidden')){
-                        $('.cardContainer').transition('vertical flip');
-                    }
-                }
+            // if (features.length > 0) {
+            //     var data = features[0];
+            // }
+            var data = features.length>0?features[0]:undefined;
+            that.updateCardInfos(data);
+        });
 
-            });
-            
-        } else if (that.currentMode == that.modes.PATH) {
+    } else if (that.currentMode == that.modes.PATH) {
 
-            that.app.actionPath(evt);
-            
-        }
-        
-    });
+        that.app.actionPath(evt);
 
-    $('#map').mouseleave(function() {
-        
-        $('#hoverbox').empty();
-        $('#hoverbox').hide();
+    }
 
-    });
-    
-    this.app.map.on('pointermove', function(evt) {
+});
 
-        var objects = that.app.actionHover(evt);
-        
-        $('#hoverbox').empty();
-        $('#hoverbox').hide();
+$('#map').mouseleave(function() {
 
-        if (objects && objects.length) {
+    $('#hoverbox').empty();
+    $('#hoverbox').hide();
 
-            for (var o of objects) {
-                
-                var div = $('<div><h3>' + o.layerName + '</h3></div>');
+});
 
-                for (var p in o.properties) {
-                    div.append($('<div>' + p + ':' + o.properties[p] + '</div>'));
-                }
+this.app.map.on('pointermove', function(evt) {
 
-                $('#hoverbox').append(div);
+    var objects = that.app.actionHover(evt);
+
+    $('#hoverbox').empty();
+    $('#hoverbox').hide();
+
+    if (objects && objects.length) {
+
+        for (var o of objects) {
+
+            var div = $('<div><h3>' + o.layerName + '</h3></div>');
+
+            for (var p in o.properties) {
+                div.append($('<div>' + p + ':' + o.properties[p] + '</div>'));
             }
 
-            $('#hoverbox').show();
-            
-            $('#hoverbox').css({
-                'top': evt.pixel[1] + 50,
-                'left': evt.pixel[0]
-            });
+            $('#hoverbox').append(div);
         }
-    });
-    
-    $('#buildingSearch').bind('keyup', function() {
-        var inputTxt = $('#buildingSearch').val().toLowerCase();
-        $('#buildingList li').each(function(index, element){
-            if(inputTxt.length > 0){
-                if($(element).html().toLowerCase().indexOf(inputTxt) < 0){
-                    $(element).css({display: 'none'});
-                }
-                else{
-                    $(element).css({display: 'list-item'});   
-                }
+
+        $('#hoverbox').show();
+
+        $('#hoverbox').css({
+            'top': evt.pixel[1] + 50,
+            'left': evt.pixel[0]
+        });
+    }
+});
+
+$('#buildingSearch').bind('keyup', function() {
+    var inputTxt = $('#buildingSearch').val().toLowerCase();
+    $('#buildingList li').each(function(index, element){
+        if(inputTxt.length > 0){
+            if($(element).html().toLowerCase().indexOf(inputTxt) < 0){
+                $(element).css({display: 'none'});
             }
             else{
-                $(element).css({display: 'list-item'});
+                $(element).css({display: 'list-item'});   
             }
-            
-        });
+        }
+        else{
+            $(element).css({display: 'list-item'});
+        }
+
     });
+});
 };
 
 GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
@@ -275,6 +257,32 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
     }
 };
 
+GuiSemantic.prototype.updateCardInfos = function(data){
+
+    var that = this;
+    if(data != undefined){
+        var coordsBat = [];
+        coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
+        var cardContainer = $('.cardContainer');
+        cardContainer.find('#batName').text(data.properties.name != null ? data.properties.name : data.properties.service);
+        cardContainer.find('#batService').text(data.properties.service);
+
+        cardContainer.find('#batItineraire').click(function() {
+            that.app.actionPath(coordsBat, true);
+        });
+
+        if ($('.cardContainer').hasClass('hidden')){
+            $('.cardContainer').transition('vertical flip');
+        }
+    }
+
+    else{
+        if(! $('.cardContainer').hasClass('hidden')){
+            $('.cardContainer').transition('vertical flip');
+        }
+    }
+};
+
 GuiSemantic.prototype.updateServiceList = function(services) {
     var that = this;
 
@@ -288,7 +296,7 @@ GuiSemantic.prototype.updateServiceList = function(services) {
 
     $('#selectServices').find('[type=submit]').on('click', function() {
         var val = selectService.val();
-        that.app.actionPathService(val);
+        that.app.actionPathService(val, that.updateCardInfos);
     });
 };
 
@@ -304,12 +312,12 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
     });
 
     $('.ui.search')
-        .search({
-            source: content,
-            onSelect: function(result, response) {
-                that.app.actionGoto(result);
-            }
-        })
+    .search({
+        source: content,
+        onSelect: function(result, response) {
+            that.app.actionGoto(result);
+        }
+    })
     ;
 
     /*
@@ -328,25 +336,25 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
 };
 
 GuiSemantic.prototype.setMode = function(m) {
-    
+
     this.currentMode = m;
 
     this.clearAll();
 
     switch(this.currentMode) {
-    case this.modes.PATH:
+        case this.modes.PATH:
         $('#path-button').addClass('primary');
         $('#select-mode-buttons').hide();
         $('#path-mode-buttons').show();
         break;
         
-    case this.modes.SELECT:
+        case this.modes.SELECT:
         $('#select-button').addClass('primary');
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').show();
         break;
         
-    default:
+        default:
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').hide();
     }
