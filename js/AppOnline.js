@@ -325,18 +325,18 @@ AppOnline.prototype.actionClearAll = function() {
                                 if(i > 0)
                                     services += ", ";
                             };
-                            data.features[0].properties.service = services;
+                            data.features[0].properties.services = services;
                             feature = new ol.Feature({
                                 geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
                                 name: data.features[0].properties.name,
                                 properties: data.features[0].properties
                             });
-                            callback([feature.getProperties()]); 
+                            callback(feature.getProperties()); 
                         }
                     });
-                }
-                else{
-                    callback(data.features);
+                    
+                } else{
+                    callback(false);
                 }
                 
                   
@@ -368,8 +368,8 @@ AppOnline.prototype.actionClearAll = function() {
 //     //};
 //     if(features.length > 0){
 //         var $cardContainer = $('.cardContainer');
-//         $cardContainer.find('#batName').text(features[0].properties.name!=null?features[0].properties.name:features[0].properties.service);
-//         $cardContainer.find('#batService').text(features[0].properties.service);
+//         $cardContainer.find('#batName').text(features[0].properties.name!=null?features[0].properties.name:features[0].properties.services);
+//         $cardContainer.find('#batService').text(features[0].properties.services);
 //         var coordsBat = [];
 
 //         var functionTmp = $.proxy(function(){
@@ -560,7 +560,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         name: data.features[0].properties.name, 
                         properties: data.features[0].properties
                     });
-                    feature.getProperties().properties.service = service;
+                    feature.getProperties().properties.services = service;
 
                     that.layers['test'].layer.getSource().addFeature(feature);
 

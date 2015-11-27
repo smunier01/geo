@@ -548,7 +548,7 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
     var that = this;
     
     var feature = that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-        
+
         if (layer.get('title') == 'Building Vector Layer' || layer.get('title') == 'Roads Vector Layer') {
 
             return feature;
@@ -557,12 +557,17 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
         
     });
 
-    this.selectedFeature = feature;
+    if (feature) {
+        this.selectedFeature = feature;
 
-    this.layers['nearest'].layer.getSource().clear();
-    this.layers['nearest'].layer.getSource().addFeature(feature);
-    
-    callback(feature.getProperties());
+        this.layers['nearest'].layer.getSource().clear();
+        this.layers['nearest'].layer.getSource().addFeature(feature);
+        console.log(feature);
+        
+        callback(feature.getProperties());
+    } else {
+        callback(false);
+    }
     
 };
 

@@ -174,8 +174,8 @@ this.app.map.on('click', function(evt) {
             // if (features.length > 0) {
             //     var data = features[0];
             // }
-            var data = features.length>0?features[0]:undefined;
-            that.updateCardInfos(data);
+
+            that.updateCardInfos(features);
         });
 
     } else if (that.currentMode == that.modes.PATH) {
@@ -259,13 +259,17 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
 GuiSemantic.prototype.updateCardInfos = function(data){
 
+    console.log(data);
+    
     var that = this;
-    if(data != undefined){
+    
+    if(data){
         var coordsBat = [];
+        
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
-        cardContainer.find('#batName').text(data.properties.name != null ? data.properties.name : data.properties.service);
-        cardContainer.find('#batService').text(data.properties.service);
+        cardContainer.find('#batName').text(data.name != null ? data.name : data.services);
+        cardContainer.find('#batService').text(data.services);
 
         cardContainer.find('#batItineraire').click(function() {
             that.app.actionPath(coordsBat, true);
