@@ -353,7 +353,9 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
     .search({
         source: content,
         onSelect: function(result, response) {
-            that.app.actionGoto(result);
+            that.app.actionGoto(result, function(object) {
+                // ?
+            });
         }
     })
     ;

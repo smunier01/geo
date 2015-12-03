@@ -807,7 +807,7 @@ AppOffline.prototype.actionPath = function(evt) {
     }
 };
 
-AppOffline.prototype.actionGoto = function(object) {
+AppOffline.prototype.actionGoto = function(object, callback) {
 
     var feature;
 
@@ -845,10 +845,7 @@ AppOffline.prototype.actionGoto = function(object) {
     this.map.getView().setCenter(coords, 18);
     this.map.getView().setZoom(18);
     
-    //this.map.getView().setCenter(coords);
-    //this.map.getView().setZoom(19);
-    
-    return 1;
+    callback(feature.getProperties());
 };
 
 /**

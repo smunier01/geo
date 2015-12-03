@@ -356,7 +356,7 @@ AppOnline.prototype.actionSelect = function(evt, callback) {
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
-AppOnline.prototype.actionGoto = function(object) {
+AppOnline.prototype.actionGoto = function(object, callback) {
     console.log('actionGoto');
 };
 
