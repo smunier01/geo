@@ -30,15 +30,10 @@
      this.layers = [];
      this.styles=[];
 
-<<<<<<< HEAD
-     this.GREY1 = '#CECECE';
-     this.COLOR1 = '#E86FB0';
-=======
     this.gpsmode = false;
 
     this.GREY1 = '#CECECE';
     this.COLOR1 = '#E86FB0';
->>>>>>> a1b590fbe2b02f7f8c1fb9f581c4985aec6c277d
 
 
      this.styles['nodeSelected'] = new ol.style.Style({
@@ -364,7 +359,6 @@ function getServiceFromFeature(data, callback){
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
-<<<<<<< HEAD
  AppOnline.prototype.actionGoto = function(object) {
     $.ajax({
         url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + object.id + '&format_options=callback:getJson',
@@ -376,11 +370,6 @@ function getServiceFromFeature(data, callback){
                 getServiceFromFeature(res.features[0]);
         }
     });
-
-=======
-AppOnline.prototype.actionGoto = function(object, callback) {
-    console.log('actionGoto');
->>>>>>> a1b590fbe2b02f7f8c1fb9f581c4985aec6c277d
 };
 
 // function parseResponse(data){
