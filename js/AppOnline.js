@@ -249,7 +249,18 @@ AppOnline.prototype.getServiceList = function(v) {
             action: 'getListServices'
         },
         success: function(res){
-            v($.parseJSON(res));
+            var parsedRes = $.parseJSON(res);
+            console.log("getServiceList");
+            var services = [];
+            //console.log(parsedRes);
+            for (var i = 0; i < parsedRes.length; i++) {
+                services.push({
+                    name: parsedRes[i].name,
+                    url: parsedRes[i].url
+                });
+            };
+            
+            v(services);
         }
     });  
 };
@@ -587,13 +598,16 @@ AppOnline.prototype.actionToggleGps = function() {
 
 AppOnline.prototype.actionPathService = function(service, callbackFinal) {
     var that = this;
+    console.log("actionPathService");
     var callback = function(serviceListe){
-        if ($.inArray(service, serviceListe) == -1) {
-            return null;
-        }
+        // if ($.inArray(service, serviceListe) == -1) {
+        //     console.log("null");
+        //     return null;
+        // }
         
         if(that.posActu){
             var coords = ol.proj.toLonLat(that.posActu);
+            console.log(service);
             var viewparams = ['x:' + coords[0], 'y:' + coords[1], "sname:'" + service + "'"];
             // var p = that.layers['closestService'].layer.getSource().getParams();
             // var coords = [];
@@ -634,7 +648,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                                     services += ";";
                             };
                             feature.getProperties().properties.services = services;
-                            
+                            console.log(feature);
                             that.layers['closestService'].layer.getSource().addFeature(feature);
 
                             if(that.posActu){

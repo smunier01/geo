@@ -131,7 +131,7 @@ GuiSemantic.prototype.init = function() {
                     servicesValue = feature[key].split(',')[0];
 
                     for (var s of services) {
-                        div.append('<option value="' + s + '">' + s + '</option>');
+                        div.append('<option value="' + s.name + '">' + s.name + '</option>');
                     }
 
                     modalContent.append(div);
@@ -343,7 +343,7 @@ GuiSemantic.prototype.updateServiceList = function(services) {
     var selectService = $('#selectServices').find('select');
     
     for (var t of services) {
-        selectService.append('<option value="'+t+'">'+t+'</option>'); 
+        selectService.append('<option value="'+t.name+'">'+t.name+'</option>'); 
     }
     
     selectService.dropdown();
