@@ -27,15 +27,15 @@
   <div class="box" id="hoverbox"></div>
 
   <div id="modal-edit" class="ui modal">
-    <div class="header">Edit Feature : </div>
-    <div class="content">
+      <div class="header">Edit Feature : </div>
+      <div class="content">
 
+      </div>
+      <div class="actions">
+        <div class="ui cancel button">Cancel</div>
+        <div class="ui approve button">OK</div>
+      </div>
     </div>
-    <div class="actions">
-      <div class="ui cancel button">Cancel</div>
-      <div class="ui approve button">OK</div>
-    </div>
-  </div>
 
   <div class="ui sidebar">
 
@@ -118,11 +118,14 @@
           <span id='batName'></span>
         </div>
 
-        <div class="content batDesc">
+        <div class="content batDescContainer">
           <i class="info icon"></i>
-          
+          <span class="batDesc">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sit amet sodales risus, eget pretium nibh. Nunc vel neque in ante ultrices accumsan non nec risus. Nam tincidunt sem vel cursus molestie. Sed placerat sit amet metus in lobortis. Suspendisse sapien libero
-          
+          </span>
+          <div class="editInfosContainer">
+            <a id="editInfos"><i class="edit icon"></i>Modifier les informations</a>
+          </div>
         </div>
         <div class="extra content">
           <span id="batService"></span>

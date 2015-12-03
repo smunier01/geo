@@ -107,6 +107,12 @@ voir : http://workshop.pgrouting.org/chapters/geoserver.html
        
       et publier normalement (emprise basés sur les données etc...)
 
+  3 - SQL View pour batiment à partir de osmId : 
+        Pareil qu'avant avec
+          nom : getBuildingFromOsmId
+          sql : select * from planet_osm_polygon where osm_id=%id%
+          expression reguliere : ^[\d\.\+-eE]+$ ( A changer pour prendre que entier )
+
   3 - Services
     SQL : 
       //--------------------------PLUS MAINTENANT--------------------------

@@ -80,6 +80,10 @@ GuiSemantic.prototype.init = function() {
 
     }
 
+    $('#editInfos').click(function(){
+        that.editBuilding();
+    });
+
     // quand on click sur une des check box, on passe le layer correspondant en visible/non-visible
     $('#layersCheckboxes input').on('click', function() {
         that.app.setVisible($(this).attr('name'), $(this).prop('checked'));
@@ -90,8 +94,15 @@ GuiSemantic.prototype.init = function() {
         if (that.currentMode != that.modes.SELECT) {
             return false;
         }
+
+        that.editBuilding();
         
-        var result = that.app.actionEdit();
+        
+    });
+
+GuiSemantic.prototype.editBuilding = function(){
+    var result = that.app.actionEdit();
+        console.log(result);
         var feature = result.object;
         var callback = result.callback;
         
@@ -107,6 +118,7 @@ GuiSemantic.prototype.init = function() {
             if (key == 'services') {
 
                 var a = function(services) {
+                    console.log(services);
 
                     servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                     var div = servicesDropdown;
@@ -162,8 +174,7 @@ GuiSemantic.prototype.init = function() {
             }
             
         }).modal('show');
-        
-    });
+}
 
 this.app.map.on('click', function(evt) {
 
