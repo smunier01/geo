@@ -46,6 +46,7 @@ call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', db, '-sql', "select * from p
 # call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', 'select * from planet_osm_polygon'])
 call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', "SELECT * FROM planet_osm_polygon as a left join (SELECT DISTINCT osm_id, array_to_string(array_agg(DISTINCT CONCAT(s.id,',',s.name,',',s.url)), ';') as services FROM (planet_osm_polygon left join services_batiments on osm_id=id_batiment) left join services as s on s.id=id_service GROUP BY osm_id) as b on a.osm_id=b.osm_id"])
 
+
 json_data_lines = json.load(open('out_lines.json'))
 json_data_polygons = json.load(open('out_polygons.json'))
 
@@ -58,5 +59,5 @@ with open('lines.geojson', 'w') as f:
 with open('polygons.geojson', 'w') as f:
     json.dump(polygons, f)
 
-#call(['rm', '-rf', 'out_lines.json'])
-#call(['rm', '-rf', 'out_polygons.json'])
+call(['rm', '-rf', 'out_lines.json'])
+call(['rm', '-rf', 'out_polygons.json'])

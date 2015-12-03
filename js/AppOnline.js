@@ -29,6 +29,8 @@ var AppOnline = function() {
     this.layers = [];
     this.styles=[];
 
+    this.gpsmode = false;
+
     this.GREY1 = '#CECECE';
     this.COLOR1 = '#E86FB0';
 
@@ -472,6 +474,35 @@ AppOnline.prototype.actionEdit = function() {
       };
     */
 };
+
+AppOffline.prototype.actionToggleGps = function() {
+    var that = this;
+    this.gpsmode = !this.gpsmode;
+
+    if (this.gpsmode) {
+
+        var showPosition = function(position) {
+
+            var sourceCurrent = that.layers['currentPosition'].layer.getSource();
+            
+            console.log("Latitude: " + position.coords.latitude + 
+                        "Longitude: " + position.coords.longitude);
+
+            that.map.getView().setCenter(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857'));
+            
+            sourceCurrent.clear();
+            sourceCurrent.addFeature((new ol.Feature(new ol.geom.Point(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857')))));
+        };
+
+        var failed = function(pram) {
+            console.log("error gps");
+        };
+
+        this.gpslocation = navigator.geolocation.watchPosition(showPosition, failed, {enableHighAccuracy:true, maximumAge:30000, timeout:27000});
+
+    }
+};
+
 
 /**
  *  Quand on click sur la map dans mode "chemin"

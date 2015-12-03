@@ -114,3 +114,10 @@ body, html, #main-content {
 #main-test a {
     display: block;
 }
+
+#geoloc {
+    position: fixed;
+    bottom: 100px;
+    left: 10px;
+    z-index: 10;
+}

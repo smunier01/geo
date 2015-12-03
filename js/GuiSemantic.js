@@ -50,6 +50,11 @@ GuiSemantic.prototype.init = function() {
         that.setMode(that.modes.PATH);
     });
 
+    $('#geomode-button').click(function() {
+        that.app.actionToggleGps();
+        $('#geomode-button').toggleClass('primary');
+    });
+
     var div;
     
     for (var l in this.app.layers) {
