@@ -109,7 +109,11 @@ GuiSemantic.prototype.init = function() {
         
         for (var key in feature) {
 
+            
+            
             if (key == 'services') {
+
+                console.log(feature[key]);
 
                 var a = function(services) {
 

@@ -475,7 +475,7 @@ AppOnline.prototype.actionEdit = function() {
     */
 };
 
-AppOffline.prototype.actionToggleGps = function() {
+AppOnline.prototype.actionToggleGps = function() {
     var that = this;
     this.gpsmode = !this.gpsmode;
 
