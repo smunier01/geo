@@ -115,6 +115,21 @@ body, html, #main-content {
     display: block;
 }
 
+.editInfosContainer{
+    text-align: right;
+    margin-top: 10px;
+}
+
+#editInfos{
+    color: rgba(0,0,0,.4); 
+    webkit-transition: color .1s ease;
+    transition: color .1s ease;
+}
+
+#editInfos:hover{
+    color: #1e70bf;
+}
+
 #geoloc {
     position: fixed;
     bottom: 100px;

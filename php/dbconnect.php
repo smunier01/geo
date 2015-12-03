@@ -43,7 +43,7 @@ class DB {
     }
 
     function getListBuildings(){
-        $stmt = $this->db->prepare("Select name from planet_osm_polygon where building = 'yes' and name <> '' and name is not null");
+        $stmt = $this->db->prepare("Select name,osm_id from planet_osm_polygon where building = 'yes' and name <> '' and name is not null");
         $stmt->execute();
         $res = $stmt->fetchAll();
 
@@ -52,6 +52,15 @@ class DB {
 
     function getServiceFromOsmId($osmId){
         $stmt = $this->db->prepare("select services.name, services.url from services join services_batiments on (services.id = services_batiments.id_service) where services_batiments.id_batiment = :osmId");
+        $stmt->bindParam(':osmId', $osmId, PDO::PARAM_INT);
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+
+        return $res;
+    }
+
+    function getBuildingFromOsmId($osmId){
+        $stmt = $this->db->prepare("Select osm_id,name,way from planet_osm_polygon where osm_id=:osmId");
         $stmt->bindParam(':osmId', $osmId, PDO::PARAM_INT);
         $stmt->execute();
         $res = $stmt->fetchAll();

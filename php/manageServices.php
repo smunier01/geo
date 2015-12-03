@@ -31,6 +31,12 @@
 				print_r(json_encode($services));
 				break;
 
+			case 'getBuildingFromOsmId':
+				$buildings = $db->getBuildingFromOsmId($_GET['osmId']);
+
+				print_r(json_encode($buildings));
+				break;
+
 			default:
 				# code...
 				break;
