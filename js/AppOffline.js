@@ -697,6 +697,7 @@ AppOffline.prototype.getServiceList = function(v) {
 
             var b = f.getProperties();
 
+            console.log(b.services);
             var services = (b.services).split(';');
 
             for (var s of services) {
