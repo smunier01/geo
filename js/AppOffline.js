@@ -53,7 +53,7 @@ var AppOffline = function () {
     /**
      *  @type {ol.ProjectionLike}
      */
-    this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'},
+    this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'};
 
     /**
      *  Reference vers la base de donnée local, permet d'enregistré les modifications en attendant
@@ -69,7 +69,11 @@ var AppOffline = function () {
 
 
     this.pointsClicked = [];
-    
+
+    this.gpsmode = false;
+
+    this.pathmode = false;
+
     //
     // Style
     //
@@ -360,6 +364,15 @@ var AppOffline = function () {
             source: new ol.source.Vector([]),
             style: that.styles['nodeSelected'],
             title: 'Hover Layer'
+        }),
+        'order': 100
+    };
+
+    this.layers['currentPosition'] = {
+        'layer': new ol.layer.Vector({
+            source: new ol.source.Vector([]),
+            style: that.styles['nodeSelected'],
+            title: 'Current Position Layer'
         }),
         'order': 100
     };
@@ -738,6 +751,34 @@ AppOffline.prototype.getRoute = function(p1, p2) {
     return routeFeatures;
 };
 
+AppOffline.prototype.actionToggleGps = function() {
+    var that = this;
+    this.gpsmode = !this.gpsmode;
+
+    if (this.gpsmode) {
+
+        var showPosition = function(position) {
+
+            var sourceCurrent = that.layers['currentPosition'].layer.getSource();
+            
+            console.log("Latitude: " + position.coords.latitude + 
+                        "Longitude: " + position.coords.longitude);
+
+            that.map.getView().setCenter(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857'));
+            
+            sourceCurrent.clear();
+            sourceCurrent.addFeature((new ol.Feature(new ol.geom.Point(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857')))));
+        };
+
+        var failed = function(pram) {
+            console.log("error gps");
+        };
+
+        this.gpslocation = navigator.geolocation.watchPosition(showPosition, failed, {enableHighAccuracy:true, maximumAge:30000, timeout:27000});
+
+    }
+};
+
 /**
  *
  */
@@ -766,7 +807,7 @@ AppOffline.prototype.actionPath = function(evt) {
     }
 };
 
-AppOffline.prototype.actionGoto = function(object) {
+AppOffline.prototype.actionGoto = function(object, callback) {
 
     var feature;
 
@@ -804,10 +845,7 @@ AppOffline.prototype.actionGoto = function(object) {
     this.map.getView().setCenter(coords, 18);
     this.map.getView().setZoom(18);
     
-    //this.map.getView().setCenter(coords);
-    //this.map.getView().setZoom(19);
-    
-    return 1;
+    callback(feature.getProperties());
 };
 
 /**
@@ -1090,6 +1128,8 @@ AppOffline.prototype.getBuildingList = function() {
     return buildings;
     
 };
+
+
 
 /**
  *  Met à jour la liste des features en fonction de ce qu'il y a en local storage

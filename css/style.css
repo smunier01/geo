@@ -115,6 +115,7 @@ body, html, #main-content {
     display: block;
 }
 
+<<<<<<< HEAD
 .editInfosContainer{
     text-align: right;
     margin-top: 10px;
@@ -128,4 +129,11 @@ body, html, #main-content {
 
 #editInfos:hover{
     color: #1e70bf;
+=======
+#geoloc {
+    position: fixed;
+    bottom: 100px;
+    left: 10px;
+    z-index: 10;
+>>>>>>> a1b590fbe2b02f7f8c1fb9f581c4985aec6c277d
 }
