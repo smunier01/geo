@@ -6,11 +6,11 @@
 		switch ($_GET['action']) {
 			case 'getListServices':
 				$services = $db->getListServices();
-				$arrayRes = [];
-				foreach ($services as $key => $value) {
-					array_push($arrayRes, $value['service']);
-				}
-				echo json_encode($arrayRes);
+				// $arrayRes = [];
+				// foreach ($services as $key => $value) {
+				// 	array_push($arrayRes, $value['service']);
+				// }
+				echo json_encode($services);
 				break;
 
 			case 'getListBuildings':

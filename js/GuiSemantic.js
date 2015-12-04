@@ -131,7 +131,7 @@ GuiSemantic.prototype.init = function() {
                     servicesValue = feature[key].split(',')[0];
 
                     for (var s of services) {
-                        div.append('<option value="' + s + '">' + s + '</option>');
+                        div.append('<option value="' + s.name + '">' + s.name + '</option>');
                     }
 
                     modalContent.append(div);
@@ -287,18 +287,19 @@ GuiSemantic.prototype.updateCardInfos = function(data){
 
     if (data){
 
-        if (this.app instanceof AppOnline) {
-            var g = data.geometry;
-            data = data.properties;
-            data.geometry = g;
-        }
+        // if (this.app instanceof AppOnline) {
+        //     var g = data.geometry;
+        //     data = data.properties;
+        //     data.geometry = g;
+        // }
         
         var coordsBat = [];
+        console.log(data);
 
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
-        var servicesAndUrl = data.services.split(';');
+        var servicesAndUrl = data.properties.service.split(';');
         var servicesUrl = [];
         var servicesName = [];
 
@@ -343,7 +344,7 @@ GuiSemantic.prototype.updateServiceList = function(services) {
     var selectService = $('#selectServices').find('select');
     
     for (var t of services) {
-        selectService.append('<option value="'+t+'">'+t+'</option>'); 
+        selectService.append('<option value="'+t.name+'">'+t.name+'</option>'); 
     }
     
     selectService.dropdown();
@@ -369,8 +370,8 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
         .search({
             source: content,
             onSelect: function(result, response) {
-                that.app.actionGoto(result, function(object) {
-                    // ?
+                that.app.actionGoto(result, function(featureProperties) {
+                    that.updateCardInfos(featureProperties);
                 });
             }
         })

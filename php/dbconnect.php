@@ -35,7 +35,7 @@ class DB {
     }
 
     function getListServices() {
-        $stmt = $this->db->prepare("Select distinct service from planet_osm_polygon where service != '' order by service ");
+        $stmt = $this->db->prepare("Select name,url from services where name != '' order by name ");
         $stmt->execute();
         $res = $stmt->fetchAll();
 
