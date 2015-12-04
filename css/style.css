@@ -143,3 +143,8 @@ body, html, #main-content {
     max-width: 50%;
     right: 10px;
 }
+
+.ol-zoom.ol-unselectable.ol-control{
+    margin-top: 50px;
+    margin-left: 4px;
+}
