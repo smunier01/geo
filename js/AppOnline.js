@@ -511,7 +511,7 @@ function showFeaturesHoverBuildings(data){
         resp['object'] = {
             name : this.selectedBat.getProperties().name,
             osm_id : this.selectedBat.getProperties().osm_id,
-            services : this.selectedBat.getProperties().service
+            services : this.selectedBat.getProperties().services
         }  
         resp['callback'] = function(result){
             console.log("CallBack edit : ");
