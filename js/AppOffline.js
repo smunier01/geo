@@ -667,6 +667,7 @@ AppOffline.prototype.actionEdit = function() {
                         var services = "";
                         
                         for (var s of result[o]) {
+
                             var res = allServices.filter(function (stmp) {return stmp.name == s});
 
                             if (res.length > 0) {

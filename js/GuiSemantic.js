@@ -105,7 +105,7 @@ GuiSemantic.prototype.init = function() {
         
     });
 
-    GuiSemantic.prototype.editBuilding = function(){
+    GuiSemantic.prototype.editBuilding = function() {
         var result = that.app.actionEdit();
         console.log(result);
         var feature = result.object;
@@ -184,7 +184,7 @@ GuiSemantic.prototype.init = function() {
             }
             
         }).modal('show');
-    }
+    };
 
     this.app.map.on('click', function(evt) {
 
@@ -264,6 +264,8 @@ GuiSemantic.prototype.init = function() {
 
 GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
+    console.log("ok");
+    
     var that = this;
     
     if (this.app instanceof AppOffline) {
@@ -273,7 +275,7 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
         // event quand on click sur "save". Envois les données à la bdd.
         $('#syncInfos').find('a').on('click', function() {
-            that.storage.save();
+            that.app.storage.save();
         });
     }
 };
