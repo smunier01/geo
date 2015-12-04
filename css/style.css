@@ -136,3 +136,10 @@ body, html, #main-content {
     left: 10px;
     z-index: 10;
 }
+
+.errorMessageContainer{
+    position:fixed !important;
+    top: 50px;
+    max-width: 50%;
+    right: 10px;
+}

@@ -20,7 +20,16 @@ var GuiSemantic = function(app) {
     this.init();
     
     this.setMode(this.modes.SELECT);
+    this.app.showError = this.showErrorMessage;
     
+};
+
+GuiSemantic.prototype.showErrorMessage = function(msg){
+    $errorMsgContent = $('#errorContent');
+
+    $errorMsgContent.text(msg);
+    if($errorMsgContent.closest('.message').hasClass('hidden'))
+        $errorMsgContent.closest('.message').transition('fade');
 };
 
 GuiSemantic.prototype.init = function() {
@@ -132,7 +141,7 @@ GuiSemantic.prototype.init = function() {
                     for(var s of feature[key].split(';')){
                         servicesValue.push(s.split(',')[0]);
                     }
-                    
+
                     for (var s of services) {
                         div.append('<option value="' + s.name + '">' + s.name + '</option>');
                     }

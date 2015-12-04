@@ -15,6 +15,8 @@ var AppOffline = function () {
 
     var that = this;
 
+    this.showError = function(){};
+
     //
     // Public Variables
     //
