@@ -128,8 +128,11 @@ GuiSemantic.prototype.init = function() {
                     
                     servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                     var div = servicesDropdown;
-                    servicesValue = feature[key].split(',')[0];
 
+                    for(var s of feature[key].split(';')){
+                        servicesValue.push(s.split(',')[0]);
+                    }
+                    
                     for (var s of services) {
                         div.append('<option value="' + s.name + '">' + s.name + '</option>');
                     }
@@ -301,8 +304,8 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
-        
-        var servicesAndUrl = data.properties.services.split(';');
+        var servicesAndUrl = data.services.split(';');
+
         var servicesUrl = [];
         var servicesName = [];
 
