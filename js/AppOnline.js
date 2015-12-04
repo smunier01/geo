@@ -430,7 +430,7 @@ AppOnline.prototype. addFeatureOnClosestService =  function(feature, clear){
     var p = this.layers['resultPgRouting'].layer.getSource().getParams();
     p.viewparams = [];
     this.layers['resultPgRouting'].layer.getSource().updateParams(p);
-    this.layers['vector2'].layer.getSource().clear()
+    this.layers['vector2'].layer.getSource().clear();
 
     if(clear)
         this.layers['closestService'].layer.getSource().clear();
