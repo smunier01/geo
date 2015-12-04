@@ -30,10 +30,10 @@
      this.layers = [];
      this.styles=[];
 
-    this.gpsmode = false;
+     this.gpsmode = false;
 
-    this.GREY1 = '#CECECE';
-    this.COLOR1 = '#E86FB0';
+     this.GREY1 = '#CECECE';
+     this.COLOR1 = '#E86FB0';
 
 
      this.styles['nodeSelected'] = new ol.style.Style({
@@ -318,8 +318,28 @@ AppOnline.prototype.actionClearAll = function() {
             dataType: 'jsonp',
             success: function (data, status) {
                 if(data.features.length > 0){
-                    that.selectedBat = data.features[0];
-                    getServiceFromFeature(data.features[0], callback);
+                    var feature = data.features[0];
+
+                    that.selectedBat = feature;
+                    console.log(feature);
+                    that.getServiceFromOsmId(feature.properties.osm_id, function(services){
+                        var s = '';
+                        for (var i = services.length - 1; i >= 0; i--) {
+                            services += services[i].name + "," + services[i].url;
+                            if(i > 0)
+                                s += ";";
+                        };
+
+                        feature.properties.services = s;
+                        olFeature = new ol.Feature({
+                            geometry: new ol.geom.Polygon(feature.geometry.coordinates),
+                            name: feature.properties.name,
+                            properties: feature.properties
+                        });
+                        that.selectedBat = olFeature;
+
+                        callback(olFeature.getProperties());
+                    });
                 }
                 else{
                     that.selectedBat = undefined;
@@ -330,86 +350,75 @@ AppOnline.prototype.actionClearAll = function() {
     }
 };
 
-function getServiceFromFeature(data, callback){
+/**
+*   Récupere la liste des services associés à un batiment (osm_id) sous forme
+*   [{
+*       name: nomDuService
+*       url: urlDuService
+*   }, ...]
+*/
+AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
     $.ajax({
         url: 'php/manageServices.php',
         type: 'GET',
         data: {
             action: 'getServiceFromOsmId',
-            osmId : data.properties.osm_id
+            osmId : osmId
         },
         success: function(res){
-            var services = '';
             res = $.parseJSON(res);
+            var result = [];
 
-            for (var i = res.length - 1; i >= 0; i--) {
-                services += res[i].name + "," + res[i].url;
-                if(i > 0)
-                    services += ";";
+            for (var i = 0; i < res.length; i++) {
+                result.push({
+                    name: res[i].name,
+                    url: res[i].url
+                });
             };
-            data.properties.services = services;
-            feature = new ol.Feature({
-                geometry: new ol.geom.Polygon(data.geometry.coordinates),
-                name: data.properties.name,
-                properties: data.properties
-            });
-            that.selectedBat = data;
 
             if(callback != undefined && typeof(callback) == "function")
-                callback(feature.getProperties()); 
+                callback(result); 
         }
     });
 }
 
-
-// var feature = this.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-
-//     
-// });
-
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
- AppOnline.prototype.actionGoto = function(object) {
+ AppOnline.prototype.actionGoto = function(object, callback) {
     $.ajax({
         url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + object.id + '&format_options=callback:getJson',
         dataType: 'jsonp',
         jsonpCallback: 'getJson',
 
         success: function(res){
-            if(res.features.length > 0)
-                getServiceFromFeature(res.features[0]);
+            if(res.features.length > 0){
+                res.features[0].properties.osm_id = res.features[0].id.split('.')[1];
+
+                that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
+                    var feature = new ol.Feature({
+                        geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
+                        name: res.features[0].properties.name, 
+                        properties: res.features[0].properties
+                    });
+                    var s = '';
+                    for (var i = 0; i < services.length; i++) {
+                        s += services[i].name + ',' + services[i].url;
+                        if(i<services.length-1)
+                            s += ';';
+                    };
+                    feature.getProperties().properties.service = s;
+                    callback(feature.getProperties());
+                });
+            }
         }
     });
 };
 
-// function parseResponse(data){
-//     var features = data.features;
-//     //for (var i = features.length - 1; i >= 0; i--) {
-//     //};
-//     if(features.length > 0){
-//         var $cardContainer = $('.cardContainer');
-//         $cardContainer.find('#batName').text(features[0].properties.name!=null?features[0].properties.name:features[0].properties.services);
-//         $cardContainer.find('#batService').text(features[0].properties.services);
-//         var coordsBat = [];
 
-//         var functionTmp = $.proxy(function(){
-//             this.actionPath(coordsBat, true);
-//         }, that);
-//         coordsBat['coordinate'] = features[0].geometry.coordinates[0][0];
-//         // $cardContainer.find('#batItineraire').click(functionTmp);
-//         // if($('.cardContainer').hasClass('hidden')){
-//         //     $('.cardContainer').transition('vertical flip');
-//         // }
-//     }
-
-//     // else{
-//     //     if(! $('.cardContainer').hasClass('hidden')){
-//     //         $('.cardContainer').transition('vertical flip');
-//     //     }
-//     // }
-// }
-
+/**
+*   Pas utilisé pour le moment
+*/
 function showFeaturesHoverBuildings(data){
 
     var nbFeatures = 0;
@@ -434,38 +443,6 @@ function showFeaturesHoverBuildings(data){
     // return infos;
 }
 
-/**
- *  Action appelé quand on click sur le bouton des services
- *
- *  Logiquement cela devrait rechercher le service le plus proche de la position courante
- */
- AppOnline.prototype.actionParking = function() {
-    // var hazardWMSLayer = new OpenLayers.Layer.WMS(
-    //     "Wenchuan Intensities (WMS)",
-    //     "http://mysite.org/geoserver/wms",
-    //     {
-    //         layers: "wenchuanintensityquery2",
-    //         transparent:true,
-    //         viewparams:'minweight:5'
-    //     },
-    //     {
-    //         opacity:0.5,
-    //         singleTile:true
-    //     }
-    //     );
-if(this.posActu){
-    var coords = ol.proj.toLonLat(this.posActu);
-
-    var viewparams = ['x:' + coords[0], 'y:' + coords[1], 'sname:parking'];
-
-    var p = this.layers['closestService'].layer.getSource().getParams();
-    p.viewparams = viewparams.join(';');
-        this.layers['closestService'].layer.getSource().updateParams(p);
-        
-
-        // this.map.addLayer(closestParkingLayer);
-    }
-};
 
 /**
  *  Quand on click sur le bouton "edit".
@@ -474,44 +451,24 @@ if(this.posActu){
  */
  AppOnline.prototype.actionEdit = function() {
     console.log("selectedBat : ");
-    console.log(this.selectedBat);
+    console.log(this.selectedBat.getProperties());
 
     if(this.selectedBat != undefined){
-
         console.log('actionEdit');
         var resp = [];
         resp['object'] = {
-            name : this.selectedBat.properties.name,
-            osm_id : this.selectedBat.properties.osm_id,
-            services : this.selectedBat.properties.services
+            name : this.selectedBat.getProperties().properties.name,
+            osm_id : this.selectedBat.getProperties().properties.osm_id,
+            services : this.selectedBat.getProperties().properties.service
         }  
         resp['callback'] = function(result){
             console.log(result);
         };
+
+        console.log(resp);
         return resp;  
     }
-    
-
-    // version mode offline pour exemple d'utilisation
-
-    /*
-      var that = this;
-      var properties = this.selectedObject.getProperties();
-      
-      return {
-      'object' : {
-      'name' : properties['name'],
-      'services' : properties['services'] || '',
-      'highway' : properties['highway']
-      },
-      'callback': function(result) {
-      result['osm_id'] = properties['osm_id'];
-      that.storage.add('edit', result);
-      that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource());
-      }
-      };
-      */
-  };
+};
 
 AppOnline.prototype.actionToggleGps = function() {
     var that = this;
@@ -524,7 +481,7 @@ AppOnline.prototype.actionToggleGps = function() {
             var sourceCurrent = that.layers['currentPosition'].layer.getSource();
             
             console.log("Latitude: " + position.coords.latitude + 
-                        "Longitude: " + position.coords.longitude);
+                "Longitude: " + position.coords.longitude);
 
             that.map.getView().setCenter(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857'));
             
@@ -587,8 +544,6 @@ AppOnline.prototype.actionToggleGps = function() {
         'x1:' + startCoord[0], 'y1:' + startCoord[1],
         'x2:' + destCoord[0], 'y2:' + destCoord[1]
         ];
-
-        //params.viewparams = viewparams.join(';');
         
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = viewparams.join(';');
@@ -596,26 +551,21 @@ AppOnline.prototype.actionToggleGps = function() {
     }
 };
 
+
+/**
+*   
+*
+*
+*/
 AppOnline.prototype.actionPathService = function(service, callbackFinal) {
     var that = this;
     console.log("actionPathService");
     var callback = function(serviceListe){
-        // if ($.inArray(service, serviceListe) == -1) {
-        //     console.log("null");
-        //     return null;
-        // }
-        
+
         if(that.posActu){
             var coords = ol.proj.toLonLat(that.posActu);
             console.log(service);
             var viewparams = ['x:' + coords[0], 'y:' + coords[1], "sname:'" + service + "'"];
-            // var p = that.layers['closestService'].layer.getSource().getParams();
-            // var coords = [];
-
-            // p.viewparams = viewparams.join(';');
-            // that.layers['closestService'].layer.getSource().updateParams(p);
-            //that.actionPath()
-            // this.map.addLayer(closestParkingLayer);
 
             $.ajax({
                 url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:closestService&outputFormat=text/javascript&viewparams=' + viewparams.join(';') + '&format_options=callback:getJson',
@@ -624,95 +574,90 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
 
                 success: function(data, status){
                     that.layers['closestService'].layer.getSource().clear();
+
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
                         name: data.features[0].properties.name, 
                         properties: data.features[0].properties
                     });
+
                     var osmId = data.features[0].id.split('.');
                     osmId = osmId[osmId.length-1];
-                    $.ajax({
-                        url: 'php/manageServices.php',
-                        type: 'GET',
-                        data: {
-                            action: 'getServiceFromOsmId',
-                            osmId: osmId
-                        },
-                        success: function(res){
-                            var services = '';
-                            res = $.parseJSON(res);
 
-                            for (var i = res.length - 1; i >= 0; i--) {
-                                services += res[i].name + "," + res[i].url;
-                                if(i > 0)
-                                    services += ";";
-                            };
-                            feature.getProperties().properties.services = services;
-                            console.log(feature);
-                            that.layers['closestService'].layer.getSource().addFeature(feature);
+                    that.getServiceFromOsmId(osmId, function(res){
+                        var services = '';
+                        //res = $.parseJSON(res);
 
-                            if(that.posActu){
-                                var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
-                                var pointsSrc = that.layers['vector2'].layer.getSource();
+                        for (var i = res.length - 1; i >= 0; i--) {
+                            services += res[i].name + "," + res[i].url;
+                            if(i > 0)
+                                services += ";";
+                        };
+                        feature.getProperties().properties.services = services;
+                        console.log(feature);
+                        that.layers['closestService'].layer.getSource().addFeature(feature);
 
-                                pointsSrc.clear();
-                                pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.posActu)));
+                        if(that.posActu){
+                            var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+                            var pointsSrc = that.layers['vector2'].layer.getSource();
+
+                            pointsSrc.clear();
+                            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.posActu)));
 
 
-                                that.click = 2;
+                            that.click = 2;
 
-                                pointsSrc.addFeature(new ol.Feature(feature.getGeometry().getInteriorPoint()));
+                            pointsSrc.addFeature(new ol.Feature(feature.getGeometry().getInteriorPoint()));
 
-                                var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
-                                var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
+                            var startCoord = transform(pointsSrc.getFeatures()[0].getGeometry().getCoordinates());
+                            var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
-                                var viewparams = [
-                                'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                                'x2:' + destCoord[0], 'y2:' + destCoord[1]
-                                ];
+                            var viewparams = [
+                            'x1:' + startCoord[0], 'y1:' + startCoord[1],
+                            'x2:' + destCoord[0], 'y2:' + destCoord[1]
+                            ];
 
-                                var p = that.layers['resultPgRouting'].layer.getSource().getParams();
-                                p.viewparams = viewparams.join(';');
-                                that.layers['resultPgRouting'].layer.getSource().updateParams(p);
-                            }
-                            callbackFinal(feature.getProperties());
+                            var p = that.layers['resultPgRouting'].layer.getSource().getParams();
+                            p.viewparams = viewparams.join(';');
+                            that.layers['resultPgRouting'].layer.getSource().updateParams(p);
                         }
+                        callbackFinal(feature.getProperties());
                     });
-}
-});
-}
-};
+                }
+        });
+        }
+    };
 
-this.getServiceList(callback);
+    this.getServiceList(callback);
 
 };
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+   */
+   AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer

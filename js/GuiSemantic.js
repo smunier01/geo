@@ -287,18 +287,19 @@ GuiSemantic.prototype.updateCardInfos = function(data){
 
     if (data){
 
-        if (this.app instanceof AppOnline) {
-            var g = data.geometry;
-            data = data.properties;
-            data.geometry = g;
-        }
+        // if (this.app instanceof AppOnline) {
+        //     var g = data.geometry;
+        //     data = data.properties;
+        //     data.geometry = g;
+        // }
         
         var coordsBat = [];
+        console.log(data);
 
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
-        var servicesAndUrl = data.services.split(';');
+        var servicesAndUrl = data.properties.service.split(';');
         var servicesUrl = [];
         var servicesName = [];
 
@@ -369,8 +370,8 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
         .search({
             source: content,
             onSelect: function(result, response) {
-                that.app.actionGoto(result, function(object) {
-                    // ?
+                that.app.actionGoto(result, function(featureProperties) {
+                    that.updateCardInfos(featureProperties);
                 });
             }
         })
