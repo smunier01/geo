@@ -607,8 +607,6 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
  *  Cherche le parking le plus proche du noeud actuelement selectionné ou de notre pos courante
  */
 AppOffline.prototype.actionParking = function() {
-    // if pos courante ??
-    // ...
 
     var that = this;
 
@@ -617,6 +615,7 @@ AppOffline.prototype.actionParking = function() {
     if (this.gpsmode) {
         
         pos = this.currentPosition;
+        
     } else if (this.pointsClicked[0] ) {
 
         pos = this.pointsClicked[0];
@@ -632,9 +631,7 @@ AppOffline.prototype.actionParking = function() {
         var parking = that.getClosestParking(pos);
         var parkingCenter = parking.getGeometry().getInteriorPoint();
 
-        console.log(pos);
-        console.log(parkingCenter.getCoordinates());
-        
+
         var routeFeatures = this.getRoute(pos, parkingCenter.getCoordinates());
 
         sourceRoute.addFeatures(routeFeatures);
@@ -716,7 +713,7 @@ AppOffline.prototype.getServiceList = function(callback) {
     if (this.cache['services'] === undefined) {
 
         this.cache['services'] = [];
-        this.cache['services']['parking'] = 1;
+        // this.cache['services']['parking'] = 1;
 
         var source = this.layers['buildingsVectors'].layer.getSource().getSource();
         
@@ -724,25 +721,24 @@ AppOffline.prototype.getServiceList = function(callback) {
 
             var b = f.getProperties();
 
-            console.log(b.services);
             var services = (b.services).split(';');
 
             for (var s of services) {
 
                 var k = s.split(',')[0];
-
-                if (that.cache['services'][k]) {
-                    that.cache['services'][k] += 1;
-                } else {
-                    that.cache['services'][k] = 1;
+                var url = s.split(',')[1];
+                
+                if (that.cache.services.filter(function (s) {return s.name == k}).length == 0) {
+                    that.cache.services.push({'name': k, 'url': url});
                 }
+
             }
 
         });    
     }
     
     console.log(this.cache['services']);
-    callback(Object.keys(this.cache['services']));
+    callback(this.cache['services']);
 };
 
 /*
@@ -823,28 +819,43 @@ AppOffline.prototype.actionToggleGps = function() {
  *  @param {MouseEvent} evt - 
  */
 AppOffline.prototype.actionPath = function(evt) {
-
+    
     var sourceSelected = this.layers['selected'].layer.getSource();
     var sourceRoute = this.layers['route'].layer.getSource();
 
-    // clear les données si on a déjà afficher un chemin
-    if (this.pointsClicked.length >= 2) {
-        this.pointsClicked = [];
+    if (this.gpsmode) {
+
         sourceSelected.clear();
         sourceRoute.clear();
-    }
-
-    this.pointsClicked.push(evt.coordinate);
-
-    sourceSelected.addFeature((new ol.Feature(new ol.geom.Point(evt.coordinate))));
-    
-    // si on était à 1, on affiche le chemin
-    if (this.pointsClicked.length >= 2) {
-
-        var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+        sourceSelected.addFeature((new ol.Feature(new ol.geom.Point(evt.coordinate))));
+        
+        var routeFeatures = this.getRoute(this.currentPosition, evt.coordinate);
 
         sourceRoute.addFeatures(routeFeatures);
+        
+
+    } else {
+        
+        // clear les données si on a déjà afficher un chemin
+        if (this.pointsClicked.length >= 2) {
+            this.pointsClicked = [];
+            sourceSelected.clear();
+            sourceRoute.clear();
+        }
+
+        this.pointsClicked.push(evt.coordinate);
+
+        sourceSelected.addFeature((new ol.Feature(new ol.geom.Point(evt.coordinate))));
+        
+        // si on était à 1, on affiche le chemin
+        if (this.pointsClicked.length >= 2) {
+
+            var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+
+            sourceRoute.addFeatures(routeFeatures);
+        }
     }
+    
 };
 
 /**
@@ -907,27 +918,32 @@ AppOffline.prototype.actionPathService = function(service) {
 
         var that = this;
 
-        if (this.pointsClicked[0]) {
+        var pos;
+
+        if (this.gpsmode) {
+            
+            pos = this.currentPosition;
+            
+        } else if (this.pointsClicked[0] ) {
+
+            pos = this.pointsClicked[0];
+
+        } 
+
+        if (pos) {
 
             this.actionClearAll();
 
             var sourceRoute = this.layers['route'].layer.getSource();
             
-            var serv = that.getClosestService(service, this.pointsClicked[0]);
+            var serv = that.getClosestService(service, pos);
             var center = serv.getGeometry().getInteriorPoint();
 
-            if (this.pointsClicked[1]) {
-                this.pointsClicked[1] = center.getCoordinates();
-            } else {
-                this.pointsClicked.push(center.getCoordinates());
-            }
-            
-            var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+            var routeFeatures = this.getRoute(pos, center.getCoordinates());
 
             sourceRoute.addFeatures(routeFeatures);
             
         }
-
     }
 };
 
