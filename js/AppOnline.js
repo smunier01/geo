@@ -30,7 +30,27 @@
      this.layers = [];
      this.styles=[];
 
+     /**
+      *  Boolean indiquant si nous utilisons ou non la geolocalisation.
+      *
+      *  @type {boolean}
+      */
      this.gpsmode = false;
+
+     /*
+      *  Position courante donnée par la geolocalisation
+      *
+      *  @type {Array.<number>}
+      */
+     this.currentPosition = [];
+
+     /*
+      *  Référence vers l'objet en charge de la geolocation.
+      *  pour l'initialiser : gpswatch = navigator.geolocation.watchPosition(...);
+      *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
+      *  @type {object}
+      */
+     this.gpswatch = undefined;
 
      this.GREY1 = '#CECECE';
      this.COLOR1 = '#E86FB0';
@@ -509,31 +529,40 @@ function showFeaturesHoverBuildings(data){
     }
 };
 
+/**
+ *  Active ou desactive le mode gps.
+ */
 AppOnline.prototype.actionToggleGps = function() {
     var that = this;
+
     this.gpsmode = !this.gpsmode;
 
     if (this.gpsmode) {
 
-        var showPosition = function(position) {
+        var sourceCurrent = that.layers['currentPosition'].layer.getSource();
+        var view = that.map.getView();
 
-            var sourceCurrent = that.layers['currentPosition'].layer.getSource();
-            
-            console.log("Latitude: " + position.coords.latitude + 
-                "Longitude: " + position.coords.longitude);
+        this.gpswatch = navigator.geolocation.watchPosition(
+            function(position) {
+                that.currentPosition = ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857');
 
-            that.map.getView().setCenter(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857'));
-            
-            sourceCurrent.clear();
-            sourceCurrent.addFeature((new ol.Feature(new ol.geom.Point(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857')))));
-        };
+                view.setCenter(that.currentPosition);
 
-        var failed = function(pram) {
-            console.log("error gps");
-        };
+                sourceCurrent.clear();
+                sourceCurrent.addFeature(new ol.Feature(new ol.geom.Point(that.currentPosition)));
+            },
+            function(error) {
+                console.log("error gps");
+            },
+            {
+                enableHighAccuracy:true, maximumAge:0, timeout:5000
+            }
+        );
 
-        this.gpslocation = navigator.geolocation.watchPosition(showPosition, failed, {enableHighAccuracy:true, maximumAge:30000, timeout:27000});
+    } else {
 
+        navigator.geolocation.clearWatch(this.gpswatch);
+        
     }
 };
 

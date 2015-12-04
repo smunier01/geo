@@ -287,11 +287,11 @@ GuiSemantic.prototype.updateCardInfos = function(data){
 
     if (data){
 
-        // if (this.app instanceof AppOnline) {
-        //     var g = data.geometry;
-        //     data = data.properties;
-        //     data.geometry = g;
-        // }
+        //if (this.app instanceof AppOnline) {
+        //    var g = data.geometry;
+        //    data = data.properties;
+        //    data.geometry = g;
+        //}
         
         var coordsBat = [];
         console.log(data);
@@ -300,6 +300,7 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         var cardContainer = $('.cardContainer');
 
         var servicesAndUrl = data.services.split(';');
+
         var servicesUrl = [];
         var servicesName = [];
 
