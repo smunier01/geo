@@ -320,23 +320,24 @@ AppOnline.prototype.actionClearAll = function() {
                 if(data.features.length > 0){
                     var feature = data.features[0];
 
-                    that.selectedBat = feature;
+                    //that.selectedBat = feature;
                     console.log(feature);
                     that.getServiceFromOsmId(feature.properties.osm_id, function(services){
                         var s = '';
                         for (var i = services.length - 1; i >= 0; i--) {
-                            services += services[i].name + "," + services[i].url;
+                            s += services[i].name + "," + services[i].url;
                             if(i > 0)
                                 s += ";";
                         };
 
-                        feature.properties.services = s;
+                        feature.properties.service = s;
                         olFeature = new ol.Feature({
                             geometry: new ol.geom.Polygon(feature.geometry.coordinates),
                             name: feature.properties.name,
                             properties: feature.properties
                         });
                         that.selectedBat = olFeature;
+                        that.addFeatureOnClosestService(that.selectedBat, true);
 
                         callback(olFeature.getProperties());
                     });
@@ -347,7 +348,7 @@ AppOnline.prototype.actionClearAll = function() {
                 }
             }
         });
-    }
+}
 };
 
 /**
@@ -401,19 +402,41 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
                         name: res.features[0].properties.name, 
                         properties: res.features[0].properties
                     });
+
                     var s = '';
                     for (var i = 0; i < services.length; i++) {
                         s += services[i].name + ',' + services[i].url;
                         if(i<services.length-1)
                             s += ';';
                     };
+
                     feature.getProperties().properties.service = s;
+                    that.selectedBat = feature;
+                    that.addFeatureOnClosestService(that.selectedBat, true);
+
                     callback(feature.getProperties());
                 });
             }
         }
     });
 };
+
+/**
+*   Ajoute une feature sur la layer closestService
+*   clear la layer si clear = true
+*/
+AppOnline.prototype. addFeatureOnClosestService =  function(feature, clear){
+    //Dans tous les cas, on ne veut pas qqch sur la layer routing 
+    var p = this.layers['resultPgRouting'].layer.getSource().getParams();
+    p.viewparams = [];
+    this.layers['resultPgRouting'].layer.getSource().updateParams(p);
+    this.layers['vector2'].layer.getSource().clear()
+
+    if(clear)
+        this.layers['closestService'].layer.getSource().clear();
+    if(feature != null && feature != undefined)
+        this.layers['closestService'].layer.getSource().addFeature(feature);
+}
 
 
 /**
@@ -573,7 +596,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                 jsonpCallback: 'getJson',
 
                 success: function(data, status){
-                    that.layers['closestService'].layer.getSource().clear();
+                    //that.layers['closestService'].layer.getSource().clear();
 
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
@@ -595,8 +618,9 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         };
                         feature.getProperties().properties.services = services;
                         console.log(feature);
-                        that.layers['closestService'].layer.getSource().addFeature(feature);
+                        //that.layers['closestService'].layer.getSource().addFeature(feature);
 
+                        that.addFeatureOnClosestService(feature, true);
                         if(that.posActu){
                             var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
                             var pointsSrc = that.layers['vector2'].layer.getSource();
@@ -623,12 +647,12 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         }
                         callbackFinal(feature.getProperties());
                     });
-                }
-        });
-        }
-    };
+}
+});
+}
+};
 
-    this.getServiceList(callback);
+this.getServiceList(callback);
 
 };
 
