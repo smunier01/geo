@@ -42,7 +42,7 @@
       *
       *  @type {Array.<number>}
       */
-     this.currentPosition = [];
+     this.currentPosition = undefined;
 
      /*
       *  Référence vers l'objet en charge de la geolocation.
@@ -181,6 +181,15 @@
             source: new ol.source.Vector([]),
             style: that.styles['nodeSelected'],
             title: 'Hover Layer'
+        }),
+        'order': 100
+    };
+
+     this.layers['currentPosition'] = {
+        'layer': new ol.layer.Vector({
+            source: new ol.source.Vector([]),
+            style: that.styles['nodeSelected'],
+            title: 'Current Position Layer'
         }),
         'order': 100
     };
@@ -543,7 +552,7 @@ AppOnline.prototype.actionToggleGps = function() {
     this.gpsmode = !this.gpsmode;
 
     if (this.gpsmode) {
-
+        this.addFeatureOnClosestService(null, true);
         var sourceCurrent = that.layers['currentPosition'].layer.getSource();
         var view = that.map.getView();
 
@@ -565,9 +574,10 @@ AppOnline.prototype.actionToggleGps = function() {
         );
 
     } else {
-
         navigator.geolocation.clearWatch(this.gpswatch);
-        
+        that.currentPosition = undefined;
+        that.layers['currentPosition'].layer.getSource().clear();
+        this.addFeatureOnClosestService(null, true);
     }
 };
 
@@ -586,7 +596,7 @@ AppOnline.prototype.actionToggleGps = function() {
 
 
 
-    if (this.click == 0 || (this.click == 2 && !redirect)) {
+    if ((this.click == 0 || (this.click == 2 && !redirect)) && !that.currentPosition) {
         //Efface le routing au cas où qqch est deja affiché
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = [];
@@ -603,7 +613,12 @@ AppOnline.prototype.actionToggleGps = function() {
     } else {
         if(redirect){
             pointsSrc.clear();
-            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(this.posActu)));
+            if(!that.currentPosition)
+                pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(this.posActu)));
+        }
+        if(that.currentPosition){
+            pointsSrc.clear();
+            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(this.currentPosition)));
         }
 
         this.click = 2;
@@ -635,8 +650,8 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
     console.log("actionPathService");
     var callback = function(serviceListe){
 
-        if(that.posActu){
-            var coords = ol.proj.toLonLat(that.posActu);
+        if(that.posActu || that.currentPosition){
+            var coords = that.currentPosition?ol.proj.toLonLat(that.currentPosition):ol.proj.toLonLat(that.posActu);
             console.log(service);
             var viewparams = ['x:' + coords[0], 'y:' + coords[1], "sname:'" + service + "'"];
 
@@ -651,13 +666,14 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
                         name: data.features[0].properties.name, 
+                        services : ''
                     });
 
-                    delete res.features[0].properties['geometry'];
-                    delete res.features[0].properties['name'];
-                    delete res.features[0].properties['service'];
+                    delete data.features[0].properties['geometry'];
+                    delete data.features[0].properties['name'];
+                    delete data.features[0].properties['service'];
 
-                    feature.setProperties(res.features[0].properties);
+                    feature.setProperties(data.features[0].properties);
 
                     var osmId = data.features[0].id.split('.');
                     osmId = osmId[osmId.length-1];
@@ -676,12 +692,12 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         //that.layers['closestService'].layer.getSource().addFeature(feature);
 
                         that.addFeatureOnClosestService(feature, true);
-                        if(that.posActu){
+                        if(that.posActu || that.currentPosition){
                             var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
                             var pointsSrc = that.layers['vector2'].layer.getSource();
 
                             pointsSrc.clear();
-                            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.posActu)));
+                            pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(that.currentPosition?that.currentPosition:that.posActu)));
 
 
                             that.click = 2;
