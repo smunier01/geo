@@ -514,6 +514,11 @@ function showFeaturesHoverBuildings(data){
             services : this.selectedBat.getProperties().service
         }  
         resp['callback'] = function(result){
+            console.log("CallBack edit : ");
+            console.log(result);
+            if(result.services){
+                result.services = result.services.join(';')
+            }
             $.ajax({
                 url: 'php/manageServices.php',
                 type: 'GET',

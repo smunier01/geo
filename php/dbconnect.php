@@ -99,15 +99,39 @@ class DB {
         $stmt->execute();
 
         //Modification des services
+        $serviceList = array();
         if ($services != ''){
-            echo $services . " --- ";
             $servicesAndUrl = explode(';', $services);
             foreach ($servicesAndUrl as $key => $value) {
-                $serviceName = explode(',', $value);
-                echo $serviceName . " | ";
+                $serviceName = explode(',', $value)[0];
+                array_push($serviceList, $serviceName);
             }
         }
 
+        $servicesBatiment = array();
+        $servicesBatimentUrl = $this->getServiceFromOsmId($osmId);
+        foreach ($servicesBatimentUrl as $key => $value) {
+            array_push($servicesBatiment, $value['name']);
+        }
+
+        $removedServices = array_diff($servicesBatiment, $serviceList);
+
+        $addedServices = array_diff($serviceList, $servicesBatiment);
+
+        foreach ($removedServices as $key => $value) {
+            $stmt = $this->db->prepare("DELETE from services_batiments where id_batiment=:idBat and id_service=(select id from services where name=:nameService)");
+            $stmt->bindParam(':idBat', $osmId);
+            $stmt->bindParam(':nameService', $value);
+            $stmt->execute();
+        }
+
+        foreach ($addedServices as $key => $value) {
+            echo 'Inserting ' . $value . ' for id ' . $osmId . '<br/>';
+            $stmt = $this->db->prepare("INSERT INTO services_batiments (id_batiment,id_service) values(:idBat, (select id from services where name=:nameService))");
+            $stmt->bindParam(':idBat', $osmId);
+            $stmt->bindParam(':nameService', $value);
+            $stmt->execute();
+        }
     }
 
 }
