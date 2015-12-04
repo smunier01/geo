@@ -603,7 +603,7 @@ function showFeaturesHoverBuildings(data){
 
 
 
-    if ((this.click == 0 || (this.click == 2 && !redirect)) && !that.currentPosition) {
+    if (((this.click == 0 && !redirect) || (this.click == 2 && !redirect)) && !that.currentPosition) {
         //Efface le routing au cas où qqch est deja affiché
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = [];

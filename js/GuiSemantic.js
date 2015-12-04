@@ -5,7 +5,7 @@
  *
  *  @class
  */
-var GuiSemantic = function(app) {
+ var GuiSemantic = function(app) {
 
     this.app = app;
 
@@ -41,8 +41,8 @@ GuiSemantic.prototype.init = function() {
     $('.ui.accordion').accordion();
 
     $('#bottom-bar')
-        .sidebar('setting', 'transition', 'push')
-        .sidebar('setting', { dimPage: false });
+    .sidebar('setting', 'transition', 'push')
+    .sidebar('setting', { dimPage: false });
     
     $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
@@ -64,6 +64,19 @@ GuiSemantic.prototype.init = function() {
         $('#geomode-button').toggleClass('primary');
     });
 
+    
+    this.app.getServiceList(function(services){
+        var serviceList = '<ul class="ui inverted relaxed divided list">';
+        console.log(services);
+        for (var i = 0; i < services.length; i++) {
+            serviceList+= '<li class="item"><a class="editService"><i class="icon edit"/></a><a class="showBatimentService"> ' + services[i].name + '</a></li>';
+        };
+        serviceList += "</ul>";
+        console.log(serviceList);
+        $('#servicesList').html(serviceList);
+    });
+    
+
     var div;
     
     for (var l in this.app.layers) {
@@ -77,17 +90,17 @@ GuiSemantic.prototype.init = function() {
 
         div = $(
             '<div class="item">'+
-                '<div class="right floated content">'+
-                '<div class="ui toggle checkbox">'+
-                '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
-                '<label></label>'+
-                '</div>'+
-                '</div>'+
-                '<div class="content">'+
-                '<label for="display"' + l + '>' + l + '</label>'+
-                '</div>'+
-                '</div>'
-        );
+            '<div class="right floated content">'+
+            '<div class="ui toggle checkbox">'+
+            '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
+            '<label></label>'+
+            '</div>'+
+            '</div>'+
+            '<div class="content">'+
+            '<label for="display"' + l + '>' + l + '</label>'+
+            '</div>'+
+            '</div>'
+            );
         
 
         $('#layersCheckboxes').append(div);
@@ -128,7 +141,7 @@ GuiSemantic.prototype.init = function() {
         var servicesValue = [];
         
         for (var key in feature) {
-       
+
             if (key == 'services') {
 
                 that.app.getServiceList(function(services){
@@ -159,10 +172,10 @@ GuiSemantic.prototype.init = function() {
             } else {
 
                 var div = $('<div class="ui labeled input fluid">' +
-                            '<div class="ui label">' + key + '</div>' +
-                            '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
-                            '</div>'
-                           );
+                    '<div class="ui label">' + key + '</div>' +
+                    '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
+                    '</div>'
+                    );
 
                 modalContent.append(div);
 
@@ -380,14 +393,14 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
     });
 
     $('.ui.search')
-        .search({
-            source: content,
-            onSelect: function(result, response) {
-                that.app.actionGoto(result, function(featureProperties) {
-                    that.updateCardInfos(featureProperties);
-                });
-            }
-        })
+    .search({
+        source: content,
+        onSelect: function(result, response) {
+            that.app.actionGoto(result, function(featureProperties) {
+                that.updateCardInfos(featureProperties);
+            });
+        }
+    })
     ;
 
     /*
@@ -402,29 +415,29 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
       
       list += '</ul>';
       $buildingList.append(list);
-    */
-};
+      */
+  };
 
-GuiSemantic.prototype.setMode = function(m) {
+  GuiSemantic.prototype.setMode = function(m) {
 
     this.currentMode = m;
 
     this.clearAll();
 
     switch(this.currentMode) {
-    case this.modes.PATH:
+        case this.modes.PATH:
         $('#path-button').addClass('primary');
         $('#select-mode-buttons').hide();
         $('#path-mode-buttons').show();
         break;
         
-    case this.modes.SELECT:
+        case this.modes.SELECT:
         $('#select-button').addClass('primary');
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').show();
         break;
         
-    default:
+        default:
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').hide();
     }
