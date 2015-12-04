@@ -617,7 +617,7 @@ function showFeaturesHoverBuildings(data){
 
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
 
-    } else {
+    } else if(this.currentPosition || this.posActu) {
         if(redirect){
             pointsSrc.clear();
             if(!that.currentPosition)
@@ -643,6 +643,9 @@ function showFeaturesHoverBuildings(data){
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = viewparams.join(';');
         this.layers['resultPgRouting'].layer.getSource().updateParams(p);
+    }
+    else{
+        this.showError("Veuillez selectionner un point de départ ( via chemin ), ou activer le gps");
     }
 };
 
