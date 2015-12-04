@@ -44,7 +44,7 @@ for opt, arg in opts:
 # conv
 call(['ogr2ogr', '-f', 'GeoJSON' ,'out_lines.json', db, '-sql', "select * from planet_osm_line WHERE osm_id>=0 AND power IS NULL AND barrier IS NULL AND boundary IS NULL"])
 # call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', 'select * from planet_osm_polygon'])
-call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', "SELECT * FROM planet_osm_polygon as a left join (SELECT DISTINCT osm_id, array_to_string(array_agg(DISTINCT CONCAT(s.id,',',s.name,',',s.url)), ';') as services FROM (planet_osm_polygon left join services_batiments on osm_id=id_batiment) left join services as s on s.id=id_service GROUP BY osm_id) as b on a.osm_id=b.osm_id"])
+call(['ogr2ogr', '-f', 'GeoJSON' ,'out_polygons.json', db, '-sql', "SELECT * FROM planet_osm_polygon as a left join (SELECT DISTINCT osm_id, array_to_string(array_agg(DISTINCT CONCAT(s.name,',',s.url)), ';') as services FROM (planet_osm_polygon left join services_batiments on osm_id=id_batiment) left join services as s on s.id=id_service GROUP BY osm_id) as b on a.osm_id=b.osm_id"])
 
 
 json_data_lines = json.load(open('out_lines.json'))

@@ -1,6 +1,10 @@
 /* global ol, Routing, MyStorage, $ */
 
-const PHP_ROOT = 'http://localhost/geo/php/';
+/*
+ *  @typedef {object} MouseEvent
+ */
+
+var PHP_ROOT = 'http://localhost/geo/php/';
 
 /**
  * Application Offline
@@ -51,6 +55,9 @@ var AppOffline = function () {
     this.cache = [];
 
     /**
+     *  Permet de convertir simplement les données contenu dans les .json (en provenance de postgis)   
+     *  en une projection approprié pour OpenLayers
+     *
      *  @type {ol.ProjectionLike}
      */
     this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'};
@@ -58,21 +65,52 @@ var AppOffline = function () {
     /**
      *  Reference vers la base de donnée local, permet d'enregistré les modifications en attendant
      *  de pouvoir les envoyer vers postgis
+     *
      *  @type {MyStorage}
      */
     this.storage = new MyStorage();
 
     /**
+     *  Référence vers l'objet actuellement selectionné.
+     *  Utilisé pour le bouton "edit".
      *
+     *  @type {ol.Feature}
      */
     this.selectedFeature = undefined;
 
-
+    /**
+     *  Référence vers les differentes positions cliqué.
+     *  Utilisé pour les recherches de chemins.
+     *
+     *  @type {Array.<ol.Coordinates>}
+     */
     this.pointsClicked = [];
 
+    /**
+     *  Boolean indiquant si nous utilisons ou non la geolocalisation.
+     *
+     *  Si TRUE, alors la carte sera centré sur notre position, et la recherche de chemin se
+     *  fera en fonction de cette position.
+     *  Si FALSE, il faut cliquer à plusieurs endroit différent pour faire une rechreche de chemins.
+     *
+     *  @type {boolean}
+     */
     this.gpsmode = false;
 
-    this.pathmode = false;
+    /*
+     *  Position courante donnée par la geolocalisation
+     *
+     *  @type {Array.<number>}
+     */
+    this.currentPosition = [];
+
+    /*
+     *  Référence vers l'objet en charge de la geolocation.
+     *  pour l'initialiser : gpswatch = navigator.geolocation.watchPosition(...);
+     *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
+     *  @type {HTML5Object}
+     */
+    this.gpswatch = undefined;
 
     //
     // Style
@@ -177,11 +215,7 @@ var AppOffline = function () {
             s = s.concat(that.styles['road_normal']);
             
         }
-        /*
-          if (feature.get('oneway') == 'yes') {
-          s = s.concat(that.styles['road_oneway']);
-          }
-        */
+
         return s;
 
     };
@@ -220,7 +254,7 @@ var AppOffline = function () {
     };
 
     //
-    // Map Def
+    // Map Definition
     //
 
     this.map = new ol.Map({
@@ -238,19 +272,7 @@ var AppOffline = function () {
     //
     // Sources & Layers
     //
-    /*
-    this.layers['roadVectors'] = {
-        'layer': new ol.layer.Vector({
-            title: 'Roads Vector Layer',
-            source: new ol.source.Vector({
-                url: 'ressources/lines.geojson',
-                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
-            }),
-            style: styleFunctionRoads
-        }),
-        'order': 10
-    };
-    */
+
     this.layers['roadVectors'] = {
  	'layer': new ol.layer.Image({
             title: 'Roads Vector Layer',
@@ -265,19 +287,6 @@ var AppOffline = function () {
  	'order': 10
     };
     
-    /*
-    this.layers['buildingsVectors'] = {
-        'layer': new ol.layer.Vector({
-            title: 'Building Vector Layer',
-            source: new ol.source.Vector({
-                url: 'ressources/polygons.geojson',
-                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
-            }),
-            style: styleFunctionBuildings
-        }),
-        'order': 9
-    };
-    */
     this.layers['buildingsVectors'] = {
  	'layer': new ol.layer.Image({
             title: 'Building Vector Layer',
@@ -459,8 +468,6 @@ var AppOffline = function () {
         }
     });
 
-    this.nodeSelected = [];
-
     /*
       Change la couleur des noeuds au passage de la souris
       &
@@ -468,35 +475,35 @@ var AppOffline = function () {
     */
     this.map.on('pointermove', function(evt) {
         /*
-        var t = true, nbFeatures = 0;
+          var t = true, nbFeatures = 0;
 
-        var sourceHover = that.layers['hover'].layer.getSource();
+          var sourceHover = that.layers['hover'].layer.getSource();
 
-        sourceHover.clear();
+          sourceHover.clear();
 
-        that.gui.clearHoverBox();
+          that.gui.clearHoverBox();
 
-        that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-            
-            nbFeatures += 1;
+          that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+          
+          nbFeatures += 1;
 
-            that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
-            
-            if (t && layer.get('title') == 'Nodes Layer') {
+          that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
+          
+          if (t && layer.get('title') == 'Nodes Layer') {
 
-                t = false;
+          t = false;
 
-                sourceHover.addFeature(feature);
+          sourceHover.addFeature(feature);
 
-            }
-            
-        });
+          }
+          
+          });
 
-        if (nbFeatures > 0) {
-            
-            that.gui.setHoverBoxPosition(evt.pixel);
+          if (nbFeatures > 0) {
+          
+          that.gui.setHoverBoxPosition(evt.pixel);
 
-        }
+          }
         */
     });
 
@@ -506,17 +513,18 @@ var AppOffline = function () {
     this.map.getViewport().addEventListener('contextmenu', function (e) {
 
         e.preventDefault();
-
-       
+    
     });
 };
 
 AppOffline.prototype.actionClearAll = function() {
+    
     this.layers['nearest'].layer.getSource().clear();
     this.layers['selected'].layer.getSource().clear();
     this.layers['route'].layer.getSource().clear();
-    this.nodeSelected = [];
     this.selectedFeature = undefined;
+    this.pointsClicked = [];
+    
 };
 
 
@@ -525,36 +533,45 @@ AppOffline.prototype.actionClearAll = function() {
  */
 AppOffline.prototype.actionHover = function(evt) {
     /*
-    var that = this, t = true, nbFeatures = 0;
+      var that = this, t = true, nbFeatures = 0;
 
-    var sourceHover = that.layers['hover'].layer.getSource();
+      var sourceHover = that.layers['hover'].layer.getSource();
 
-    sourceHover.clear();
+      sourceHover.clear();
 
-    var infos = [];
-    
-    that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-        
-        nbFeatures += 1;
+      var infos = [];
+      
+      that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+      
+      nbFeatures += 1;
 
-        infos.push({'layerName': layer.get('title'), 'properties': feature.getProperties()});
-        
-        if (t && layer.get('title') == 'Nodes Layer') {
+      infos.push({'layerName': layer.get('title'), 'properties': feature.getProperties()});
+      
+      if (t && layer.get('title') == 'Nodes Layer') {
 
-            t = false;
+      t = false;
 
-            sourceHover.addFeature(feature);
+      sourceHover.addFeature(feature);
 
-        }
-        
-    });
+      }
+      
+      });
 
-    return infos;
+      return infos;
     */
 };
 
 /**
- *
+ * @callback requestCallback
+ * @param {object} feature - object containing a list of properties of the object selected
+ */
+
+/**
+ * Récupére l'objet qui à été cliqué. Garde sa référence dans 'selectedFeature'. Et retourne le 
+ * résultat vers l'UI grace à un callback.
+ * 
+ * @param {MouseEvent} evt - position où on à cliqué
+ * @param {requestCallback} cb - donne à l'UI l'objet qui à été cliqué
  */
 AppOffline.prototype.actionSelect = function(evt, callback) {
 
@@ -571,14 +588,16 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
     });
 
     if (feature) {
+
         this.selectedFeature = feature;
 
         this.layers['nearest'].layer.getSource().clear();
         this.layers['nearest'].layer.getSource().addFeature(feature);
-        console.log(feature);
-        
+
         callback(feature.getProperties());
+
     } else {
+        
         callback(false);
     }
     
@@ -593,22 +612,30 @@ AppOffline.prototype.actionParking = function() {
 
     var that = this;
 
-    if (this.pointsClicked[0]) {
+    var pos;
+
+    if (this.gpsmode) {
+        
+        pos = this.currentPosition;
+    } else if (this.pointsClicked[0] ) {
+
+        pos = this.pointsClicked[0];
+
+    } 
+
+    if (pos) {
 
         this.actionClearAll();
 
         var sourceRoute = this.layers['route'].layer.getSource();
         
-        var parking = that.getClosestParking(this.pointsClicked[0]);
+        var parking = that.getClosestParking(pos);
         var parkingCenter = parking.getGeometry().getInteriorPoint();
 
-        if (this.pointsClicked[1]) {
-            this.pointsClicked[1] = parkingCenter.getCoordinates();
-        } else {
-            this.pointsClicked.push(parkingCenter.getCoordinates());
-        }
+        console.log(pos);
+        console.log(parkingCenter.getCoordinates());
         
-        var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
+        var routeFeatures = this.getRoute(pos, parkingCenter.getCoordinates());
 
         sourceRoute.addFeatures(routeFeatures);
         
@@ -642,7 +669,7 @@ AppOffline.prototype.actionEdit = function() {
 
             if (Object.keys(changed).length > 0) {
 
- 
+                
                 changed['osm_id'] = properties['osm_id'];
                 that.storage.add('edit', changed);
 
@@ -678,7 +705,7 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
 /**
  *
  */
-AppOffline.prototype.getServiceList = function(v) {
+AppOffline.prototype.getServiceList = function(callback) {
 
     var that = this;
     
@@ -692,7 +719,7 @@ AppOffline.prototype.getServiceList = function(v) {
         this.cache['services']['parking'] = 1;
 
         var source = this.layers['buildingsVectors'].layer.getSource().getSource();
-    
+        
         source.forEachFeature(function(f) {
 
             var b = f.getProperties();
@@ -702,7 +729,7 @@ AppOffline.prototype.getServiceList = function(v) {
 
             for (var s of services) {
 
-                var k = s.split(',')[1];
+                var k = s.split(',')[0];
 
                 if (that.cache['services'][k]) {
                     that.cache['services'][k] += 1;
@@ -711,15 +738,18 @@ AppOffline.prototype.getServiceList = function(v) {
                 }
             }
 
-        });
-       
+        });    
     }
+    
     console.log(this.cache['services']);
-    v(Object.keys(this.cache['services']));
+    callback(Object.keys(this.cache['services']));
 };
 
 /*
+ *  Récupére la route entre deux points
  *
+ *  @param {ol.Coordinates} p1 début
+ *  @param {ol.Coordinates} p2 arrivé
  */
 AppOffline.prototype.getRoute = function(p1, p2) {
 
@@ -752,36 +782,45 @@ AppOffline.prototype.getRoute = function(p1, p2) {
     return routeFeatures;
 };
 
+/**
+ *  Active ou desactive le mode gps.
+ */
 AppOffline.prototype.actionToggleGps = function() {
     var that = this;
+
     this.gpsmode = !this.gpsmode;
 
     if (this.gpsmode) {
 
-        var showPosition = function(position) {
+        var sourceCurrent = that.layers['currentPosition'].layer.getSource();
+        var view = that.map.getView();
 
-            var sourceCurrent = that.layers['currentPosition'].layer.getSource();
-            
-            console.log("Latitude: " + position.coords.latitude + 
-                        "Longitude: " + position.coords.longitude);
+        this.gpswatch = navigator.geolocation.watchPosition(
+            function(position) {
+                that.currentPosition = ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857');
 
-            that.map.getView().setCenter(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857'));
-            
-            sourceCurrent.clear();
-            sourceCurrent.addFeature((new ol.Feature(new ol.geom.Point(ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857')))));
-        };
+                view.setCenter(that.currentPosition);
 
-        var failed = function(pram) {
-            console.log("error gps");
-        };
+                sourceCurrent.clear();
+                sourceCurrent.addFeature(new ol.Feature(new ol.geom.Point(that.currentPosition)));
+            },
+            function(error) {
+                console.log("error gps");
+            },
+            {
+                enableHighAccuracy:true, maximumAge:0, timeout:5000
+            }
+        );
 
-        this.gpslocation = navigator.geolocation.watchPosition(showPosition, failed, {enableHighAccuracy:true, maximumAge:30000, timeout:27000});
+    } else {
 
+        navigator.geolocation.clearWatch(this.gpswatch);
+        
     }
 };
 
 /**
- *
+ *  @param {MouseEvent} evt - 
  */
 AppOffline.prototype.actionPath = function(evt) {
 
@@ -803,11 +842,15 @@ AppOffline.prototype.actionPath = function(evt) {
     if (this.pointsClicked.length >= 2) {
 
         var routeFeatures = this.getRoute(this.pointsClicked[0], this.pointsClicked[1]);
-        
+
         sourceRoute.addFeatures(routeFeatures);
     }
 };
 
+/**
+ *  @param {object} object - objet contenant l'id et le nom de l'objet où nous souhaitons bouger la map
+ *  @param {callback} callback - callback prenant en parametre les propriétés du feature selectionné. Permet à l'UI d'afficher les info de objet.
+ */
 AppOffline.prototype.actionGoto = function(object, callback) {
 
     var feature;
@@ -850,15 +893,12 @@ AppOffline.prototype.actionGoto = function(object, callback) {
 };
 
 /**
- *
- *
+ *  Cherche le service le plus proche
  */
 AppOffline.prototype.actionPathService = function(service) {
-    /*
-    if ($.inArray(service, this.getServiceList()) == -1) {
-        return null;
-    }
-    */
+
+    console.log(service);
+    
     if (service == 'parking') {
 
         return this.actionParking();
@@ -971,17 +1011,17 @@ AppOffline.prototype.getClosestService = function(service, coord) {
     
 
     /*
-    for (var p of this.getParkingList()) {
+      for (var p of this.getParkingList()) {
 
-        var v = p.getGeometry().getClosestPoint(coord);
+      var v = p.getGeometry().getClosestPoint(coord);
 
-        var dist = (new ol.geom.LineString([v, coord])).getLength();
+      var dist = (new ol.geom.LineString([v, coord])).getLength();
 
-        if (dist <= min) {
-            min = dist;
-            minP = p;
-        }
-    }
+      if (dist <= min) {
+      min = dist;
+      minP = p;
+      }
+      }
     */
     return minP;
 };
