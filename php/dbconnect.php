@@ -67,4 +67,47 @@ class DB {
 
         return $res;
     }
+
+    function updateInfoBatiments($infos){
+        $osmId = $infos['osm_id'];
+
+        //Modification des paramètres dans la BDD
+        $requete = "UPDATE planet_osm_polygon SET ";
+        $i=0;
+        $params = array();
+        $services = '';
+
+        foreach ($infos as $key => $value) {
+            if($key != 'services' && $key != 'osm_id'){
+                if($i>0){
+                    $requete = $requete . ", ";
+                }
+                $requete = $requete . " " . $key . " = :" . $i . " ";
+                array_push($params, $value);
+                $i+=2;
+            }
+            else if($key == 'services'){
+                $services = $value;
+            }
+        }
+
+        $requete = $requete . "where osm_id = " . $osmId;
+        $stmt = $this->db->prepare($requete);
+        foreach ($params as $key => $value) {
+            $stmt->bindParam(':' . $key, $value);
+        }
+        $stmt->execute();
+
+        //Modification des services
+        if ($services != ''){
+            echo $services . " --- ";
+            $servicesAndUrl = explode(';', $services);
+            foreach ($servicesAndUrl as $key => $value) {
+                $serviceName = explode(',', $value);
+                echo $serviceName . " | ";
+            }
+        }
+
+    }
+
 }

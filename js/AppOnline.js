@@ -330,24 +330,28 @@ AppOnline.prototype.actionClearAll = function() {
                                 s += ";";
                         };
 
-                        feature.properties.service = s;
+                        feature.properties.services = s;
                         olFeature = new ol.Feature({
                             geometry: new ol.geom.Polygon(feature.geometry.coordinates),
                             name: feature.properties.name,
-                            properties: feature.properties
                         });
+
+                        delete feature.properties['geometry'];
+                        delete feature.properties['name'];
+                        olFeature.setProperties(feature.properties);
+
                         that.selectedBat = olFeature;
                         that.addFeatureOnClosestService(that.selectedBat, true);
 
                         callback(olFeature.getProperties());
                     });
-                }
-                else{
-                    that.selectedBat = undefined;
-                    callback(false);
-                }
-            }
-        });
+}
+else{
+    that.selectedBat = undefined;
+    callback(false);
+}
+}
+});
 }
 };
 
@@ -399,9 +403,12 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
                 that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
-                        name: res.features[0].properties.name, 
-                        properties: res.features[0].properties
+                        name: res.features[0].properties.name,
                     });
+
+                    delete res.features[0].properties['geometry'];
+                    delete res.features[0].properties['name'];
+                    delete res.features[0].properties['service'];
 
                     var s = '';
                     for (var i = 0; i < services.length; i++) {
@@ -409,16 +416,18 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
                         if(i<services.length-1)
                             s += ';';
                     };
+                    res.features[0].properties.services = s;
+                    feature.setProperties(res.features[0].properties);
 
-                    feature.getProperties().properties.service = s;
+                    feature.getProperties().services = s;
                     that.selectedBat = feature;
                     that.addFeatureOnClosestService(that.selectedBat, true);
 
                     callback(feature.getProperties());
                 });
-            }
-        }
-    });
+}
+}
+});
 };
 
 /**
@@ -480,12 +489,19 @@ function showFeaturesHoverBuildings(data){
         console.log('actionEdit');
         var resp = [];
         resp['object'] = {
-            name : this.selectedBat.getProperties().properties.name,
-            osm_id : this.selectedBat.getProperties().properties.osm_id,
-            services : this.selectedBat.getProperties().properties.service
+            name : this.selectedBat.getProperties().name,
+            osm_id : this.selectedBat.getProperties().osm_id,
+            services : this.selectedBat.getProperties().service
         }  
         resp['callback'] = function(result){
-            console.log(result);
+            $.ajax({
+                url: 'php/manageServices.php',
+                type: 'GET',
+                data: {
+                    action: 'updateBatimentInfos',
+                    infos: JSON.stringify(result)
+                },
+            });            
         };
 
         console.log(resp);
@@ -601,8 +617,13 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                     var feature = new ol.Feature({
                         geometry: new ol.geom.Polygon(data.features[0].geometry.coordinates),
                         name: data.features[0].properties.name, 
-                        properties: data.features[0].properties
                     });
+
+                    delete res.features[0].properties['geometry'];
+                    delete res.features[0].properties['name'];
+                    delete res.features[0].properties['service'];
+
+                    feature.setProperties(res.features[0].properties);
 
                     var osmId = data.features[0].id.split('.');
                     osmId = osmId[osmId.length-1];
@@ -616,7 +637,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                             if(i > 0)
                                 services += ";";
                         };
-                        feature.getProperties().properties.services = services;
+                        feature.getProperties().services = services;
                         console.log(feature);
                         //that.layers['closestService'].layer.getSource().addFeature(feature);
 
@@ -659,29 +680,29 @@ this.getServiceList(callback);
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-   */
-   AppOnline.prototype.addAllLayers = function() {
+     */
+     AppOnline.prototype.addAllLayers = function() {
 
-    this.map.getLayers().clear();
+        this.map.getLayers().clear();
 
-    var tmp = [];
+        var tmp = [];
 
-    for (var key in this.layers) {
+        for (var key in this.layers) {
 
-        if (this.layers.hasOwnProperty(key)) {
-            var l = this.layers[key];
+            if (this.layers.hasOwnProperty(key)) {
+                var l = this.layers[key];
 
-            tmp.push(l);
+                tmp.push(l);
+            }
+
         }
 
-    }
+        sortByKey(tmp, 'order');
 
-    sortByKey(tmp, 'order');
-
-    for (var ff of tmp) {
-        this.map.addLayer(ff.layer);
-    }
-};
+        for (var ff of tmp) {
+            this.map.addLayer(ff.layer);
+        }
+    };
 
 /**
  *  Change la visibilitéé d'un layer

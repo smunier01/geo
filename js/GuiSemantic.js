@@ -299,7 +299,7 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
-        var servicesAndUrl = data.properties.services.split(';');
+        var servicesAndUrl = data.services.split(';');
         var servicesUrl = [];
         var servicesName = [];
 
