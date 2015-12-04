@@ -43,7 +43,7 @@ class DB {
     }
 
     function getListBuildings(){
-        $stmt = $this->db->prepare("Select name,osm_id from planet_osm_polygon where building = 'yes' and name <> '' and name is not null");
+        $stmt = $this->db->prepare("Select name,osm_id from planet_osm_polygon where building <> '' and building is not null and name <> '' and name is not null");
         $stmt->execute();
         $res = $stmt->fetchAll();
 
