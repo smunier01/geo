@@ -660,13 +660,34 @@ AppOffline.prototype.actionEdit = function() {
             for (var o in result) {
 
                 if (properties[o] !== undefined && (result[o] != properties[o])) {
-                    changed[o] = result[o];
+
+                    if (o == 'services') {
+
+                        var allServices = that.getServiceList();
+                        var services = "";
+                        
+                        for (var s of result[o]) {
+                            var res = allServices.filter(function (stmp) {return stmp.name == s});
+
+                            if (res.length > 0) {
+                                services += res[0].name + ',' + res[0].url + ';';
+                            } else {
+                                services += s + ',;';
+                            }
+                        }
+                        
+                        changed[o] = services;
+                        
+                    } else {
+                        changed[o] = result[o];
+                    }
+
+                    
                 }
             }
 
             if (Object.keys(changed).length > 0) {
 
-                
                 changed['osm_id'] = properties['osm_id'];
                 that.storage.add('edit', changed);
 
@@ -737,8 +758,11 @@ AppOffline.prototype.getServiceList = function(callback) {
         });    
     }
     
-    console.log(this.cache['services']);
-    callback(this.cache['services']);
+    if (typeof callback == 'function') {
+        callback(this.cache['services']);
+    }
+    
+    return this.cache['services'];
 };
 
 /*
