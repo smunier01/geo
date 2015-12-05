@@ -68,7 +68,7 @@ var AppOffline = function () {
      *
      *  @type {MyStorage}
      */
-    this.storage = new MyStorage();
+    this.storage = new MyStorage(this);
 
     /**
      *  Référence vers l'objet actuellement selectionné.
@@ -173,7 +173,7 @@ var AppOffline = function () {
     /**
      * Fonction de gestion des styles pour les routes.
      */
-    var styleFunctionRoads = function (feature) {
+    this.styleFunctionRoads = function (feature) {
 
         var s = [];
 
@@ -223,7 +223,8 @@ var AppOffline = function () {
     /**
      * Fonction de gestion des styles pour les batiments.
      */
-    var styleFunctionBuildings = function (feature) {
+    this.styleFunctionBuildings = function (feature) {
+
 
         var s = [];
 
@@ -277,11 +278,11 @@ var AppOffline = function () {
  	'layer': new ol.layer.Image({
             title: 'Roads Vector Layer',
  	    source: new ol.source.ImageVector({
- 		source: new ol.source.Vector({
+ 		source: new ol.source.Vector({/*
  		    url: 'ressources/lines.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
- 		style: styleFunctionRoads
+ 		style: this.styleFunctionRoads
  	    })
  	}),
  	'order': 10
@@ -291,53 +292,17 @@ var AppOffline = function () {
  	'layer': new ol.layer.Image({
             title: 'Building Vector Layer',
  	    source: new ol.source.ImageVector({
- 		source: new ol.source.Vector({
+ 		source: new ol.source.Vector({/*
  		    url: 'ressources/polygons.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
- 		style: styleFunctionBuildings
+ 		style: this.styleFunctionBuildings
  	    })
  	}),
  	'order': 9
     };
-    
-    // callback pour buildings.json
-    var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
 
-        var source = that.layers['buildingsVectors'].layer.getSource().getSource();
-
-        if (source.getState() == 'ready') {
-
-            source.unByKey(key1);
-
-            // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(source);
-
-            // met à jour la liste des batiments dans le menu
-            that.gui.updateBuildingList(that.getBuildingList());
-
-            // met à jour la liste des services
-            that.getServiceList(function(services) {
-                that.gui.updateServiceList(services);
-            });
-        }
-    });
-
-    // callback pour lines.json
-    var key2 = this.layers['roadVectors'].layer.getSource().on('change', function() {
-
-        var source = that.layers['roadVectors'].layer.getSource().getSource();
-
-        if (source.getState() == 'ready') {
-
-            source.unByKey(key2);
-
-            // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(source);
-
-        }
-
-    });
+    this.loadJsonFiles();
 
     this.initStyles();
 
@@ -1099,6 +1064,123 @@ AppOffline.prototype.getRoadList = function() {
     
 };
 
+AppOffline.prototype.loadJsonFiles = function() {
+
+    var that = this;
+    
+    if (typeof cordova !== 'undefined') {
+
+        var lp = that.layers['buildingsVectors'].layer;
+        
+        that.storage.getCordovaFile('polygons', function(geojson) {
+
+            console.log("file found");
+
+            var newSource = new ol.source.ImageVector({
+                source: new ol.source.Vector({
+                    features: (new ol.format.GeoJSON()).readFeatures(geojson)
+                }),
+                style: that.styleFunctionBuildings
+            });
+            
+            lp.setSource(newSource);
+
+             // met à jour les features de la source si il y a des modifs en localStorage
+            that.updateFeaturesFromStorage(newSource);
+
+            // met à jour la liste des batiments dans le menu
+            that.gui.updateBuildingList(that.getBuildingList());
+
+            // met à jour la liste des services
+            that.getServiceList(function(services) {
+                that.gui.updateServiceList(services);
+            });
+            
+        }, function(e) {
+
+            console.log("file not found, using polygons.geojson");
+
+            var newSource = new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/polygons.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: that.styleFunctionBuildings
+ 	    });
+            
+            lp.setSource(newSource);
+
+            that.setSourceCallback('buildings');
+            
+        });
+
+        var lr = that.layers['roadVectors'].layer;
+        
+        that.storage.getCordovaFile('lines', function(geojson) {
+
+            var newSource = new ol.source.ImageVector({
+                source: new ol.source.Vector({
+                    features: (new ol.format.GeoJSON()).readFeatures(geojson)
+                }),
+                style: that.styleFunctionRoads
+            });
+            
+            lr.setSource(newSource);
+
+            that.updateFeaturesFromStorage(newSource);
+            
+        }, function(e) {
+
+            var newSource = new ol.source.ImageVector({
+ 		source: new ol.source.Vector({
+ 		    url: 'ressources/lines.geojson',
+ 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 		}),
+ 		style: that.styleFunctionRoads
+ 	    });
+            
+            lr.setSource(newSource);
+
+            that.setSourceCallback('lines');
+            
+        });
+              
+    } else {
+
+        var lp2 = that.layers['buildingsVectors'].layer;
+        var lr2 = that.layers['roadVectors'].layer;
+
+        var newSource = new ol.source.ImageVector({
+ 	    source: new ol.source.Vector({
+ 		url: 'ressources/polygons.geojson',
+ 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 	    }),
+ 	    style: that.styleFunctionBuildings
+ 	});
+        
+        lp2.setSource(newSource);
+
+        that.setSourceCallback('buildings');
+
+        var newSource = new ol.source.ImageVector({
+ 	    source: new ol.source.Vector({
+ 		url: 'ressources/lines.geojson',
+ 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+ 	    }),
+ 	    style: that.styleFunctionRoads
+ 	});
+        
+        lr2.setSource(newSource);
+
+        that.setSourceCallback('lines');
+    }
+
+};
+
+AppOffline.prototype.syncOnline = function() {
+    this.downloadFiles();
+};
+
 /**
  *  @returns {Array.<ol.Feature>} liste des parkings
  */
@@ -1244,6 +1326,17 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
 
     // on met à jour l'affichage dans l'interface graphique
     this.gui.updateSyncInfos(featuresToEdit);
+};
+
+AppOffline.prototype.downloadFiles = function() {
+
+    var that = this;
+    
+    that.storage.updateGeoJson('polygons', function() {
+        that.storage.updateGeoJson('lines', function() {
+            that.loadJsonFiles();
+        });
+    });
 };
 
 /**
@@ -1426,6 +1519,65 @@ AppOffline.prototype.initStyles = function() {
         })
     });
 
+};
+
+AppOffline.prototype.setSourceCallback = function(value) {
+
+    var that = this;
+
+    if (value == 'buildings') {
+    // callback pour buildings.json
+    var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
+        
+        console.log('building callback json');
+        
+        var source = that.layers['buildingsVectors'].layer.getSource().getSource();
+        
+        var a = true;
+        source.forEachFeature(function(f) {
+            if (a) {
+                console.log(f.getGeometry().getCoordinates());
+                a = false;
+            }
+        });
+        
+        if (source.getState() == 'ready') {
+
+            source.unByKey(key1);
+
+            // met à jour les features de la source si il y a des modifs en localStorage
+            that.updateFeaturesFromStorage(source);
+
+            // met à jour la liste des batiments dans le menu
+            that.gui.updateBuildingList(that.getBuildingList());
+
+            // met à jour la liste des services
+            that.getServiceList(function(services) {
+                that.gui.updateServiceList(services);
+            });
+        }
+    });
+
+    } else if (value == 'lines') {
+
+        // callback pour lines.json
+        var key2 = this.layers['roadVectors'].layer.getSource().on('change', function() {
+
+            var source = that.layers['roadVectors'].layer.getSource().getSource();
+
+            if (source.getState() == 'ready') {
+
+                source.unByKey(key2);
+
+                // met à jour les features de la source si il y a des modifs en localStorage
+                that.updateFeaturesFromStorage(source);
+
+            }
+
+        });
+        
+    }
+    
 };
 
 /**

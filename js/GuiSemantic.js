@@ -50,9 +50,17 @@ GuiSemantic.prototype.init = function() {
         that.setMode(that.modes.PATH);
     });
 
+    $('#saveLocal').on('click', function() {
+        that.app.storage.save();
+    });
+
     $('#geomode-button').click(function() {
         that.app.actionToggleGps();
         $('#geomode-button').toggleClass('primary');
+    });
+
+    $('#sync').on('click', function() {
+        that.app.syncOnline();
     });
 
     var div;
@@ -276,10 +284,6 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
         // le nombre de changes actuallement en local storage
         $('#syncInfos').find('.detail').html(localChanges.length);
 
-        // event quand on click sur "save". Envois les données à la bdd.
-        $('#syncInfos').find('a').on('click', function() {
-            that.app.storage.save();
-        });
     }
 };
 

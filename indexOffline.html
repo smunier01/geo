@@ -77,12 +77,17 @@
         </div>
 
         <div id="syncInfos" class="content">
-          <a class="ui label icon">
+          <a id="saveLocal" class="ui label icon">
             <i class="icon cloud"></i>
             save local changes
             <div class="detail"></div>
           </a>
-        </div>  
+          <a id="sync" class="ui label icon">
+            <i class="icon cloud"></i>
+            sync
+          </a>
+        </div>
+        
       </div>
     </div>
     
@@ -198,6 +203,20 @@
 
       </div>
 
+    </div>
+
+    <div id="download-modal" class="ui basic modal">
+
+      <div class="header">
+        Download JSON Files
+      </div>
+
+      <div class="description">
+        <div id="download-modal-progress" class="ui fluid indicating progress">
+          <div class="bar"></div>
+          <div class="label">Funding</div>
+        </div>
+      </div>
     </div>
 
     <script>
