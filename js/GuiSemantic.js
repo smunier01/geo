@@ -461,7 +461,7 @@ GuiSemantic.prototype.updateServiceSidebar = function(){
 
      $('#servicesList .editService').click(function(){
         var container = $(this).closest('.item');
-        that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).text());
+        that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).attr('href'));
     });
 
  });
