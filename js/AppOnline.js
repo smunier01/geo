@@ -588,6 +588,27 @@ function showFeaturesHoverBuildings(data){
     }
 };
 
+AppOnline.prototype.editService = function(services, callback){
+    console.log(services);
+    var that = this;
+    $.ajax({
+        url: 'php/manageServices.php',
+        type: 'GET',
+        data: {
+            action: 'updateServiceInfos',
+            serviceInfos: JSON.stringify(services)
+        },
+        success: function(res){
+            res = $.parseJSON(res);
+            console.log(res);
+            if(res.status == 'failure'){
+                that.showError(res.message);
+            }
+            callback();
+        }
+    });
+    
+};
 
 /**
  *  Quand on click sur la map dans mode "chemin"

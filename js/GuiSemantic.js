@@ -65,17 +65,7 @@ GuiSemantic.prototype.init = function() {
     });
 
     
-    this.app.getServiceList(function(services){
-        var serviceList = '<ul class="ui inverted relaxed divided list">';
-        console.log(services);
-        for (var i = 0; i < services.length; i++) {
-            serviceList+= '<li class="item"><a class="editService"><i class="icon edit"/></a><a class="showBatimentService"> ' + services[i].name + '</a></li>';
-        };
-        serviceList += "</ul>";
-        console.log(serviceList);
-        $('#servicesList').html(serviceList);
-    });
-    
+    that.updateServiceSidebar();
 
     var div;
     
@@ -127,19 +117,57 @@ GuiSemantic.prototype.init = function() {
         
     });
 
+    GuiSemantic.prototype.editService = function(service, url){
+        console.log("editService");
+        var modalContent = $('#modal-edit .content');
+        $('#modal-edit>.header').text('Edition de service');
+
+        modalContent.empty();
+        var oldNameService = service;
+
+        modalContent.append('<div class="ui labeled input fluid">' +
+            '<div class="ui label">Nom</div>' +
+            '<input type="text" name="service" value="' + service + '">' +
+            '</div>');
+        modalContent.append('<div class="ui labeled input fluid">' +
+            '<div class="ui label">Url</div>' +
+            '<input type="text" name="url" value="' + url + '">' +
+            '</div>');
+
+        $('#modal-edit').modal({
+            onApprove : function() {
+                if($('#modal-edit input[name="service"]').val().length > 0){
+                    var o = {
+                        name: $('#modal-edit input[name="service"]').val(),
+                        url: $('#modal-edit input[name="url"]').val().length>0?$('#modal-edit input[name="url"]').val():null,
+                        oldName : oldNameService
+                    };
+                    console.log("click approuved");
+                    that.app.editService(o, function(){
+                        that.updateServiceSidebar();
+                    });
+                }
+                else{
+                    that.showErrorMessage("Merci d'entrer un nom de service");
+                }
+            }
+        }).modal('show');
+
+    };
+
     GuiSemantic.prototype.editBuilding = function(){
         var result = that.app.actionEdit();
         console.log(result);
         var feature = result.object;
         var callback = result.callback;
-        
-        var modalContent = $('#modal-edit .content');
 
+        var modalContent = $('#modal-edit .content');
+        $('#modal-edit>.header').text('Edition de batiment');
         modalContent.empty();
 
         var servicesDropdown;
         var servicesValue = [];
-        
+
         for (var key in feature) {
 
             if (key == 'services') {
@@ -147,7 +175,7 @@ GuiSemantic.prototype.init = function() {
                 that.app.getServiceList(function(services){
 
                     console.log(services);
-                    
+
                     servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                     var div = servicesDropdown;
 
@@ -168,7 +196,7 @@ GuiSemantic.prototype.init = function() {
                     servicesDropdown.dropdown('set selected', servicesValue);
 
                 });
-                
+
             } else {
 
                 var div = $('<div class="ui labeled input fluid">' +
@@ -400,25 +428,46 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
                 that.updateCardInfos(featureProperties);
             });
         }
-    })
-    ;
+    });
+};
 
-    /*
-      var $buildingList = $('#buildingList');
-      var list = '<ul>';
 
-      $.each(buildings, function(index, value){
-      if(value.name != undefined){
-      list += '<li>' + value.name + '</li>';  
-      }
-      });
-      
-      list += '</ul>';
-      $buildingList.append(list);
-      */
-  };
+GuiSemantic.prototype.updateServiceSidebar = function(){
+    var that = this;
+    this.app.getServiceList(function(services){
+        var serviceList = '<ul class="ui inverted relaxed divided list">';
+        console.log(services);
+        for (var i = 0; i < services.length; i++) {
+            serviceList += '<li class="item">' + 
+            '<div class="header">' + 
+            '<a class="editService">' + 
+            '<i class="icon edit"/>' + 
+            '</a>' + 
+            '<a class="showBatimentService">' + 
+            services[i].name + 
+            '</a>' + 
+            '</div>' + 
+            '<div class="serviceUrlContainer">';
+            if(services[i].url != null){
+             serviceList += '<a href="' + services[i].url + '" class="serviceUrl">' + 
+             'lien vers ' + services[i].name + 
+             '</a>';
+         }
+         serviceList += '</div>' +'</li>';
+     }
+     serviceList += "</ul>";
 
-  GuiSemantic.prototype.setMode = function(m) {
+     $('#servicesList').html(serviceList);
+
+     $('#servicesList .editService').click(function(){
+        var container = $(this).closest('.item');
+        that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).text());
+    });
+
+ });
+};
+
+GuiSemantic.prototype.setMode = function(m) {
 
     this.currentMode = m;
 

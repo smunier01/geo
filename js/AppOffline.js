@@ -1159,6 +1159,19 @@ AppOffline.prototype.addAllLayers = function() {
     }
 };
 
+AppOffline.prototype.editService = function(services, callback){
+    /*
+
+    Service sous la forme 
+    {
+        name: nouveauNom
+        url: nouvelleUrl ( null si vide )
+        oldName: ancienNom ( Sinon pas possible de le retrouver :D )
+    }
+    callback appel juste le rafraichissement de la liste des services de GuiSemantic, pas de param !
+    
+    */
+};
 
 /**
  *  Change la visibilitéé d'un layer
