@@ -5,7 +5,7 @@
  *
  *  @class
  */
-var GuiSemantic = function(app) {
+ var GuiSemantic = function(app) {
 
     this.app = app;
 
@@ -20,7 +20,16 @@ var GuiSemantic = function(app) {
     this.init();
     
     this.setMode(this.modes.SELECT);
+    this.app.showError = this.showErrorMessage;
     
+};
+
+GuiSemantic.prototype.showErrorMessage = function(msg){
+    $errorMsgContent = $('#errorContent');
+
+    $errorMsgContent.text(msg);
+    if($errorMsgContent.closest('.message').hasClass('hidden'))
+        $errorMsgContent.closest('.message').transition('fade');
 };
 
 GuiSemantic.prototype.init = function() {
@@ -32,8 +41,8 @@ GuiSemantic.prototype.init = function() {
     $('.ui.accordion').accordion();
 
     $('#bottom-bar')
-        .sidebar('setting', 'transition', 'push')
-        .sidebar('setting', { dimPage: false });
+    .sidebar('setting', 'transition', 'push')
+    .sidebar('setting', { dimPage: false });
     
     $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
@@ -62,6 +71,8 @@ GuiSemantic.prototype.init = function() {
     $('#sync').on('click', function() {
         that.app.syncOnline();
     });
+ 
+    that.updateServiceSidebar();
 
     var div;
     
@@ -76,17 +87,17 @@ GuiSemantic.prototype.init = function() {
 
         div = $(
             '<div class="item">'+
-                '<div class="right floated content">'+
-                '<div class="ui toggle checkbox">'+
-                '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
-                '<label></label>'+
-                '</div>'+
-                '</div>'+
-                '<div class="content">'+
-                '<label for="display"' + l + '>' + l + '</label>'+
-                '</div>'+
-                '</div>'
-        );
+            '<div class="right floated content">'+
+            '<div class="ui toggle checkbox">'+
+            '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
+            '<label></label>'+
+            '</div>'+
+            '</div>'+
+            '<div class="content">'+
+            '<label for="display"' + l + '>' + l + '</label>'+
+            '</div>'+
+            '</div>'
+            );
         
 
         $('#layersCheckboxes').append(div);
@@ -113,34 +124,73 @@ GuiSemantic.prototype.init = function() {
         
     });
 
-    GuiSemantic.prototype.editBuilding = function() {
+    GuiSemantic.prototype.editService = function(service, url){
+        console.log("editService");
+        var modalContent = $('#modal-edit .content');
+        $('#modal-edit>.header').text('Edition de service');
+
+        modalContent.empty();
+        var oldNameService = service;
+
+        modalContent.append('<div class="ui labeled input fluid">' +
+            '<div class="ui label">Nom</div>' +
+            '<input type="text" name="service" value="' + service + '">' +
+            '</div>');
+        modalContent.append('<div class="ui labeled input fluid">' +
+            '<div class="ui label">Url</div>' +
+            '<input type="text" name="url" value="' + url + '">' +
+            '</div>');
+
+        $('#modal-edit').modal({
+            onApprove : function() {
+                if($('#modal-edit input[name="service"]').val().length > 0){
+                    var o = {
+                        name: $('#modal-edit input[name="service"]').val(),
+                        url: $('#modal-edit input[name="url"]').val().length>0?$('#modal-edit input[name="url"]').val():null,
+                        oldName : oldNameService
+                    };
+                    console.log("click approuved");
+                    that.app.editService(o, function(){
+                        that.updateServiceSidebar();
+                    });
+                }
+                else{
+                    that.showErrorMessage("Merci d'entrer un nom de service");
+                }
+            }
+        }).modal('show');
+
+    };
+
+    GuiSemantic.prototype.editBuilding = function(){
+        
         var result = that.app.actionEdit();
         console.log(result);
         var feature = result.object;
         var callback = result.callback;
-        
-        var modalContent = $('#modal-edit .content');
 
+        var modalContent = $('#modal-edit .content');
+        $('#modal-edit>.header').text('Edition de batiment');
         modalContent.empty();
 
         var servicesDropdown;
         var servicesValue = [];
-        
+
         for (var key in feature) {
-       
+
             if (key == 'services') {
 
                 that.app.getServiceList(function(services){
 
                     console.log(services);
-                    
+
                     servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                     var div = servicesDropdown;
 
                     for(var s of feature[key].split(';')){
                         servicesValue.push(s.split(',')[0]);
                     }
-                    
+
                     for (var s of services) {
                         div.append('<option value="' + s.name + '">' + s.name + '</option>');
                     }
@@ -154,14 +204,14 @@ GuiSemantic.prototype.init = function() {
                     servicesDropdown.dropdown('set selected', servicesValue);
 
                 });
-                
+
             } else {
 
                 var div = $('<div class="ui labeled input fluid">' +
-                            '<div class="ui label">' + key + '</div>' +
-                            '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
-                            '</div>'
-                           );
+                    '<div class="ui label">' + key + '</div>' +
+                    '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
+                    '</div>'
+                    );
 
                 modalContent.append(div);
 
@@ -377,29 +427,50 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
     });
 
     $('.ui.search')
-        .search({
-            source: content,
-            onSelect: function(result, response) {
-                that.app.actionGoto(result, function(featureProperties) {
-                    that.updateCardInfos(featureProperties);
-                });
-            }
-        })
-    ;
+    .search({
+        source: content,
+        onSelect: function(result, response) {
+            that.app.actionGoto(result, function(featureProperties) {
+                that.updateCardInfos(featureProperties);
+            });
+        }
+    });
+};
 
-    /*
-      var $buildingList = $('#buildingList');
-      var list = '<ul>';
 
-      $.each(buildings, function(index, value){
-      if(value.name != undefined){
-      list += '<li>' + value.name + '</li>';  
-      }
-      });
-      
-      list += '</ul>';
-      $buildingList.append(list);
-    */
+GuiSemantic.prototype.updateServiceSidebar = function(){
+    var that = this;
+    this.app.getServiceList(function(services){
+        var serviceList = '<ul class="ui inverted relaxed divided list">';
+        console.log(services);
+        for (var i = 0; i < services.length; i++) {
+            serviceList += '<li class="item">' + 
+            '<div class="header">' + 
+            '<a class="editService">' + 
+            '<i class="icon edit"/>' + 
+            '</a>' + 
+            '<a class="showBatimentService">' + 
+            services[i].name + 
+            '</a>' + 
+            '</div>' + 
+            '<div class="serviceUrlContainer">';
+            if(services[i].url != null){
+             serviceList += '<a href="' + services[i].url + '" class="serviceUrl">' + 
+             'lien vers ' + services[i].name + 
+             '</a>';
+         }
+         serviceList += '</div>' +'</li>';
+     }
+     serviceList += "</ul>";
+
+     $('#servicesList').html(serviceList);
+
+     $('#servicesList .editService').click(function(){
+        var container = $(this).closest('.item');
+        that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).attr('href'));
+    });
+
+ });
 };
 
 GuiSemantic.prototype.setMode = function(m) {
@@ -409,19 +480,19 @@ GuiSemantic.prototype.setMode = function(m) {
     this.clearAll();
 
     switch(this.currentMode) {
-    case this.modes.PATH:
+        case this.modes.PATH:
         $('#path-button').addClass('primary');
         $('#select-mode-buttons').hide();
         $('#path-mode-buttons').show();
         break;
         
-    case this.modes.SELECT:
+        case this.modes.SELECT:
         $('#select-button').addClass('primary');
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').show();
         break;
         
-    default:
+        default:
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').hide();
     }

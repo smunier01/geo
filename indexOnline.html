@@ -18,6 +18,7 @@
   <!--<script src="js/Gui.js"></script>-->
   <script src="js/GuiSemantic.js"></script>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 </head>
 <body>
@@ -37,7 +38,7 @@
     </div>
   </div>
 
-  <div class="ui sidebar">
+  <div class="ui sidebar" id="left-sidebar">
 
 
     <div class="ui accordion inverted fluid vertical menu">
@@ -121,7 +122,7 @@
         <div class="content batDescContainer">
           <i class="info icon"></i>
           <span class="batDesc">
-            
+
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sit amet sodales risus, eget pretium nibh. Nunc vel neque in ante ultrices accumsan non nec risus. Nam tincidunt sem vel cursus molestie. Sed placerat sit amet metus in lobortis. Suspendisse sapien libero
           </span>
           <div class="editInfosContainer">
@@ -138,6 +139,14 @@
           </span>
         </div>
       </div>
+    </div>
+
+    <div class="ui negative message errorMessageContainer hidden">
+      <i class="close icon"></i>
+      <div class="header">
+        Erreur
+      </div>
+      <p id="errorContent">An error occured</p>
     </div>
 
     <div id="geoloc" class="ui horizontal list">
@@ -176,7 +185,7 @@
     </div>
 
     <div id="select-mode-buttons" class="ui horizontal list">
-      
+
       <!-- <div class="item">
         <div class="content">
           <button id="edit-button" class="ui orange icon labeled button">
@@ -210,6 +219,10 @@
 
     $('#closeCard').click(function(){
       $(this).closest('.cardContainer').transition('vertical flip');
+    });
+
+    $('.errorMessageContainer .close').on('click', function() {
+      $(this).closest('.message').transition('fade')
     });
 
   </script>

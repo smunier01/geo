@@ -11,6 +11,7 @@
     that = this;
     this.selectedBat = undefined;
     
+    this.showError = function(msg){};
     /**
      * @type {string} 
      */
@@ -35,14 +36,14 @@
       *
       *  @type {boolean}
       */
-     this.gpsmode = false;
+      this.gpsmode = false;
 
      /*
       *  Position courante donnée par la geolocalisation
       *
       *  @type {Array.<number>}
       */
-     this.currentPosition = undefined;
+      this.currentPosition = undefined;
 
      /*
       *  Référence vers l'objet en charge de la geolocation.
@@ -50,13 +51,13 @@
       *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
       *  @type {object}
       */
-     this.gpswatch = undefined;
+      this.gpswatch = undefined;
 
-     this.GREY1 = '#CECECE';
-     this.COLOR1 = '#E86FB0';
+      this.GREY1 = '#CECECE';
+      this.COLOR1 = '#E86FB0';
 
 
-     this.styles['nodeSelected'] = new ol.style.Style({
+      this.styles['nodeSelected'] = new ol.style.Style({
         image: new ol.style.Circle({
             fill: new ol.style.Fill({
                 color: that.GREY1
@@ -185,7 +186,7 @@
         'order': 100
     };
 
-     this.layers['currentPosition'] = {
+    this.layers['currentPosition'] = {
         'layer': new ol.layer.Vector({
             source: new ol.source.Vector([]),
             style: that.styles['nodeSelected'],
@@ -455,6 +456,9 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
                     callback(feature.getProperties());
                 });
 }
+else{
+    that.showError("Aucun batiment ne correspond à la recherche");
+}
 }
 });
 };
@@ -541,12 +545,15 @@ function showFeaturesHoverBuildings(data){
         console.log(resp);
         return resp;  
     }
+    else{
+        this.showError("Aucun batiment selectionné");
+    }
 };
 
 /**
  *  Active ou desactive le mode gps.
  */
-AppOnline.prototype.actionToggleGps = function() {
+ AppOnline.prototype.actionToggleGps = function() {
     var that = this;
 
     this.gpsmode = !this.gpsmode;
@@ -571,7 +578,7 @@ AppOnline.prototype.actionToggleGps = function() {
             {
                 enableHighAccuracy:true, maximumAge:0, timeout:5000
             }
-        );
+            );
 
     } else {
         navigator.geolocation.clearWatch(this.gpswatch);
@@ -581,6 +588,27 @@ AppOnline.prototype.actionToggleGps = function() {
     }
 };
 
+AppOnline.prototype.editService = function(services, callback){
+    console.log(services);
+    var that = this;
+    $.ajax({
+        url: 'php/manageServices.php',
+        type: 'GET',
+        data: {
+            action: 'updateServiceInfos',
+            serviceInfos: JSON.stringify(services)
+        },
+        success: function(res){
+            res = $.parseJSON(res);
+            console.log(res);
+            if(res.status == 'failure'){
+                that.showError(res.message);
+            }
+            callback();
+        }
+    });
+    
+};
 
 /**
  *  Quand on click sur la map dans mode "chemin"
@@ -596,7 +624,7 @@ AppOnline.prototype.actionToggleGps = function() {
 
 
 
-    if ((this.click == 0 || (this.click == 2 && !redirect)) && !that.currentPosition) {
+    if (((this.click == 0 && !redirect) || (this.click == 2 && !redirect)) && !that.currentPosition) {
         //Efface le routing au cas où qqch est deja affiché
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = [];
@@ -610,7 +638,7 @@ AppOnline.prototype.actionToggleGps = function() {
 
         pointsSrc.addFeature(new ol.Feature(new ol.geom.Point(evt.coordinate)));
 
-    } else {
+    } else if(this.currentPosition || this.posActu) {
         if(redirect){
             pointsSrc.clear();
             if(!that.currentPosition)
@@ -636,6 +664,9 @@ AppOnline.prototype.actionToggleGps = function() {
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
         p.viewparams = viewparams.join(';');
         this.layers['resultPgRouting'].layer.getSource().updateParams(p);
+    }
+    else{
+        this.showError("Veuillez selectionner un point de départ ( via chemin ), ou activer le gps");
     }
 };
 
@@ -721,6 +752,9 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
 }
 });
 }
+else{
+    that.showError("Veuillez selectionner un point de départ ( via chemin ), ou activer le gps");
+}
 };
 
 this.getServiceList(callback);
@@ -730,29 +764,29 @@ this.getServiceList(callback);
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+   */
+   AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer

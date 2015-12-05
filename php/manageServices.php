@@ -43,6 +43,12 @@ if(isset($_GET['action']) && !empty($_GET['action'])){
 		//print_r(json_encode($buildings));
 		break;
 
+		case 'updateServiceInfos':
+		$db->updateServiceInfos(json_decode($_GET['serviceInfos'], true));
+
+		//print_r(json_encode($buildings));
+		break;
+
 		default:
 				# code...
 		break;

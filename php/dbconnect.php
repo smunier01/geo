@@ -68,6 +68,28 @@ class DB {
         return $res;
     }
 
+    function updateServiceInfos($serviceInfos){
+        $stmt = $this->db->prepare("select * from services where name=:name");
+        $stmt->bindParam(':name', $serviceInfos['name']); 
+        $stmt->execute();
+        $res = $stmt->fetchAll();
+        $return = array();
+        if(count($res)==0 || $serviceInfos['name'] == $serviceInfos['oldName']){
+            $return['status'] = "success";
+            $stmt = $this->db->prepare("UPDATE services set name=:name, url=:url where name=:oldName");
+            $stmt->bindParam(':name', $serviceInfos['name']);
+            $stmt->bindParam(':url', $serviceInfos['url']);
+            $stmt->bindParam(':oldName', $serviceInfos['oldName']);
+            $stmt->execute();
+        }
+        else{
+            $return['status'] = "failure";
+            $return['message'] = "Un service portant ce nom existe deja";
+        }
+
+        echo json_encode($return);
+    }
+
     function updateInfoBatiments($infos){
         $osmId = $infos['osm_id'];
 
