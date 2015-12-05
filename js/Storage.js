@@ -21,7 +21,7 @@
  *  
  *  @class
  */
-var MyStorage = function(app) {
+var MyStorage = function(app, gui) {
 
     this.app = app;
     // localStorage.removeItem('edit');
@@ -92,62 +92,32 @@ MyStorage.prototype.errorHandler = function(e) {
     console.log('Error: ' + msg);
     
 };
-/*
-MyStorage.prototype.updateGeoJson = function(file, callback) {
-
-    $.get('http://82.229.108.217/geo/php/sync.php?file=' + file).done(function(result) {
-
-        window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
-
-	    dir.getFile(file + ".geojson", {create:true}, function(file) {
-
-                file.createWriter(function(fileWriter) {
-
-                    fileWriter.onwriteend = function(e) {
-                        callback();
-                    };
-
-                    fileWriter.onerror = function(e) {
-                        console.log('Write failed: ' + e.toString());
-                    };
-
-                    // Create a new Blob and write it to log.txt.
-                    var blob = new Blob([result], {type: 'text/plain'});
-
-                    fileWriter.write(blob);
-
-                }, this.errorHandler);
-                
-	    });
-        });
-    });
-};
-*/
 
 MyStorage.prototype.updateGeoJson = function(file, callback) {
 
+    var that = this;
+    
+    var progressBar = $('#download-modal-progress-' + file);
+    console.log(PHP_ROOT + 'sync.php?file=' + file);
     $.ajax({
         type: 'GET',
         dataType: "text",
-        url: 'http://82.229.108.217/geo/php/sync.php?file=' + file,
+        url: PHP_ROOT + 'sync.php?file=' + file,
         data: {},
-        xhr: function()
-        {
+        xhr: function() {
             var xhr = new window.XMLHttpRequest();
-
-            //$('#left-sidebar').sidebar('toggle');
-            $('#download-modal').modal('show');
-            //$('#download-modal-progress').progress();
-            $('#download-modal-progress').progress({value:0, total:100});
-            
+            console.log("hello start xhr");
+            //$('#download-modal').modal('show');
+            //progressBar.progress({value:0, total:100});
+            that.app.gui.setProgressDownloadModal(0, file);
             //Download progress
             xhr.addEventListener("progress", function(evt){
-                console.log(evt);
+                console.log("progress");
                 if (evt.lengthComputable) {  
                     var percentComplete = evt.loaded / evt.total;
 
-                    $('#download-modal-progress').progress({value:percentComplete * 100, total:100});
-                    console.log(percentComplete);
+                    //progressBar.progress({value:percentComplete * 100, total:100});
+                    that.app.gui.setProgressDownloadModal(percentComplete * 100, file);
                 }
             }, false);
             
@@ -155,32 +125,39 @@ MyStorage.prototype.updateGeoJson = function(file, callback) {
         },
         success: function(result) {
 
-            $('#download-modal').modal('hide');
-            
-            window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
+            if (typeof cordova != 'undefined') {
+                
+                window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
 
-	        dir.getFile(file + ".geojson", {create:true}, function(file) {
+	            dir.getFile(file + ".geojson", {create:true}, function(file) {
 
-                    
-                    file.createWriter(function(fileWriter) {
+                        
+                        file.createWriter(function(fileWriter) {
 
-                        fileWriter.onwriteend = function(e) {
-                            callback();
-                        };
+                            fileWriter.onwriteend = function(e) {
+                                callback();
+                            };
 
-                        fileWriter.onerror = function(e) {
-                            console.log('Write failed: ' + e.toString());
-                        };
+                            fileWriter.onerror = function(e) {
+                                console.log('Write failed: ' + e.toString());
+                            };
 
-                        // Create a new Blob and write it to log.txt.
-                        var blob = new Blob([result], {type: 'text/plain'});
+                            // Create a new Blob and write it to log.txt.
+                            var blob = new Blob([result], {type: 'text/plain'});
 
-                        fileWriter.write(blob);
+                            fileWriter.write(blob);
 
-                    }, this.errorHandler);
-                    
-	        });
-            });
+                        }, this.errorHandler);
+                        
+	            });
+                });
+                
+            } else {
+                console.log("cordova undefined");
+            }
+        },
+        error: function(e) {
+            console.log(e);
         }
     });
     

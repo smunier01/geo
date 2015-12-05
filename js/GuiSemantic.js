@@ -512,3 +512,17 @@ GuiSemantic.prototype.clearAll = function() {
     
     this.app.actionClearAll();
 };
+
+GuiSemantic.prototype.showDownloadModal = function() {
+    $('#download-modal').modal('show');
+};
+
+GuiSemantic.prototype.setProgressDownloadModal = function(progress, bar) {
+    var progressBar = $('#download-modal-progress-' + bar);
+
+    progressBar.progress({value:progress, total:100});
+};
+
+GuiSemantic.prototype.hideDownloadModal = function() {
+    $('#download-modal').modal('hide');
+};

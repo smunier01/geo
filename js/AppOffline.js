@@ -1346,12 +1346,30 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
 AppOffline.prototype.downloadFiles = function() {
 
     var that = this;
+
+    var task = 2;
+
+    var work = function() {
+        task -= 1;
+
+        if (task == 0) {
+            that.gui.hideDownloadModal();
+            that.loadJsonFiles();
+        };
+    };
+
+    console.log(that.gui);
+
+    that.gui.showDownloadModal();
     
     that.storage.updateGeoJson('polygons', function() {
-        that.storage.updateGeoJson('lines', function() {
-            that.loadJsonFiles();
-        });
+        work();
     });
+
+    that.storage.updateGeoJson('lines', function() {
+        work();
+    });
+    
 };
 
 /**
