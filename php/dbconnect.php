@@ -13,7 +13,7 @@ class DB {
         $this->stmt1 = $this->db->prepare("SELECT osm_id as id, source, target, 1.0 as cost FROM ways;");
 
         $this->stmt2 = $this->db->prepare("SELECT * FROM pgr_dijkstra('SELECT cast(osm_id as integer) as id, source, target, cast(1.0 as double precision) as cost FROM ways', :from, :to, false, false);
-");
+            ");
 
     }
 
@@ -68,11 +68,23 @@ class DB {
         return $res;
     }
 
+    function getServiceFromName($name){
+        $stmt = $this->db->prepare("Select * from services where name=:name");
+        $stmt->bindParam(':name', $name);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+
+
+    }
+
     function updateServiceInfos($serviceInfos){
+
         $stmt = $this->db->prepare("select * from services where name=:name");
         $stmt->bindParam(':name', $serviceInfos['name']); 
         $stmt->execute();
         $res = $stmt->fetchAll();
+
         $return = array();
         if(count($res)==0 || $serviceInfos['name'] == $serviceInfos['oldName']){
             $return['status'] = "success";
@@ -148,6 +160,14 @@ class DB {
         }
 
         foreach ($addedServices as $key => $value) {
+
+            if(count($this->getServiceFromName($value)) <= 0){
+                echo 'Creating service ' . $value . '<br/>';
+                $stmt=$this->db->prepare("INSERT into services (name) values(:name)");
+                $stmt->bindParam(':name', $value);
+                $stmt->execute();
+            }
+
             echo 'Inserting ' . $value . ' for id ' . $osmId . '<br/>';
             $stmt = $this->db->prepare("INSERT INTO services_batiments (id_batiment,id_service) values(:idBat, (select id from services where name=:nameService))");
             $stmt->bindParam(':idBat', $osmId);
