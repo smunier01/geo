@@ -5,7 +5,7 @@
  *
  *  @class
  */
- var GuiSemantic = function(app) {
+var GuiSemantic = function(app) {
 
     this.app = app;
 
@@ -41,8 +41,8 @@ GuiSemantic.prototype.init = function() {
     $('.ui.accordion').accordion();
 
     $('#bottom-bar')
-    .sidebar('setting', 'transition', 'push')
-    .sidebar('setting', { dimPage: false });
+        .sidebar('setting', 'transition', 'push')
+        .sidebar('setting', { dimPage: false });
     
     $('#left-sidebar').sidebar('setting', 'transition', 'push');
 
@@ -71,7 +71,7 @@ GuiSemantic.prototype.init = function() {
     $('#sync').on('click', function() {
         that.app.syncOnline();
     });
- 
+    
     that.updateServiceSidebar();
 
     var div;
@@ -87,17 +87,17 @@ GuiSemantic.prototype.init = function() {
 
         div = $(
             '<div class="item">'+
-            '<div class="right floated content">'+
-            '<div class="ui toggle checkbox">'+
-            '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
-            '<label></label>'+
-            '</div>'+
-            '</div>'+
-            '<div class="content">'+
-            '<label for="display"' + l + '>' + l + '</label>'+
-            '</div>'+
-            '</div>'
-            );
+                '<div class="right floated content">'+
+                '<div class="ui toggle checkbox">'+
+                '<input type="checkbox" name="' + l + '" id="display' + l + '"'+s+'/>'+
+                '<label></label>'+
+                '</div>'+
+                '</div>'+
+                '<div class="content">'+
+                '<label for="display"' + l + '>' + l + '</label>'+
+                '</div>'+
+                '</div>'
+        );
         
 
         $('#layersCheckboxes').append(div);
@@ -124,7 +124,7 @@ GuiSemantic.prototype.init = function() {
         
     });
 
-    GuiSemantic.prototype.editService = function(service, url){
+    GuiSemantic.prototype.editService = function(service, url) {
         console.log("editService");
         var modalContent = $('#modal-edit .content');
         $('#modal-edit>.header').text('Edition de service');
@@ -133,13 +133,13 @@ GuiSemantic.prototype.init = function() {
         var oldNameService = service;
 
         modalContent.append('<div class="ui labeled input fluid">' +
-            '<div class="ui label">Nom</div>' +
-            '<input type="text" name="service" value="' + service + '">' +
-            '</div>');
+                            '<div class="ui label">Nom</div>' +
+                            '<input type="text" name="service" value="' + service + '">' +
+                            '</div>');
         modalContent.append('<div class="ui labeled input fluid">' +
-            '<div class="ui label">Url</div>' +
-            '<input type="text" name="url" value="' + url + '">' +
-            '</div>');
+                            '<div class="ui label">Url</div>' +
+                            '<input type="text" name="url" value="' + url + '">' +
+                            '</div>');
 
         $('#modal-edit').modal({
             onApprove : function() {
@@ -162,10 +162,9 @@ GuiSemantic.prototype.init = function() {
 
     };
 
-    GuiSemantic.prototype.editBuilding = function(){
+    GuiSemantic.prototype.editBuilding = function() {
         
         var result = that.app.actionEdit();
-        console.log(result);
         var feature = result.object;
         var callback = result.callback;
 
@@ -180,16 +179,10 @@ GuiSemantic.prototype.init = function() {
 
             if (key == 'services') {
 
-                that.app.getServiceList(function(services){
-
-                    console.log(services);
+                that.app.getServiceList(function(services) {
 
                     servicesDropdown = $('<select name="services" multiple="" class="ui fluid search dropdown"></select>');
                     var div = servicesDropdown;
-
-                    for(var s of feature[key].split(';')){
-                        servicesValue.push(s.split(',')[0]);
-                    }
 
                     for (var s of services) {
                         div.append('<option value="' + s.name + '">' + s.name + '</option>');
@@ -201,6 +194,12 @@ GuiSemantic.prototype.init = function() {
                         allowAdditions: true
                     });
 
+                    if (feature[key]) {
+                        for(var s of feature[key].split(';')){
+                            servicesValue.push(s.split(',')[0]);
+                        }
+                    }
+
                     servicesDropdown.dropdown('set selected', servicesValue);
 
                 });
@@ -208,30 +207,33 @@ GuiSemantic.prototype.init = function() {
             } else {
 
                 var div = $('<div class="ui labeled input fluid">' +
-                    '<div class="ui label">' + key + '</div>' +
-                    '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
-                    '</div>'
-                    );
+                            '<div class="ui label">' + key + '</div>' +
+                            '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
+                            '</div>'
+                           );
 
                 modalContent.append(div);
 
             }
         }
         /*
-        if (typeof servicesDropdown != "undefined") {
+          if (typeof servicesDropdown != "undefined") {
 
-            servicesDropdown.dropdown({
-                allowAdditions: true
-            });
-            servicesDropdown.dropdown('set selected', servicesValue);
+          servicesDropdown.dropdown({
+          allowAdditions: true
+          });
+          servicesDropdown.dropdown('set selected', servicesValue);
 
-        }
+          }
         */
         $('#modal-edit').modal({
 
             onApprove : function() {
 
                 var obj = {};
+
+                console.log("kk");
+                console.log(obj);
                 
                 modalContent.children().each(function() {
 
@@ -241,6 +243,9 @@ GuiSemantic.prototype.init = function() {
                     
                 });
 
+                console.log("kk");
+                console.log(obj);
+                
                 callback(obj, function(feature){
                     that.updateCardInfos(feature);
                 });
@@ -360,6 +365,7 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
+        
         var servicesAndUrl = data.services.split(';');
 
         var servicesUrl = [];
@@ -429,14 +435,14 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
     });
 
     $('.ui.search')
-    .search({
-        source: content,
-        onSelect: function(result, response) {
-            that.app.actionGoto(result, function(featureProperties) {
-                that.updateCardInfos(featureProperties);
-            });
-        }
-    });
+        .search({
+            source: content,
+            onSelect: function(result, response) {
+                that.app.actionGoto(result, function(featureProperties) {
+                    that.updateCardInfos(featureProperties);
+                });
+            }
+        });
 };
 
 
@@ -447,32 +453,32 @@ GuiSemantic.prototype.updateServiceSidebar = function(){
         console.log(services);
         for (var i = 0; i < services.length; i++) {
             serviceList += '<li class="item">' + 
-            '<div class="header">' + 
-            '<a class="editService">' + 
-            '<i class="icon edit"/>' + 
-            '</a>' + 
-            '<a class="showBatimentService">' + 
-            services[i].name + 
-            '</a>' + 
-            '</div>' + 
-            '<div class="serviceUrlContainer">';
+                '<div class="header">' + 
+                '<a class="editService">' + 
+                '<i class="icon edit"/>' + 
+                '</a>' + 
+                '<a class="showBatimentService">' + 
+                services[i].name + 
+                '</a>' + 
+                '</div>' + 
+                '<div class="serviceUrlContainer">';
             if(services[i].url != null){
-             serviceList += '<a href="' + services[i].url + '" class="serviceUrl">' + 
-             'lien vers ' + services[i].name + 
-             '</a>';
-         }
-         serviceList += '</div>' +'</li>';
-     }
-     serviceList += "</ul>";
+                serviceList += '<a href="' + services[i].url + '" class="serviceUrl">' + 
+                    'lien vers ' + services[i].name + 
+                    '</a>';
+            }
+            serviceList += '</div>' +'</li>';
+        }
+        serviceList += "</ul>";
 
-     $('#servicesList').html(serviceList);
+        $('#servicesList').html(serviceList);
 
-     $('#servicesList .editService').click(function(){
-        var container = $(this).closest('.item');
-        that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).attr('href'));
+        $('#servicesList .editService').click(function(){
+            var container = $(this).closest('.item');
+            that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).attr('href'));
+        });
+
     });
-
- });
 };
 
 GuiSemantic.prototype.setMode = function(m) {
@@ -482,19 +488,19 @@ GuiSemantic.prototype.setMode = function(m) {
     this.clearAll();
 
     switch(this.currentMode) {
-        case this.modes.PATH:
+    case this.modes.PATH:
         $('#path-button').addClass('primary');
         $('#select-mode-buttons').hide();
         $('#path-mode-buttons').show();
         break;
         
-        case this.modes.SELECT:
+    case this.modes.SELECT:
         $('#select-button').addClass('primary');
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').show();
         break;
         
-        default:
+    default:
         $('#path-mode-buttons').hide();
         $('#select-mode-buttons').hide();
     }

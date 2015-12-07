@@ -5,8 +5,8 @@
  *
  * @class
  */
- var that;
- var AppOnline = function() {
+var that;
+var AppOnline = function() {
 
     that = this;
     this.selectedBat = undefined;
@@ -15,49 +15,49 @@
     /**
      * @type {string} 
      */
-     this.GEO_HOST = 'localhost:8080';
+    this.GEO_HOST = 'localhost:8080';
 
     /**
      *  Reference à l'objet map d'openlayer
      *  @type {ol.Map}
      */
-     this.map = undefined;
-     this.posActu = undefined;
+    this.map = undefined;
+    this.posActu = undefined;
 
     /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
      */ 
-     this.layers = [];
-     this.styles=[];
+    this.layers = [];
+    this.styles=[];
 
-     /**
-      *  Boolean indiquant si nous utilisons ou non la geolocalisation.
-      *
-      *  @type {boolean}
-      */
-      this.gpsmode = false;
+    /**
+     *  Boolean indiquant si nous utilisons ou non la geolocalisation.
+     *
+     *  @type {boolean}
+     */
+    this.gpsmode = false;
 
-     /*
-      *  Position courante donnée par la geolocalisation
-      *
-      *  @type {Array.<number>}
-      */
-      this.currentPosition = undefined;
+    /*
+     *  Position courante donnée par la geolocalisation
+     *
+     *  @type {Array.<number>}
+     */
+    this.currentPosition = undefined;
 
-     /*
-      *  Référence vers l'objet en charge de la geolocation.
-      *  pour l'initialiser : gpswatch = navigator.geolocation.watchPosition(...);
-      *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
-      *  @type {object}
-      */
-      this.gpswatch = undefined;
+    /*
+     *  Référence vers l'objet en charge de la geolocation.
+     *  pour l'initialiser : gpswatch = navigator.geolocation.watchPosition(...);
+     *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
+     *  @type {object}
+     */
+    this.gpswatch = undefined;
 
-      this.GREY1 = '#CECECE';
-      this.COLOR1 = '#E86FB0';
+    this.GREY1 = '#CECECE';
+    this.COLOR1 = '#E86FB0';
 
 
-      this.styles['nodeSelected'] = new ol.style.Style({
+    this.styles['nodeSelected'] = new ol.style.Style({
         image: new ol.style.Circle({
             fill: new ol.style.Fill({
                 color: that.GREY1
@@ -221,7 +221,7 @@
 /**
  * ??
  */
- AppOnline.prototype.getFeaturesFromClick = function(event) {
+AppOnline.prototype.getFeaturesFromClick = function(event) {
 
     var viewResolution = (this.map.getView().getResolution());
 
@@ -230,7 +230,7 @@
 
         {'INFO_FORMAT': 'text/javascript'}
 
-        );
+    );
     
     if (url) {
 
@@ -245,9 +245,9 @@
                 /*
                   vectorSource.clear();
                   vectorSource.addFeatures(geojsonFormat.readFeatures(response));
-                  */
+                */
 
-              });
+            });
         }
 
     }
@@ -303,14 +303,14 @@ AppOnline.prototype.actionClearAll = function() {
       this.layers['route'].layer.getSource().clear();
       this.nodeSelected = [];
       this.selectedFeature = undefined;
-      */
-  };
+    */
+};
 
 
 /**
  *  Quand la souris bouge sur la map, pas forcement utile
  */
- AppOnline.prototype.actionHover = function(evt) {
+AppOnline.prototype.actionHover = function(evt) {
     /*
       var viewResolution = (this.map.getView().getResolution());
       var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
@@ -324,7 +324,7 @@ AppOnline.prototype.actionClearAll = function() {
       dataType: 'jsonp'
 
       });
-}*/
+      }*/
 };
 
 /**
@@ -333,7 +333,7 @@ AppOnline.prototype.actionClearAll = function() {
  * Cela devrait renvoyer les propriétés d'un feature
  */
 
- AppOnline.prototype.actionSelect = function(evt, callback) {
+AppOnline.prototype.actionSelect = function(evt, callback) {
 
     var viewResolution = (this.map.getView().getResolution());
     var url = this.layers['buildings'].layer.getSource().getGetFeatureInfoUrl( evt.coordinate, viewResolution, 'EPSG:3857',{
@@ -375,23 +375,23 @@ AppOnline.prototype.actionClearAll = function() {
 
                         callback(olFeature.getProperties());
                     });
-}
-else{
-    that.selectedBat = undefined;
-    callback(false);
-}
-}
-});
-}
+                }
+                else{
+                    that.selectedBat = undefined;
+                    callback(false);
+                }
+            }
+        });
+    }
 };
 
 /**
-*   Récupere la liste des services associés à un batiment (osm_id) sous forme
-*   [{
-*       name: nomDuService
-*       url: urlDuService
-*   }, ...]
-*/
+ *   Récupere la liste des services associés à un batiment (osm_id) sous forme
+ *   [{
+ *       name: nomDuService
+ *       url: urlDuService
+ *   }, ...]
+ */
 AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
     $.ajax({
         url: 'php/manageServices.php',
@@ -415,66 +415,66 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
                 callback(result); 
         }
     });
-}
+};
 
 AppOnline.prototype.getBuildingFromOsmId = function(osmId, callback){
-   $.ajax({
-    url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + osmId + '&format_options=callback:getJson',
-    dataType: 'jsonp',
-    jsonpCallback: 'getJson',
+    $.ajax({
+        url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + osmId + '&format_options=callback:getJson',
+        dataType: 'jsonp',
+        jsonpCallback: 'getJson',
 
-    success: function(res){
-        if(res.features.length > 0){
-            res.features[0].properties.osm_id = res.features[0].id.split('.')[1];
+        success: function(res){
+            if(res.features.length > 0){
+                res.features[0].properties.osm_id = res.features[0].id.split('.')[1];
 
-            that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
-                var feature = new ol.Feature({
-                    geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
-                    name: res.features[0].properties.name,
+                that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
+                    var feature = new ol.Feature({
+                        geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
+                        name: res.features[0].properties.name,
+                    });
+
+                    delete res.features[0].properties['geometry'];
+                    delete res.features[0].properties['name'];
+                    delete res.features[0].properties['service'];
+
+                    var s = '';
+                    for (var i = 0; i < services.length; i++) {
+                        s += services[i].name + ',' + services[i].url;
+                        if(i<services.length-1)
+                            s += ';';
+                    }
+                    res.features[0].properties.services = s;
+                    feature.setProperties(res.features[0].properties);
+
+                    feature.getProperties().services = s;
+
+                    callback(feature);
                 });
+            }
 
-                delete res.features[0].properties['geometry'];
-                delete res.features[0].properties['name'];
-                delete res.features[0].properties['service'];
-
-                var s = '';
-                for (var i = 0; i < services.length; i++) {
-                    s += services[i].name + ',' + services[i].url;
-                    if(i<services.length-1)
-                        s += ';';
-                };
-                res.features[0].properties.services = s;
-                feature.setProperties(res.features[0].properties);
-
-                feature.getProperties().services = s;
-
-                callback(feature);
-            });
+            else{
+                that.showError("Aucun batiment ne correspond à la recherche");
+            }
         }
-
-        else{
-            that.showError("Aucun batiment ne correspond à la recherche");
-        }
-    }
-});
+    });
 };
 
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
- AppOnline.prototype.actionGoto = function(object, callback) {
+AppOnline.prototype.actionGoto = function(object, callback) {
     this.getBuildingFromOsmId(object.id, function(feature){
         that.selectedBat = feature;
         that.addFeatureOnClosestService(that.selectedBat, true);
         callback(feature.getProperties());
     });
- };
+};
 
 /**
-*   Ajoute une feature sur la layer closestService
-*   clear la layer si clear = true
-*/
-AppOnline.prototype. addFeatureOnClosestService =  function(feature, clear){
+ *   Ajoute une feature sur la layer closestService
+ *   clear la layer si clear = true
+ */
+AppOnline.prototype.addFeatureOnClosestService =  function(feature, clear){
     //Dans tous les cas, on ne veut pas qqch sur la layer routing 
     var p = this.layers['resultPgRouting'].layer.getSource().getParams();
     p.viewparams = [];
@@ -489,8 +489,8 @@ AppOnline.prototype. addFeatureOnClosestService =  function(feature, clear){
 
 
 /**
-*   Pas utilisé pour le moment
-*/
+ *   Pas utilisé pour le moment
+ */
 function showFeaturesHoverBuildings(data){
 
     var nbFeatures = 0;
@@ -521,7 +521,7 @@ function showFeaturesHoverBuildings(data){
  *  
  *  
  */
- AppOnline.prototype.actionEdit = function() {
+AppOnline.prototype.actionEdit = function() {
     console.log("selectedBat : ");
     console.log(this.selectedBat.getProperties());
 
@@ -567,7 +567,7 @@ function showFeaturesHoverBuildings(data){
 /**
  *  Active ou desactive le mode gps.
  */
- AppOnline.prototype.actionToggleGps = function() {
+AppOnline.prototype.actionToggleGps = function() {
     var that = this;
 
     this.gpsmode = !this.gpsmode;
@@ -592,7 +592,7 @@ function showFeaturesHoverBuildings(data){
             {
                 enableHighAccuracy:true, maximumAge:0, timeout:5000
             }
-            );
+        );
 
     } else {
         navigator.geolocation.clearWatch(this.gpswatch);
@@ -630,7 +630,7 @@ AppOnline.prototype.editService = function(services, callback){
  *  Enregistre le premier click et utilise pgRouting pour afficher le plus court chemin
  *  entre les deux points.
  */
- AppOnline.prototype.actionPath = function(evt, redirect) {
+AppOnline.prototype.actionPath = function(evt, redirect) {
 
     var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
     var pointsSrc = this.layers['vector2'].layer.getSource();
@@ -671,8 +671,8 @@ AppOnline.prototype.editService = function(services, callback){
         var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
         var viewparams = [
-        'x1:' + startCoord[0], 'y1:' + startCoord[1],
-        'x2:' + destCoord[0], 'y2:' + destCoord[1]
+            'x1:' + startCoord[0], 'y1:' + startCoord[1],
+            'x2:' + destCoord[0], 'y2:' + destCoord[1]
         ];
         
         var p = this.layers['resultPgRouting'].layer.getSource().getParams();
@@ -686,10 +686,10 @@ AppOnline.prototype.editService = function(services, callback){
 
 
 /**
-*   
-*
-*
-*/
+ *   
+ *
+ *
+ */
 AppOnline.prototype.actionPathService = function(service, callbackFinal) {
     var that = this;
     console.log("actionPathService");
@@ -753,8 +753,8 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                             var destCoord = transform(pointsSrc.getFeatures()[1].getGeometry().getCoordinates());
 
                             var viewparams = [
-                            'x1:' + startCoord[0], 'y1:' + startCoord[1],
-                            'x2:' + destCoord[0], 'y2:' + destCoord[1]
+                                'x1:' + startCoord[0], 'y1:' + startCoord[1],
+                                'x2:' + destCoord[0], 'y2:' + destCoord[1]
                             ];
 
                             var p = that.layers['resultPgRouting'].layer.getSource().getParams();
@@ -763,51 +763,51 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                         }
                         callbackFinal(feature.getProperties());
                     });
-}
-});
-}
-else{
-    that.showError("Veuillez selectionner un point de départ ( via chemin ), ou activer le gps");
-}
-};
+                }
+            });
+        }
+        else{
+            that.showError("Veuillez selectionner un point de départ ( via chemin ), ou activer le gps");
+        }
+    };
 
-this.getServiceList(callback);
+    this.getServiceList(callback);
 
 };
 
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-     */
-     AppOnline.prototype.addAllLayers = function() {
+ */
+AppOnline.prototype.addAllLayers = function() {
 
-        this.map.getLayers().clear();
+    this.map.getLayers().clear();
 
-        var tmp = [];
+    var tmp = [];
 
-        for (var key in this.layers) {
+    for (var key in this.layers) {
 
-            if (this.layers.hasOwnProperty(key)) {
-                var l = this.layers[key];
+        if (this.layers.hasOwnProperty(key)) {
+            var l = this.layers[key];
 
-                tmp.push(l);
-            }
-
+            tmp.push(l);
         }
 
-        sortByKey(tmp, 'order');
+    }
 
-        for (var ff of tmp) {
-            this.map.addLayer(ff.layer);
-        }
-    };
+    sortByKey(tmp, 'order');
+
+    for (var ff of tmp) {
+        this.map.addLayer(ff.layer);
+    }
+};
 
 /**
  *  Change la visibilitéé d'un layer
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
- AppOnline.prototype.setVisible = function(name, value) {
+AppOnline.prototype.setVisible = function(name, value) {
     this.layers[name].layer.setVisible(value);
 };
 
@@ -822,7 +822,7 @@ function sortByKey(array, key) {
 /**
  *  @param {Gui}
  */
- AppOnline.prototype.setGui = function(gui) {
+AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 
     // met à jour la liste des batiments pour le search input

@@ -612,7 +612,7 @@ AppOffline.prototype.actionEdit = function() {
     var properties = this.selectedFeature.getProperties();
 
     if (properties['building'] !== undefined) {
-        properties['services'] = properties['services'] || null;
+        properties['services'] = properties['services'] || "";
     }
     
     delete properties['geometry'];
@@ -630,13 +630,16 @@ AppOffline.prototype.actionEdit = function() {
 
                     if (o == 'services') {
 
+                        if (result[o] === null) {
+                            result[o] = [];
+                        }
+                        
                         var allServices = that.getServiceList();
                         var services = "";
-                        
+
                         for (var s of result[o]) {
 
                             var res = allServices.filter(function (stmp) {return stmp.name == s});
-
                             if (res.length > 0) {
                                 services += res[0].name + ',' + res[0].url + ';';
                             } else {
@@ -657,12 +660,17 @@ AppOffline.prototype.actionEdit = function() {
             if (Object.keys(changed).length > 0) {
 
                 changed['osm_id'] = properties['osm_id'];
+
                 that.storage.add('edit', changed);
 
-                that.cache['services'] = undefined;
+                delete that.cache['services'];
 
                 that.updateFeaturesFromStorage(that.layers['roadVectors'].layer.getSource().getSource());
                 that.updateFeaturesFromStorage(that.layers['buildingsVectors'].layer.getSource().getSource());
+                
+                var feature = that.layers['buildingsVectors'].layer.getSource().getSource().getFeatureById(changed['osm_id']);
+
+                callback(feature.getProperties());
             }
         }
     };
@@ -707,7 +715,6 @@ AppOffline.prototype.getServiceList = function(callback) {
         var source = this.layers['buildingsVectors'].layer.getSource().getSource();
         
         source.forEachFeature(function(f) {
-
             var b = f.getProperties();
 
             var services = (b.services).split(';');
@@ -1149,6 +1156,8 @@ AppOffline.prototype.loadJsonFiles = function() {
               
     } else {
 
+        console.log("not cordova, file found");
+
         var lp2 = that.layers['buildingsVectors'].layer;
         var lr2 = that.layers['roadVectors'].layer;
 
@@ -1565,16 +1574,11 @@ AppOffline.prototype.setSourceCallback = function(value) {
         console.log('building callback json');
         
         var source = that.layers['buildingsVectors'].layer.getSource().getSource();
-        
-        var a = true;
-        source.forEachFeature(function(f) {
-            if (a) {
-                console.log(f.getGeometry().getCoordinates());
-                a = false;
-            }
-        });
-        
+
+        console.log(source.getFeatures().length);
         if (source.getState() == 'ready') {
+
+            console.log('building callback json 2');
 
             source.unByKey(key1);
 
@@ -1584,6 +1588,8 @@ AppOffline.prototype.setSourceCallback = function(value) {
             // met à jour la liste des batiments dans le menu
             that.gui.updateBuildingList(that.getBuildingList());
 
+            delete that.cache['services'];
+            
             // met à jour la liste des services
             that.getServiceList(function(services) {
                 that.gui.updateServiceList(services);
