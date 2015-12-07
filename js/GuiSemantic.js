@@ -241,7 +241,9 @@ GuiSemantic.prototype.init = function() {
                     
                 });
 
-                callback(obj);
+                callback(obj, function(feature){
+                    that.updateCardInfos(feature);
+                });
             }
             
         }).modal('show');

@@ -162,13 +162,11 @@ class DB {
         foreach ($addedServices as $key => $value) {
 
             if(count($this->getServiceFromName($value)) <= 0){
-                echo 'Creating service ' . $value . '<br/>';
                 $stmt=$this->db->prepare("INSERT into services (name) values(:name)");
                 $stmt->bindParam(':name', $value);
                 $stmt->execute();
             }
 
-            echo 'Inserting ' . $value . ' for id ' . $osmId . '<br/>';
             $stmt = $this->db->prepare("INSERT INTO services_batiments (id_batiment,id_service) values(:idBat, (select id from services where name=:nameService))");
             $stmt->bindParam(':idBat', $osmId);
             $stmt->bindParam(':nameService', $value);

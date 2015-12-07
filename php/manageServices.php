@@ -40,7 +40,6 @@ if(isset($_GET['action']) && !empty($_GET['action'])){
 		case 'updateBatimentInfos':
 		$db->updateInfoBatiments(json_decode($_GET['infos'], true));
 
-		//print_r(json_encode($buildings));
 		break;
 
 		case 'updateServiceInfos':

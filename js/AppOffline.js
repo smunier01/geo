@@ -619,7 +619,7 @@ AppOffline.prototype.actionEdit = function() {
     
     return {
         'object' : properties,
-        'callback': function(result) {
+        'callback': function(result, callback) { //Callback prend une ol.Feature.getProperties(), rafraichit les infos de la card avec les modifications !
 
             var changed = {};
 

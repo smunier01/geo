@@ -417,51 +417,57 @@ AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
     });
 }
 
+AppOnline.prototype.getBuildingFromOsmId = function(osmId, callback){
+   $.ajax({
+    url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + osmId + '&format_options=callback:getJson',
+    dataType: 'jsonp',
+    jsonpCallback: 'getJson',
+
+    success: function(res){
+        if(res.features.length > 0){
+            res.features[0].properties.osm_id = res.features[0].id.split('.')[1];
+
+            that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
+                var feature = new ol.Feature({
+                    geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
+                    name: res.features[0].properties.name,
+                });
+
+                delete res.features[0].properties['geometry'];
+                delete res.features[0].properties['name'];
+                delete res.features[0].properties['service'];
+
+                var s = '';
+                for (var i = 0; i < services.length; i++) {
+                    s += services[i].name + ',' + services[i].url;
+                    if(i<services.length-1)
+                        s += ';';
+                };
+                res.features[0].properties.services = s;
+                feature.setProperties(res.features[0].properties);
+
+                feature.getProperties().services = s;
+
+                callback(feature);
+            });
+        }
+
+        else{
+            that.showError("Aucun batiment ne correspond à la recherche");
+        }
+    }
+});
+};
+
 /**
  * Action appelé quand on recherche un batiment / route dans la barre de recherche
  */
  AppOnline.prototype.actionGoto = function(object, callback) {
-    $.ajax({
-        url: 'http://' + that.GEO_HOST + '/geoserver/wfs/cite?service=wfs&request=GetFeature&typeNames=sf:getBuildingFromOsmId&outputFormat=text/javascript&viewparams=' + 'id:' + object.id + '&format_options=callback:getJson',
-        dataType: 'jsonp',
-        jsonpCallback: 'getJson',
-
-        success: function(res){
-            if(res.features.length > 0){
-                res.features[0].properties.osm_id = res.features[0].id.split('.')[1];
-
-                that.getServiceFromOsmId(res.features[0].properties.osm_id, function(services){
-                    var feature = new ol.Feature({
-                        geometry: new ol.geom.Polygon(res.features[0].geometry.coordinates),
-                        name: res.features[0].properties.name,
-                    });
-
-                    delete res.features[0].properties['geometry'];
-                    delete res.features[0].properties['name'];
-                    delete res.features[0].properties['service'];
-
-                    var s = '';
-                    for (var i = 0; i < services.length; i++) {
-                        s += services[i].name + ',' + services[i].url;
-                        if(i<services.length-1)
-                            s += ';';
-                    };
-                    res.features[0].properties.services = s;
-                    feature.setProperties(res.features[0].properties);
-
-                    feature.getProperties().services = s;
-                    that.selectedBat = feature;
-                    that.addFeatureOnClosestService(that.selectedBat, true);
-
-                    callback(feature.getProperties());
-                });
-}
-else{
-    that.showError("Aucun batiment ne correspond à la recherche");
-}
-}
-});
-};
+    this.getBuildingFromOsmId(object.id, function(feature){
+        that.selectedBat = feature;
+        that.addFeatureOnClosestService(that.selectedBat, true);
+    });
+ };
 
 /**
 *   Ajoute une feature sur la layer closestService
@@ -526,7 +532,7 @@ function showFeaturesHoverBuildings(data){
             osm_id : this.selectedBat.getProperties().osm_id,
             services : this.selectedBat.getProperties().services
         }  
-        resp['callback'] = function(result){
+        resp['callback'] = function(result, callback){
             console.log("CallBack edit : ");
             console.log(result);
             if(result.services){
@@ -539,6 +545,13 @@ function showFeaturesHoverBuildings(data){
                     action: 'updateBatimentInfos',
                     infos: JSON.stringify(result)
                 },
+                success: function(){
+                    that.getBuildingFromOsmId(that.selectedBat.getProperties().osm_id, function(feature){
+                        that.selectedBat = feature;
+                        callback(that.selectedBat.getProperties());
+                    });
+                    
+                }
             });            
         };
 
@@ -764,29 +777,29 @@ this.getServiceList(callback);
 /**
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
-   */
-   AppOnline.prototype.addAllLayers = function() {
+     */
+     AppOnline.prototype.addAllLayers = function() {
 
-    this.map.getLayers().clear();
+        this.map.getLayers().clear();
 
-    var tmp = [];
+        var tmp = [];
 
-    for (var key in this.layers) {
+        for (var key in this.layers) {
 
-        if (this.layers.hasOwnProperty(key)) {
-            var l = this.layers[key];
+            if (this.layers.hasOwnProperty(key)) {
+                var l = this.layers[key];
 
-            tmp.push(l);
+                tmp.push(l);
+            }
+
         }
 
-    }
+        sortByKey(tmp, 'order');
 
-    sortByKey(tmp, 'order');
-
-    for (var ff of tmp) {
-        this.map.addLayer(ff.layer);
-    }
-};
+        for (var ff of tmp) {
+            this.map.addLayer(ff.layer);
+        }
+    };
 
 /**
  *  Change la visibilitéé d'un layer
