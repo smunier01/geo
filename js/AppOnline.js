@@ -466,6 +466,7 @@ AppOnline.prototype.getBuildingFromOsmId = function(osmId, callback){
     this.getBuildingFromOsmId(object.id, function(feature){
         that.selectedBat = feature;
         that.addFeatureOnClosestService(that.selectedBat, true);
+        callback(feature.getProperties());
     });
  };
 
