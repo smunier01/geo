@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/style.css" type="text/css">
     <link rel="stylesheet" href="libs/openlayers/ol.css" type="text/css">
 
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
     <script src="libs/semantic-ui/semantic.min.js"></script>
     <script src="libs/openlayers/ol-debug.js"></script>
     <script src="js/Storage.js"></script>
@@ -76,12 +77,17 @@
         </div>
 
         <div id="syncInfos" class="content">
-          <a class="ui label icon">
+          <a id="saveLocal" class="ui label icon">
             <i class="icon cloud"></i>
             save local changes
             <div class="detail"></div>
           </a>
-        </div>  
+          <a id="sync" class="ui label icon">
+            <i class="icon cloud"></i>
+            sync
+          </a>
+        </div>
+        
       </div>
     </div>
     
@@ -197,6 +203,24 @@
 
       </div>
 
+    </div>
+
+    <div id="download-modal" class="ui basic modal">
+
+      <div class="header">
+        Download JSON Files
+      </div>
+
+      <div class="description">
+        <div id="download-modal-progress-polygons" class="ui fluid indicating progress">
+          <div class="bar"></div>
+          <div class="label">polygons.geojson</div>
+        </div>
+        <div id="download-modal-progress-lines" class="ui fluid indicating progress">
+          <div class="bar"></div>
+          <div class="label">lines.geojson</div>
+        </div>
+      </div>
     </div>
 
     <script>

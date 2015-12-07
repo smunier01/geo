@@ -86,12 +86,12 @@ Gui.prototype.updateBuildingList = function(buildings) {
     list += "</ul>";
     $buildingList.append(list);
 
-}
+};
 
 Gui.prototype.clearHoverBox = function() {
     $("#hoverbox").empty();
     $("#hoverbox").hide();
-}
+};
 
 Gui.prototype.addToHoverBox = function(object, title) {
 
@@ -102,7 +102,7 @@ Gui.prototype.addToHoverBox = function(object, title) {
     }
     
     $("#hoverbox").append(div);
-}
+};
 
 Gui.prototype.setHoverBoxPosition = function(pos) {
 
@@ -112,7 +112,20 @@ Gui.prototype.setHoverBoxPosition = function(pos) {
 	"top": pos[1] + 50,
 	"left": pos[0]
     });
-}
+};
+
+Gui.prototype.showDownloadModal = function() {
+    $('#download-modal').modal('show');
+};
+
+Gui.prototype.setProgressDownloadModal = function(progress, bar) {
+    var progressBar = $('#download-modal-progress-' + bar);
+    progressBar.progress({value:percentComplete * 100, total:100});
+};
+
+Gui.prototype.hideDownloadModal = function() {
+    $('#download-modal').modal('hide');
+};
 
 Gui.prototype.refreshSize = function() {
     /*
