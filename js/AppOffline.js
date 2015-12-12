@@ -436,45 +436,6 @@ var AppOffline = function () {
     });
 
     /*
-      Change la couleur des noeuds au passage de la souris
-      &
-      Affichage des infos sur les differents objets
-    */
-    this.map.on('pointermove', function(evt) {
-        /*
-          var t = true, nbFeatures = 0;
-
-          var sourceHover = that.layers['hover'].layer.getSource();
-
-          sourceHover.clear();
-
-          that.gui.clearHoverBox();
-
-          that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-          
-          nbFeatures += 1;
-
-          that.gui.addToHoverBox(feature.getProperties(), layer.get('title')); 
-          
-          if (t && layer.get('title') == 'Nodes Layer') {
-
-          t = false;
-
-          sourceHover.addFeature(feature);
-
-          }
-          
-          });
-
-          if (nbFeatures > 0) {
-          
-          that.gui.setHoverBoxPosition(evt.pixel);
-
-          }
-        */
-    });
-
-    /*
       Click Droit
     */
     this.map.getViewport().addEventListener('contextmenu', function (e) {
@@ -484,6 +445,10 @@ var AppOffline = function () {
     });
 };
 
+/**
+ *  clear 'nearest', 'selected' and 'route' layer.
+ *  clear selectedFeature ref and pointsClicked array.
+ */
 AppOffline.prototype.actionClearAll = function() {
     
     this.layers['nearest'].layer.getSource().clear();
@@ -492,40 +457,6 @@ AppOffline.prototype.actionClearAll = function() {
     this.selectedFeature = undefined;
     this.pointsClicked = [];
     
-};
-
-
-/**
- *  Quand la souris bouge sur la map
- */
-AppOffline.prototype.actionHover = function(evt) {
-    /*
-      var that = this, t = true, nbFeatures = 0;
-
-      var sourceHover = that.layers['hover'].layer.getSource();
-
-      sourceHover.clear();
-
-      var infos = [];
-      
-      that.map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-      
-      nbFeatures += 1;
-
-      infos.push({'layerName': layer.get('title'), 'properties': feature.getProperties()});
-      
-      if (t && layer.get('title') == 'Nodes Layer') {
-
-      t = false;
-
-      sourceHover.addFeature(feature);
-
-      }
-      
-      });
-
-      return infos;
-    */
 };
 
 /**
@@ -606,6 +537,10 @@ AppOffline.prototype.actionParking = function() {
     }
 };
 
+/**
+ *  Quand le bouton 'edit' à été cliqué.
+ *  Permet de mettre à jour l'objet actuelement selectionné
+ */
 AppOffline.prototype.actionEdit = function() {
 
     var that = this;
@@ -697,7 +632,7 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
 };
 
 /**
- *
+ * Retourne par valeur ou par callback la liste des services dispo
  */
 AppOffline.prototype.getServiceList = function(callback) {
 
@@ -815,6 +750,7 @@ AppOffline.prototype.actionToggleGps = function() {
 };
 
 /**
+ *  Utilisation de dijsktra pour trouver le chemin en deux points.
  *  @param {MouseEvent} evt - 
  */
 AppOffline.prototype.actionPath = function(evt) {
@@ -1073,6 +1009,10 @@ AppOffline.prototype.getRoadList = function() {
     
 };
 
+/**
+ * Récupére les fichiers geojson. soit dans www/ressources/
+ * soit en utilisant les fonctions cordova si nous somme sur mobile et que ces fichiers existes
+ */
 AppOffline.prototype.loadJsonFiles = function() {
 
     var that = this;
@@ -1188,11 +1128,16 @@ AppOffline.prototype.loadJsonFiles = function() {
 
 };
 
+/**
+ *  Download les fichiers geojson depuis le serveur. 
+ *  Permet de synchronisé de faire la synchronisation online -> offline
+ */
 AppOffline.prototype.syncOnline = function() {
     this.downloadFiles();
 };
 
 /**
+ *  Retourne la liste des parkings
  *  @returns {Array.<ol.Feature>} liste des parkings
  */
 AppOffline.prototype.getParkingList = function() {
@@ -1352,31 +1297,50 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
     this.gui.updateSyncInfos(featuresToEdit);
 };
 
+AppOffline.prototype.updateJsonOnServer = function(callback) {
+    $.ajax({
+        url: PHP_ROOT + '/genJson.php',
+        type: 'GET',
+        data: {},
+        success: function(){
+            callback();
+        }
+    });
+};
+
 AppOffline.prototype.downloadFiles = function() {
 
+    console.log('updating files on server');
+
     var that = this;
-
-    var task = 2;
-
-    var work = function() {
-        task -= 1;
-
-        if (task == 0) {
-            that.gui.hideDownloadModal();
-            that.loadJsonFiles();
-        };
-    };
-
-    console.log(that.gui);
-
-    that.gui.showDownloadModal();
     
-    that.storage.updateGeoJson('polygons', function() {
-        work();
-    });
+    this.updateJsonOnServer(function() {
 
-    that.storage.updateGeoJson('lines', function() {
-        work();
+        console.log('downloading files');
+        
+        var task = 2;
+
+        var work = function() {
+            task -= 1;
+
+            if (task == 0) {
+                that.gui.hideDownloadModal();
+                that.loadJsonFiles();
+            };
+        };
+
+        console.log(that.gui);
+
+        that.gui.showDownloadModal();
+        
+        that.storage.updateGeoJson('polygons', function() {
+            work();
+        });
+
+        that.storage.updateGeoJson('lines', function() {
+            work();
+        });
+
     });
     
 };

@@ -58,7 +58,7 @@ var Routing = function(app) {
  */
 Routing.prototype.init = function(file) {
 
-    this.graph = new Graph;
+    this.graph = new Graph();
 
     var d = $.Deferred();
 

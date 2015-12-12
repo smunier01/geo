@@ -198,8 +198,36 @@ MyStorage.prototype.save = function() {
 
     var that = this;
 
-    this.app.downloadFiles();
+    var toedit = that.get('edit');
+
+    toedit = toedit instanceof Array ? toedit : [toedit];
+
+    var end = function() {
+        console.log('ending');
+    };
+
+    var task = toedit.length;
     
+    var successCallback = function() {
+        console.log("hello");
+        task -= 1;
+        if (task === 0) {
+            end();
+        }
+    };
+    
+    for (var e of toedit) {
+        $.ajax({
+            url: PHP_ROOT + 'manageServices.php',
+            type: 'GET',
+            data: {
+                action: 'updateBatimentInfos',
+                infos: JSON.stringify(e)
+            },
+            success: successCallback
+        });
+    }
+   
 };
 
 /**
@@ -208,5 +236,5 @@ MyStorage.prototype.save = function() {
  *  (cela permet de vider localStorage si les fichiers .json de la map ont été mis-à-jours) 
  */
 MyStorage.prototype.removeUseless = function() {
-
+    
 };

@@ -382,8 +382,8 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         var descUrl = '';
         for (var i = 0; i < servicesUrl.length; i++) {
             if(servicesUrl[i] != null)
-                descUrl += '<li><a href="' + servicesUrl[i] + '">Lien ver ' + servicesName[i] + '</a></li>';
-        };
+                descUrl += '<li><a href="' + servicesUrl[i] + '">Lien vers ' + servicesName[i] + '</a></li>';
+        }
         if(descUrl !== '')
             cardContainer.find('.batDesc').html('<ul>' + descUrl + '</ul>');
         else{
