@@ -86,9 +86,12 @@ class DB {
         $res = $stmt->fetchAll();
 
         $return = array();
-        if(count($res)==0 || $serviceInfos['name'] == $serviceInfos['oldName']){
+        if(count($res)==0 || ($serviceInfos['name'] == $serviceInfos['oldName'] && strlen($serviceInfos['name'])>0 && $serviceInfos['name'] != "undefined")){
             $return['status'] = "success";
             $stmt = $this->db->prepare("UPDATE services set name=:name, url=:url where name=:oldName");
+            if($serviceInfos['url'] == "undefined"){
+                $serviceInfos['url'] = null;
+            }
             $stmt->bindParam(':name', $serviceInfos['name']);
             $stmt->bindParam(':url', $serviceInfos['url']);
             $stmt->bindParam(':oldName', $serviceInfos['oldName']);
@@ -96,7 +99,7 @@ class DB {
         }
         else{
             $return['status'] = "failure";
-            $return['message'] = "Un service portant ce nom existe deja";
+            $return['message'] = "Un service portant ce nom existe deja ou le nom saisi est invalide";
         }
 
         echo json_encode($return);
@@ -154,6 +157,9 @@ class DB {
 
         foreach ($removedServices as $key => $value) {
             $stmt = $this->db->prepare("DELETE from services_batiments where id_batiment=:idBat and id_service=(select id from services where name=:nameService)");
+            if($value == "undefined" || $value == ""){
+                $value = null;
+            }
             $stmt->bindParam(':idBat', $osmId);
             $stmt->bindParam(':nameService', $value);
             $stmt->execute();

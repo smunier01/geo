@@ -205,10 +205,12 @@ GuiSemantic.prototype.init = function() {
                 });
 
             } else {
-
+                var val = feature[key];
+                if(val == null || val == undefined || val == "undefined")
+                    val = "";
                 var div = $('<div class="ui labeled input fluid">' +
                             '<div class="ui label">' + key + '</div>' +
-                            '<input type="text" name="' + key + '" value="' + feature[key] + '">' +
+                            '<input type="text" name="' + key + '" value="' + val + '">' +
                             '</div>'
                            );
 
@@ -475,7 +477,10 @@ GuiSemantic.prototype.updateServiceSidebar = function(){
 
         $('#servicesList .editService').click(function(){
             var container = $(this).closest('.item');
-            that.editService($('.showBatimentService', container).text(), $('.serviceUrl', container).attr('href'));
+            var url = $('.serviceUrl', container).attr('href');
+            if(url == "undefined" || url==undefined || url==null)
+                url = '';
+            that.editService($('.showBatimentService', container).text(), url);
         });
 
     });
