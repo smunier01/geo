@@ -412,9 +412,28 @@ AppOnline.prototype.actionGoto = function(object, callback) {
     this.getBuildingFromOsmId(object.id, function(feature){
         that.selectedBat = feature;
         that.addFeatureOnClosestService(that.selectedBat, true);
+        console.log(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
+        that.zoomToCoords(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
         callback(feature.getProperties());
     });
 };
+
+AppOnline.prototype.zoomToCoords = function(coords){
+     var pan = ol.animation.pan({
+        duration: 2000,
+        source: this.map.getView().getCenter()
+    });
+    
+    var zoom = ol.animation.zoom({
+        resolution: this.map.getView().getResolution(),
+        duration: 2000
+    });
+    
+    this.map.beforeRender(pan, zoom);
+    
+    this.map.getView().setCenter(coords, 17);
+    this.map.getView().setZoom(17);
+}
 
 /**
  *   Ajoute une feature sur la layer closestService
