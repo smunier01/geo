@@ -412,7 +412,9 @@ AppOnline.prototype.actionGoto = function(object, callback) {
     this.getBuildingFromOsmId(object.id, function(feature){
         that.selectedBat = feature;
         that.addFeatureOnClosestService(that.selectedBat, true);
+        
         console.log(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
+       
         that.zoomToCoords(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
         callback(feature.getProperties());
     });
@@ -496,6 +498,7 @@ AppOnline.prototype.actionEdit = function() {
             osm_id : this.selectedBat.getProperties().osm_id,
             services : this.selectedBat.getProperties().services
         }  
+        
         resp['callback'] = function(result, callback){
             if(result.services){
                 result.services = result.services.join(';')
