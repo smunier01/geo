@@ -250,6 +250,7 @@ GuiSemantic.prototype.init = function() {
                 
                 callback(obj, function(feature){
                     that.updateCardInfos(feature);
+                    that.updateBuildingList(that.app.getBuildingList());
                 });
             }
             
@@ -436,7 +437,7 @@ GuiSemantic.prototype.updateBuildingList = function(buildings) {
         }
     });
 
-    $('.ui.search')
+    $('.ui.search').search('destroy')
         .search({
             source: content,
             onSelect: function(result, response) {
