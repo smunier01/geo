@@ -4,7 +4,7 @@
  *  @typedef {object} MouseEvent
  */
 
-var PHP_ROOT = 'http://localhost/geo/php/';
+var PHP_ROOT = 'http://178.62.87.186/geo/php/';
 
 /**
  * Application Offline
@@ -636,43 +636,43 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
  */
 AppOffline.prototype.getServiceList = function(callback) {
 
+    console.log('getServiceList');
     var that = this;
-    
-    var services = [];
-    
+
+    var result = [];
+
     var buildings = this.getBuildingList();
 
-    if (this.cache['services'] === undefined) {
+    var source = this.layers['buildingsVectors'].layer.getSource().getSource();
+    
+    source.forEachFeature(function(f) {
+        var b = f.getProperties();
 
-        this.cache['services'] = [];
-        // this.cache['services']['parking'] = 1;
+        console.log(b);
+        var services = (b.services).split(';');
 
-        var source = this.layers['buildingsVectors'].layer.getSource().getSource();
+        console.log(services);
         
-        source.forEachFeature(function(f) {
-            var b = f.getProperties();
+        for (var s of services) {
 
-            var services = (b.services).split(';');
-
-            for (var s of services) {
-
-                var k = s.split(',')[0];
-                var url = s.split(',')[1];
-                
-                if (that.cache.services.filter(function (s) {return s.name == k}).length == 0) {
-                    that.cache.services.push({'name': k, 'url': url});
-                }
-
+            var k = s.split(',')[0];
+            var url = s.split(',')[1];
+            
+            if (result.filter(function (s) {return s.name == k}).length == 0) {
+                result.push({'name': k, 'url': url});
             }
 
-        });    
-    }
+        }
+
+    });    
+
     
     if (typeof callback == 'function') {
-        callback(this.cache['services']);
+        callback(result);
     }
-    
-    return this.cache['services'];
+
+    console.log(result);
+    return result;
 };
 
 /*
@@ -1299,7 +1299,7 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
 
 AppOffline.prototype.updateJsonOnServer = function(callback) {
     $.ajax({
-        url: PHP_ROOT + '/genJson.php',
+        url: PHP_ROOT + 'genJson.php',
         type: 'GET',
         data: {},
         success: function(){
