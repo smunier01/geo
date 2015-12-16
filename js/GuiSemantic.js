@@ -245,7 +245,7 @@ GuiSemantic.prototype.init = function() {
                 
                 callback(obj, function(feature){
                     that.updateCardInfos(feature);
-                    that.updateBuildingList(that.app.getBuildingList());
+                    that.app.getBuildingList(that.updateBuildingList);
                     that.updateServiceSidebar();
                 });
             }

@@ -224,22 +224,22 @@ var AppOnline = function() {
 //     }
 // };
 
-AppOnline.prototype.getBuildingList = function() {
+AppOnline.prototype.getBuildingList = function(callback) {
     var buildings = [{name: 'building1', osm_id: 1}];
     
     $.ajax({
         url: 'php/manageServices.php',
         type: 'GET',
         data: {action: 'getListBuildings'},
-        async: false
+        //async: false
     }).done(function(res) {
         var results = $.parseJSON(res);
         buildings = results;
-
+        callback(results);
     });
 
     
-    return buildings;
+    //return buildings;
 };
 
 AppOnline.prototype.getServiceList = function(v) {
@@ -786,7 +786,8 @@ AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 
     // met à jour la liste des batiments pour le search input
-    this.gui.updateBuildingList(this.getBuildingList());
+    //this.gui.updateBuildingList(this.getBuildingList());
+    this.getBuildingList(this.gui.updateBuildingList);
 
     // met à jour la liste des services (pour le dropdown en bas à gauche)
     this.getServiceList(function(services) {

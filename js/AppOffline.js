@@ -640,7 +640,7 @@ AppOffline.prototype.getServiceList = function(callback) {
     
     var services = [];
     
-    var buildings = this.getBuildingList();
+    //var buildings = this.getBuildingList();
 
     if (this.cache['services'] === undefined) {
 
@@ -1038,7 +1038,7 @@ AppOffline.prototype.loadJsonFiles = function() {
             that.updateFeaturesFromStorage(newSource);
 
             // met à jour la liste des batiments dans le menu
-            that.gui.updateBuildingList(that.getBuildingList());
+            that.getBuildingList(that.gui.updateBuildingList);
 
             // met à jour la liste des services
             that.getServiceList(function(services) {
@@ -1244,7 +1244,7 @@ AppOffline.prototype.displayPoints = function(source, data) {
  *  Retourne la liste des batiments
  *  @returns {Array.<Object>} liste des batiments
  */
-AppOffline.prototype.getBuildingList = function() {
+AppOffline.prototype.getBuildingList = function(callback) {
 
     var buildings = [];
 
@@ -1258,7 +1258,7 @@ AppOffline.prototype.getBuildingList = function() {
 
     });
 
-    return buildings;
+    callback(buildings);
     
 };
 
@@ -1550,8 +1550,7 @@ AppOffline.prototype.setSourceCallback = function(value) {
             that.updateFeaturesFromStorage(source);
 
             // met à jour la liste des batiments dans le menu
-            that.gui.updateBuildingList(that.getBuildingList());
-
+            that.getBuildingList(that.gui.updateBuildingList);
             delete that.cache['services'];
             
             // met à jour la liste des services
