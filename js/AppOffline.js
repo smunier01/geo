@@ -1031,7 +1031,7 @@ AppOffline.prototype.loadJsonFiles = function() {
             lp.setSource(newSource);
 
             // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(newSource);
+            that.updateFeaturesFromStorage(newSource.getSource());
 
             // met à jour la liste des batiments dans le menu
             that.getBuildingList(function(buildings){
@@ -1073,7 +1073,7 @@ AppOffline.prototype.loadJsonFiles = function() {
 
             lr.setSource(newSource);
 
-            that.updateFeaturesFromStorage(newSource);
+            that.updateFeaturesFromStorage(newSource.getSource());
 
         }, function(e) {
 
@@ -1283,8 +1283,10 @@ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
         featuresToEdit = [featuresToEdit];
     }
 
+    console.log(source);
+    
     for (var f of featuresToEdit) {
-
+        
         var feature = source.getFeatureById(f['osm_id']);
         
         if (feature) {

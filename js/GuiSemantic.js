@@ -245,7 +245,7 @@ GuiSemantic.prototype.init = function() {
                 
                 callback(obj, function(feature){
                     that.updateCardInfos(feature);
-                    //that.app.getBuildingList(that.updateBuildingList);
+                    that.app.getBuildingList(that.updateBuildingList);
                     that.updateServiceSidebar();
                 });
             }
@@ -405,18 +405,24 @@ GuiSemantic.prototype.updateCardInfos = function(data){
 GuiSemantic.prototype.updateServiceList = function(services) {
     var that = this;
 
+    console.log(services);
+    
     var selectService = $('#selectServices').find('select');
-    
+
     for (var t of services) {
-        selectService.append('<option value="'+t.name+'">'+t.name+'</option>'); 
+        if (t.url !== undefined && t.name !== undefined) {
+            console.log(t);
+            selectService.append('<option value="'+t.name+'">'+t.name+'</option>');
+        }
     }
-    
+
     selectService.dropdown();
 
     $('#selectServices').find('[type=submit]').on('click', function() {
         var val = selectService.val();
         that.app.actionPathService(val, that.updateCardInfos);
     });
+    
 };
 
 GuiSemantic.prototype.updateBuildingList = function(buildings) {

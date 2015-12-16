@@ -12,10 +12,16 @@ var AppOnline = function() {
     this.selectedBat = undefined;
     
     this.showError = function(msg){};
+    
     /**
      * @type {string} 
      */
-    this.GEO_HOST = 'localhost:8080';
+    this.GEO_HOST = '178.62.87.186:8080';
+
+    /**
+     * @type {string} 
+     */
+    this.PHP_HOST = 'http://178.62.87.186/geo/php/';
 
     /**
      *  Reference à l'objet map d'openlayer
@@ -228,7 +234,7 @@ AppOnline.prototype.getBuildingList = function(callback) {
     var buildings = [{name: 'building1', osm_id: 1}];
     
     $.ajax({
-        url: 'php/manageServices.php',
+        url: this.PHP_HOST + 'manageServices.php',
         type: 'GET',
         data: {action: 'getListBuildings'},
         //async: false
@@ -244,7 +250,7 @@ AppOnline.prototype.getBuildingList = function(callback) {
 
 AppOnline.prototype.getServiceList = function(v) {
     $.ajax({
-        url: 'php/manageServices.php',
+        url: this.PHP_HOST + 'manageServices.php',
         type: 'GET',
         data: {
             action: 'getListServices'
@@ -338,7 +344,7 @@ AppOnline.prototype.actionSelect = function(evt, callback) {
  */
 AppOnline.prototype.getServiceFromOsmId = function (osmId, callback){
     $.ajax({
-        url: 'php/manageServices.php',
+        url: this.PHP_HOST + 'manageServices.php',
         type: 'GET',
         data: {
             action: 'getServiceFromOsmId',
@@ -490,6 +496,8 @@ AppOnline.prototype.actionHover = function(){
  *  
  */
 AppOnline.prototype.actionEdit = function() {
+
+    var that = this;
     
     if(this.selectedBat != undefined){
         var resp = [];
@@ -497,14 +505,14 @@ AppOnline.prototype.actionEdit = function() {
             name : this.selectedBat.getProperties().name,
             osm_id : this.selectedBat.getProperties().osm_id,
             services : this.selectedBat.getProperties().services
-        }  
+        };
         
         resp['callback'] = function(result, callback){
             if(result.services){
-                result.services = result.services.join(';')
+                result.services = result.services.join(';');
             }
             $.ajax({
-                url: 'php/manageServices.php',
+                url: that.PHP_HOST + 'manageServices.php',
                 type: 'GET',
                 data: {
                     action: 'updateBatimentInfos',
@@ -572,7 +580,7 @@ AppOnline.prototype.actionToggleGps = function() {
 AppOnline.prototype.editService = function(services, callback){
     var that = this;
     $.ajax({
-        url: 'php/manageServices.php',
+        url: this.PHP_HOST + 'manageServices.php',
         type: 'GET',
         data: {
             action: 'updateServiceInfos',
