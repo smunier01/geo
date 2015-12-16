@@ -694,7 +694,7 @@ AppOnline.prototype.actionPathService = function(service, callbackFinal) {
                             if(i > 0)
                                 services += ";";
                         };
-                        feature.getProperties().services = services;
+                        feature.setProperties({services: services});
                         
                         that.addFeatureOnClosestService(feature, true);
                         if(that.posActu || that.currentPosition){
