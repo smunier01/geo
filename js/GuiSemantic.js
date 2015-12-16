@@ -282,7 +282,7 @@ GuiSemantic.prototype.init = function() {
     });
 
     this.app.map.on('pointermove', function(evt) {
-
+        /*
         var objects = that.app.actionHover(evt);
 
         $('#hoverbox').empty();
@@ -308,6 +308,7 @@ GuiSemantic.prototype.init = function() {
                 'left': evt.pixel[0]
             });
         }
+        */
     });
 
     $('#buildingSearch').bind('keyup', function() {
