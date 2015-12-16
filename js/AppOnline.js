@@ -30,6 +30,7 @@ var AppOnline = function() {
      */ 
     this.layers = [];
     this.styles=[];
+    this.hasCenteredGps = false;
 
     /**
      *  Boolean indiquant si nous utilisons ou non la geolocalisation.
@@ -223,22 +224,22 @@ var AppOnline = function() {
 //     }
 // };
 
-AppOnline.prototype.getBuildingList = function() {
+AppOnline.prototype.getBuildingList = function(callback) {
     var buildings = [{name: 'building1', osm_id: 1}];
     
     $.ajax({
         url: 'php/manageServices.php',
         type: 'GET',
         data: {action: 'getListBuildings'},
-        async: false
+        //async: false
     }).done(function(res) {
         var results = $.parseJSON(res);
         buildings = results;
-
+        callback(results);
     });
 
     
-    return buildings;
+    //return buildings;
 };
 
 AppOnline.prototype.getServiceList = function(v) {
@@ -413,8 +414,7 @@ AppOnline.prototype.actionGoto = function(object, callback) {
         that.selectedBat = feature;
         that.addFeatureOnClosestService(that.selectedBat, true);
         
-        console.log(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
-       
+        
         that.zoomToCoords(that.selectedBat.getGeometry().getInteriorPoint().getCoordinates());
         callback(feature.getProperties());
     });
@@ -544,7 +544,10 @@ AppOnline.prototype.actionToggleGps = function() {
             function(position) {
                 that.currentPosition = ol.proj.transform([position.coords.longitude, position.coords.latitude], 'EPSG:4326', 'EPSG:3857');
 
-                view.setCenter(that.currentPosition);
+                if(!that.hasCenteredGps){
+                    view.setCenter(that.currentPosition);
+                    that.hasCenteredGps = true;
+                }
 
                 sourceCurrent.clear();
                 sourceCurrent.addFeature(new ol.Feature(new ol.geom.Point(that.currentPosition)));
@@ -562,6 +565,7 @@ AppOnline.prototype.actionToggleGps = function() {
         that.currentPosition = undefined;
         that.layers['currentPosition'].layer.getSource().clear();
         this.addFeatureOnClosestService(null, true);
+        this.hasCenteredGps = false;
     }
 };
 
@@ -782,7 +786,8 @@ AppOnline.prototype.setGui = function(gui) {
     this.gui = gui;
 
     // met à jour la liste des batiments pour le search input
-    this.gui.updateBuildingList(this.getBuildingList());
+    //this.gui.updateBuildingList(this.getBuildingList());
+    this.getBuildingList(this.gui.updateBuildingList);
 
     // met à jour la liste des services (pour le dropdown en bas à gauche)
     this.getServiceList(function(services) {

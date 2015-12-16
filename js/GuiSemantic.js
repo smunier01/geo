@@ -125,7 +125,6 @@ GuiSemantic.prototype.init = function() {
     });
 
     GuiSemantic.prototype.editService = function(service, url) {
-        console.log("editService");
         var modalContent = $('#modal-edit .content');
         $('#modal-edit>.header').text('Edition de service');
 
@@ -149,7 +148,6 @@ GuiSemantic.prototype.init = function() {
                         url: $('#modal-edit input[name="url"]').val().length>0?$('#modal-edit input[name="url"]').val():null,
                         oldName : oldNameService
                     };
-                    console.log("click approuved");
                     that.app.editService(o, function(){
                         that.updateServiceSidebar();
                     });
@@ -234,8 +232,7 @@ GuiSemantic.prototype.init = function() {
 
                 var obj = {};
 
-                console.log("kk");
-                console.log(obj);
+                (obj);
                 
                 modalContent.children().each(function() {
 
@@ -245,12 +242,10 @@ GuiSemantic.prototype.init = function() {
                     
                 });
 
-                console.log("kk");
-                console.log(obj);
                 
                 callback(obj, function(feature){
                     that.updateCardInfos(feature);
-                    that.updateBuildingList(that.app.getBuildingList());
+                    that.app.getBuildingList(that.updateBuildingList);
                     that.updateServiceSidebar();
                 });
             }
@@ -337,7 +332,6 @@ GuiSemantic.prototype.init = function() {
 
 GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
-    console.log("ok");
     
     var that = this;
     
@@ -351,8 +345,6 @@ GuiSemantic.prototype.updateSyncInfos = function(localChanges) {
 
 GuiSemantic.prototype.updateCardInfos = function(data){
 
-    console.log("updateCardInfos");
-    console.log(data);
     
     var that = this;
 
@@ -365,8 +357,7 @@ GuiSemantic.prototype.updateCardInfos = function(data){
         //}
         
         var coordsBat = [];
-        console.log(data);
-
+        
         coordsBat['coordinate'] = data.geometry.getInteriorPoint().getCoordinates();
         var cardContainer = $('.cardContainer');
 
@@ -455,7 +446,7 @@ GuiSemantic.prototype.updateServiceSidebar = function(){
     var that = this;
     this.app.getServiceList(function(services){
         var serviceList = '<ul class="ui inverted relaxed divided list">';
-        console.log(services);
+        
         for (var i = 0; i < services.length; i++) {
             serviceList += '<li class="item">' + 
                 '<div class="header">' + 
