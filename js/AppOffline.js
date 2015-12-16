@@ -171,7 +171,7 @@ var AppOffline = function () {
      *  @default
      */
     this.ROAD_PRIMARY = '#FAD9B6';
-    
+
     /**
      * Fonction de gestion des styles pour les routes.
      */
@@ -213,7 +213,7 @@ var AppOffline = function () {
             s = s.concat(that.styles['road_tertiary']);
 
         } else {
-            
+
             s = s.concat(that.styles['road_normal']);
             
         }
@@ -277,31 +277,31 @@ var AppOffline = function () {
     //
 
     this.layers['roadVectors'] = {
- 	'layer': new ol.layer.Image({
+        'layer': new ol.layer.Image({
             title: 'Roads Vector Layer',
- 	    source: new ol.source.ImageVector({
+            source: new ol.source.ImageVector({
  		source: new ol.source.Vector({/*
- 		    url: 'ressources/lines.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
+ 		                                url: 'ressources/lines.geojson',
+ 		                                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
  		style: this.styleFunctionRoads
- 	    })
- 	}),
- 	'order': 10
+            })
+        }),
+        'order': 10
     };
-    
+
     this.layers['buildingsVectors'] = {
- 	'layer': new ol.layer.Image({
+        'layer': new ol.layer.Image({
             title: 'Building Vector Layer',
- 	    source: new ol.source.ImageVector({
+            source: new ol.source.ImageVector({
  		source: new ol.source.Vector({/*
- 		    url: 'ressources/polygons.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
+ 		                                url: 'ressources/polygons.geojson',
+ 		                                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
  		style: this.styleFunctionBuildings
- 	    })
- 	}),
- 	'order': 9
+            })
+        }),
+        'order': 9
     };
 
     this.loadJsonFiles();
@@ -380,7 +380,7 @@ var AppOffline = function () {
         }),
         'order': 2
     };
-    
+
     this.addAllLayers();
 
     //
@@ -418,7 +418,7 @@ var AppOffline = function () {
         });
 
     });
-    
+
     /**
      *  Mise à jour de la map quand on press 'enter'.
      *  (c'est utile (pour le moment) pour voir si le 'tileloaderror' à bien fonctionné)
@@ -441,7 +441,7 @@ var AppOffline = function () {
     this.map.getViewport().addEventListener('contextmenu', function (e) {
 
         e.preventDefault();
-    
+
     });
 };
 
@@ -450,7 +450,7 @@ var AppOffline = function () {
  *  clear selectedFeature ref and pointsClicked array.
  */
 AppOffline.prototype.actionClearAll = function() {
-    
+
     this.layers['nearest'].layer.getSource().clear();
     this.layers['selected'].layer.getSource().clear();
     this.layers['route'].layer.getSource().clear();
@@ -495,7 +495,7 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
         callback(feature.getProperties());
 
     } else {
-        
+
         callback(false);
     }
     
@@ -511,7 +511,7 @@ AppOffline.prototype.actionParking = function() {
     var pos;
 
     if (this.gpsmode) {
-        
+
         pos = this.currentPosition;
         
     } else if (this.pointsClicked[0] ) {
@@ -648,11 +648,8 @@ AppOffline.prototype.getServiceList = function(callback) {
     source.forEachFeature(function(f) {
         var b = f.getProperties();
 
-        console.log(b);
         var services = (b.services).split(';');
 
-        console.log(services);
-        
         for (var s of services) {
 
             var k = s.split(',')[0];
@@ -671,7 +668,6 @@ AppOffline.prototype.getServiceList = function(callback) {
         callback(result);
     }
 
-    console.log(result);
     return result;
 };
 
@@ -754,7 +750,7 @@ AppOffline.prototype.actionToggleGps = function() {
  *  @param {MouseEvent} evt - 
  */
 AppOffline.prototype.actionPath = function(evt) {
-    
+
     var sourceSelected = this.layers['selected'].layer.getSource();
     var sourceRoute = this.layers['route'].layer.getSource();
 
@@ -770,7 +766,7 @@ AppOffline.prototype.actionPath = function(evt) {
         
 
     } else {
-        
+
         // clear les données si on a déjà afficher un chemin
         if (this.pointsClicked.length >= 2) {
             this.pointsClicked = [];
@@ -856,7 +852,7 @@ AppOffline.prototype.actionPathService = function(service) {
         var pos;
 
         if (this.gpsmode) {
-            
+
             pos = this.currentPosition;
             
         } else if (this.pointsClicked[0] ) {
@@ -1034,12 +1030,13 @@ AppOffline.prototype.loadJsonFiles = function() {
             
             lp.setSource(newSource);
 
-             // met à jour les features de la source si il y a des modifs en localStorage
+            // met à jour les features de la source si il y a des modifs en localStorage
             that.updateFeaturesFromStorage(newSource);
 
             // met à jour la liste des batiments dans le menu
-            that.getBuildingList(that.gui.updateBuildingList);
-
+            that.getBuildingList(function(buildings){
+                that.gui.updateBuildingList(buildings);
+            });
             // met à jour la liste des services
             that.getServiceList(function(services) {
                 that.gui.updateServiceList(services);
@@ -1050,12 +1047,12 @@ AppOffline.prototype.loadJsonFiles = function() {
             console.log("file not found, using polygons.geojson");
 
             var newSource = new ol.source.ImageVector({
- 		source: new ol.source.Vector({
- 		    url: 'ressources/polygons.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 		}),
- 		style: that.styleFunctionBuildings
- 	    });
+                source: new ol.source.Vector({
+                    url: 'ressources/polygons.geojson',
+                    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+                }),
+                style: that.styleFunctionBuildings
+            });
             
             lp.setSource(newSource);
 
@@ -1064,7 +1061,7 @@ AppOffline.prototype.loadJsonFiles = function() {
         });
 
         var lr = that.layers['roadVectors'].layer;
-        
+
         that.storage.getCordovaFile('lines', function(geojson) {
 
             var newSource = new ol.source.ImageVector({
@@ -1073,27 +1070,27 @@ AppOffline.prototype.loadJsonFiles = function() {
                 }),
                 style: that.styleFunctionRoads
             });
-            
+
             lr.setSource(newSource);
 
             that.updateFeaturesFromStorage(newSource);
-            
+
         }, function(e) {
 
             var newSource = new ol.source.ImageVector({
- 		source: new ol.source.Vector({
- 		    url: 'ressources/lines.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 		}),
- 		style: that.styleFunctionRoads
- 	    });
-            
+                source: new ol.source.Vector({
+                    url: 'ressources/lines.geojson',
+                    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+                }),
+                style: that.styleFunctionRoads
+            });
+
             lr.setSource(newSource);
 
             that.setSourceCallback('lines');
-            
+
         });
-              
+
     } else {
 
         console.log("not cordova, file found");
@@ -1102,25 +1099,25 @@ AppOffline.prototype.loadJsonFiles = function() {
         var lr2 = that.layers['roadVectors'].layer;
 
         var newSource = new ol.source.ImageVector({
- 	    source: new ol.source.Vector({
- 		url: 'ressources/polygons.geojson',
- 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 	    }),
- 	    style: that.styleFunctionBuildings
- 	});
-        
+            source: new ol.source.Vector({
+                url: 'ressources/polygons.geojson',
+                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+            }),
+            style: that.styleFunctionBuildings
+        });
+
         lp2.setSource(newSource);
 
         that.setSourceCallback('buildings');
 
         var newSource = new ol.source.ImageVector({
- 	    source: new ol.source.Vector({
- 		url: 'ressources/lines.geojson',
- 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 	    }),
- 	    style: that.styleFunctionRoads
- 	});
-        
+            source: new ol.source.Vector({
+                url: 'ressources/lines.geojson',
+                format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+            }),
+            style: that.styleFunctionRoads
+        });
+
         lr2.setSource(newSource);
 
         that.setSourceCallback('lines');
@@ -1199,14 +1196,14 @@ AppOffline.prototype.addAllLayers = function() {
 AppOffline.prototype.editService = function(services, callback){
     /*
 
-    Service sous la forme 
-    {
-        name: nouveauNom
-        url: nouvelleUrl ( null si vide )
-        oldName: ancienNom ( Sinon pas possible de le retrouver :D )
-    }
-    callback appel juste le rafraichissement de la liste des services de GuiSemantic, pas de param !
-    
+      Service sous la forme 
+      {
+      name: nouveauNom
+      url: nouvelleUrl ( null si vide )
+      oldName: ancienNom ( Sinon pas possible de le retrouver :D )
+      }
+      callback appel juste le rafraichissement de la liste des services de GuiSemantic, pas de param !
+      
     */
 };
 
@@ -1258,7 +1255,11 @@ AppOffline.prototype.getBuildingList = function(callback) {
 
     });
 
-    callback(buildings);
+    if (typeof callback == 'function') {
+        callback(buildings);
+    }
+
+    return buildings;
     
 };
 
@@ -1271,7 +1272,7 @@ AppOffline.prototype.getBuildingList = function(callback) {
  *  @returns {Number} nombre de features mis à jour
  */
 AppOffline.prototype.updateFeaturesFromStorage = function(source) {
-    
+
     var featuresToEdit = this.storage.get('edit');
 
     if (!featuresToEdit) {
@@ -1428,7 +1429,7 @@ AppOffline.prototype.initStyles = function() {
             zIndex: 9
         }),
         new ol.style.Style({
-            
+
             stroke: new ol.style.Stroke({
                 color: 'white',
                 width: 2
@@ -1464,7 +1465,7 @@ AppOffline.prototype.initStyles = function() {
             zIndex: 9
         }),
         new ol.style.Style({
-            
+
             stroke: new ol.style.Stroke({
                 color: 'white',
                 width: 4
@@ -1532,33 +1533,36 @@ AppOffline.prototype.setSourceCallback = function(value) {
     var that = this;
 
     if (value == 'buildings') {
-    // callback pour buildings.json
-    var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
-        
-        console.log('building callback json');
-        
-        var source = that.layers['buildingsVectors'].layer.getSource().getSource();
+        // callback pour buildings.json
+        var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
 
-        console.log(source.getFeatures().length);
-        if (source.getState() == 'ready') {
-
-            console.log('building callback json 2');
-
-            source.unByKey(key1);
-
-            // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(source);
-
-            // met à jour la liste des batiments dans le menu
-            that.getBuildingList(that.gui.updateBuildingList);
-            delete that.cache['services'];
+            console.log('building callback json');
             
-            // met à jour la liste des services
-            that.getServiceList(function(services) {
-                that.gui.updateServiceList(services);
-            });
-        }
-    });
+            var source = that.layers['buildingsVectors'].layer.getSource().getSource();
+
+            console.log(source.getFeatures().length);
+            if (source.getState() == 'ready') {
+
+                console.log('building callback json 2');
+
+                source.unByKey(key1);
+
+                // met à jour les features de la source si il y a des modifs en localStorage
+                that.updateFeaturesFromStorage(source);
+
+                // met à jour la liste des batiments dans le menu
+                that.getBuildingList(function(buildings){
+                    that.gui.updateBuildingList(buildings);
+                });
+                
+                delete that.cache['services'];
+                
+                // met à jour la liste des services
+                that.getServiceList(function(services) {
+                    that.gui.updateServiceList(services);
+                });
+            }
+        });
 
     } else if (value == 'lines') {
 
