@@ -4,14 +4,14 @@
  *  @typedef {object} MouseEvent
  */
 
-var PHP_ROOT = 'http://localhost/geo/php/';
+ var PHP_ROOT = 'http://localhost/geo/php/';
 
 /**
  * Application Offline
  *
  * @class
  */
-var AppOffline = function () {
+ var AppOffline = function () {
 
     var that = this;
 
@@ -25,36 +25,36 @@ var AppOffline = function () {
      *  Reference à l'objet map d'openlayer
      *  @type {ol.Map}
      */
-    this.map = undefined;
+     this.map = undefined;
 
     /**
      *  Reference à l'objet Gui
      *  @type {Gui}
      */
-    this.gui = undefined;
+     this.gui = undefined;
 
     /**
      *  Objet contenant la liste des layers openlayers utilisé
      *  @type {Object.<string, ol.layer.Vector>}
      */
-    this.layers = [];
+     this.layers = [];
 
     /**
      *  Array contenant la liste des styles généré par la methode initStyles
      *  @type {Object.<string, ol.style.Style>}
      */
-    this.styles = [];
+     this.styles = [];
 
     /**
      *  Class contenant le graphe des routes et l'implémentation de dijkstra
      *  @ŧype {Routing}
      */
-    this.routing = undefined;
+     this.routing = undefined;
 
     /**
      *  @type {Object.<string, Array.<ol.Features>>}
      */
-    this.cache = [];
+     this.cache = [];
 
     /**
      *  Permet de convertir simplement les données contenu dans les .json (en provenance de postgis)   
@@ -62,7 +62,7 @@ var AppOffline = function () {
      *
      *  @type {ol.ProjectionLike}
      */
-    this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'};
+     this.to3857 = {'dataProjection': 'EPSG:4326', 'featureProjection': 'EPSG:3857'};
 
     /**
      *  Reference vers la base de donnée local, permet d'enregistré les modifications en attendant
@@ -70,7 +70,7 @@ var AppOffline = function () {
      *
      *  @type {MyStorage}
      */
-    this.storage = new MyStorage(this);
+     this.storage = new MyStorage(this);
 
     /**
      *  Référence vers l'objet actuellement selectionné.
@@ -78,7 +78,7 @@ var AppOffline = function () {
      *
      *  @type {ol.Feature}
      */
-    this.selectedFeature = undefined;
+     this.selectedFeature = undefined;
 
     /**
      *  Référence vers les differentes positions cliqué.
@@ -86,7 +86,7 @@ var AppOffline = function () {
      *
      *  @type {Array.<ol.Coordinates>}
      */
-    this.pointsClicked = [];
+     this.pointsClicked = [];
 
     /**
      *  Boolean indiquant si nous utilisons ou non la geolocalisation.
@@ -97,14 +97,14 @@ var AppOffline = function () {
      *
      *  @type {boolean}
      */
-    this.gpsmode = false;
+     this.gpsmode = false;
 
     /*
      *  Position courante donnée par la geolocalisation
      *
      *  @type {Array.<number>}
      */
-    this.currentPosition = [];
+     this.currentPosition = [];
 
     /*
      *  Référence vers l'objet en charge de la geolocation.
@@ -112,7 +112,7 @@ var AppOffline = function () {
      *  pour le desactiver : navigator.geolocation.clearWatch(gpswatch);
      *  @type {HTML5Object}
      */
-    this.gpswatch = undefined;
+     this.gpswatch = undefined;
 
     //
     // Style
@@ -122,60 +122,60 @@ var AppOffline = function () {
      *  @type {string}
      *  @default
      */
-    this.COLOR1 = '#E86FB0';
+     this.COLOR1 = '#E86FB0';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.COLOR2 = '#A8FFC7';
+     this.COLOR2 = '#A8FFC7';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.COLOR3 = '#A8FFC7';
+     this.COLOR3 = '#A8FFC7';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.GREY1 = '#CECECE';
+     this.GREY1 = '#CECECE';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.ROAD_FOOT = '#D19B9B';
+     this.ROAD_FOOT = '#D19B9B';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.ROAD_CYCLE = '#93CF98';
+     this.ROAD_CYCLE = '#93CF98';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.ROAD_BORDER = '#737373';
+     this.ROAD_BORDER = '#737373';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.ROAD_TRAM = '#FFFBBF';
+     this.ROAD_TRAM = '#FFFBBF';
 
     /**
      *  @type {string}
      *  @default
      */
-    this.ROAD_PRIMARY = '#FAD9B6';
-    
+     this.ROAD_PRIMARY = '#FAD9B6';
+
     /**
      * Fonction de gestion des styles pour les routes.
      */
-    this.styleFunctionRoads = function (feature) {
+     this.styleFunctionRoads = function (feature) {
 
         var s = [];
 
@@ -213,7 +213,7 @@ var AppOffline = function () {
             s = s.concat(that.styles['road_tertiary']);
 
         } else {
-            
+
             s = s.concat(that.styles['road_normal']);
             
         }
@@ -225,7 +225,7 @@ var AppOffline = function () {
     /**
      * Fonction de gestion des styles pour les batiments.
      */
-    this.styleFunctionBuildings = function (feature) {
+     this.styleFunctionBuildings = function (feature) {
 
 
         var s = [];
@@ -277,111 +277,111 @@ var AppOffline = function () {
     //
 
     this.layers['roadVectors'] = {
- 	'layer': new ol.layer.Image({
-            title: 'Roads Vector Layer',
- 	    source: new ol.source.ImageVector({
+      'layer': new ol.layer.Image({
+        title: 'Roads Vector Layer',
+        source: new ol.source.ImageVector({
  		source: new ol.source.Vector({/*
  		    url: 'ressources/lines.geojson',
  		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
  		style: this.styleFunctionRoads
- 	    })
- 	}),
- 	'order': 10
-    };
-    
-    this.layers['buildingsVectors'] = {
- 	'layer': new ol.layer.Image({
-            title: 'Building Vector Layer',
- 	    source: new ol.source.ImageVector({
+  })
+    }),
+      'order': 10
+  };
+
+  this.layers['buildingsVectors'] = {
+      'layer': new ol.layer.Image({
+        title: 'Building Vector Layer',
+        source: new ol.source.ImageVector({
  		source: new ol.source.Vector({/*
  		    url: 'ressources/polygons.geojson',
  		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})*/
  		}),
  		style: this.styleFunctionBuildings
- 	    })
- 	}),
- 	'order': 9
-    };
+  })
+    }),
+      'order': 9
+  };
 
-    this.loadJsonFiles();
+  this.loadJsonFiles();
 
-    this.initStyles();
+  this.initStyles();
 
-    this.layers['nodes'] = {
-        'layer': new ol.layer.Vector({
-            source: new ol.source.Vector([]),
-            title: 'Nodes Layer',
-            visible: false
+  this.layers['nodes'] = {
+    'layer': new ol.layer.Vector({
+        source: new ol.source.Vector([]),
+        title: 'Nodes Layer',
+        visible: false
+    }),
+    'order': 75
+};
+
+this.layers['nearest'] = {
+    'layer': new ol.layer.Vector({
+        source: new ol.source.Vector([]),
+        title: 'Nearest Layer',
+        visible: true
+    }),
+    'order': 99
+};
+
+this.layers['route'] = {
+    'layer': new ol.layer.Vector({
+        source:  new ol.source.Vector([]),
+        style: that.styles['nodeAndRouteSelected'],
+        title: 'Route Layer'
+    }),
+    'order': 97
+};
+
+this.layers['hover'] = {
+    'layer': new ol.layer.Vector({
+        source: new ol.source.Vector([]),
+        style: that.styles['nodeSelected'],
+        title: 'Hover Layer'
+    }),
+    'order': 100
+};
+
+this.layers['currentPosition'] = {
+    'layer': new ol.layer.Vector({
+        source: new ol.source.Vector([]),
+        style: that.styles['nodeSelected'],
+        title: 'Current Position Layer'
+    }),
+    'order': 100
+};
+
+this.layers['selected'] = {
+    'layer': new ol.layer.Vector({
+        source: new ol.source.Vector([]),
+        style: that.styles['nodeSelected'],
+        title: 'Selected Layer'
+    }),
+    'order': 98
+};
+
+this.layers['streetNamesGS'] = {
+    'layer': new ol.layer.Tile({
+        source: new ol.source.OSM({
+            url: 'ressources/tiles/streetNames-XYZ-format/{z}_{x}_{y}.png'
         }),
-        'order': 75
-    };
+        visible: true,
+        title: 'OSM Layer Names'
+    }),
+    'order': 20
+};
 
-    this.layers['nearest'] = {
-        'layer': new ol.layer.Vector({
-            source: new ol.source.Vector([]),
-            title: 'Nearest Layer',
-            visible: true
-        }),
-        'order': 99
-    };
+this.layers['osm'] = {
+    'layer': new ol.layer.Tile({
+        source: new ol.source.MapQuest({layer: 'osm'}),
+        visible: false
+    }),
+    'order': 2
+};
 
-    this.layers['route'] = {
-        'layer': new ol.layer.Vector({
-            source:  new ol.source.Vector([]),
-            style: that.styles['nodeAndRouteSelected'],
-            title: 'Route Layer'
-        }),
-        'order': 97
-    };
-
-    this.layers['hover'] = {
-        'layer': new ol.layer.Vector({
-            source: new ol.source.Vector([]),
-            style: that.styles['nodeSelected'],
-            title: 'Hover Layer'
-        }),
-        'order': 100
-    };
-
-    this.layers['currentPosition'] = {
-        'layer': new ol.layer.Vector({
-            source: new ol.source.Vector([]),
-            style: that.styles['nodeSelected'],
-            title: 'Current Position Layer'
-        }),
-        'order': 100
-    };
-
-    this.layers['selected'] = {
-        'layer': new ol.layer.Vector({
-            source: new ol.source.Vector([]),
-            style: that.styles['nodeSelected'],
-            title: 'Selected Layer'
-        }),
-        'order': 98
-    };
-
-    this.layers['streetNamesGS'] = {
-        'layer': new ol.layer.Tile({
-            source: new ol.source.OSM({
-                url: 'ressources/tiles/streetNames-XYZ-format/{z}_{x}_{y}.png'
-            }),
-            visible: true,
-            title: 'OSM Layer Names'
-        }),
-        'order': 20
-    };
-
-    this.layers['osm'] = {
-        'layer': new ol.layer.Tile({
-            source: new ol.source.MapQuest({layer: 'osm'}),
-            visible: false
-        }),
-        'order': 2
-    };
-    
-    this.addAllLayers();
+this.addAllLayers();
 
     //
     // Routing
@@ -403,7 +403,7 @@ var AppOffline = function () {
     /**
      * Si il y a une erreur lors du chargement d'une des tiles (elle existe surement pas)
      */
-    this.layers['streetNamesGS'].layer.getSource().on('tileloaderror', function(event) {
+     this.layers['streetNamesGS'].layer.getSource().on('tileloaderror', function(event) {
 
         var self = this;
 
@@ -418,12 +418,12 @@ var AppOffline = function () {
         });
 
     });
-    
+
     /**
      *  Mise à jour de la map quand on press 'enter'.
      *  (c'est utile (pour le moment) pour voir si le 'tileloaderror' à bien fonctionné)
      */
-    $(document).keypress(function(e) {
+     $(document).keypress(function(e) {
         if (e.which == 13) {
 
             var s1 = that.layers['streetNamesGS'].layer.getSource();
@@ -437,20 +437,20 @@ var AppOffline = function () {
 
     /*
       Click Droit
-    */
-    this.map.getViewport().addEventListener('contextmenu', function (e) {
+      */
+      this.map.getViewport().addEventListener('contextmenu', function (e) {
 
         e.preventDefault();
-    
+
     });
-};
+  };
 
 /**
  *  clear 'nearest', 'selected' and 'route' layer.
  *  clear selectedFeature ref and pointsClicked array.
  */
-AppOffline.prototype.actionClearAll = function() {
-    
+ AppOffline.prototype.actionClearAll = function() {
+
     this.layers['nearest'].layer.getSource().clear();
     this.layers['selected'].layer.getSource().clear();
     this.layers['route'].layer.getSource().clear();
@@ -471,7 +471,7 @@ AppOffline.prototype.actionClearAll = function() {
  * @param {MouseEvent} evt - position où on à cliqué
  * @param {requestCallback} cb - donne à l'UI l'objet qui à été cliqué
  */
-AppOffline.prototype.actionSelect = function(evt, callback) {
+ AppOffline.prototype.actionSelect = function(evt, callback) {
 
     var that = this;
     
@@ -495,7 +495,7 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
         callback(feature.getProperties());
 
     } else {
-        
+
         callback(false);
     }
     
@@ -504,14 +504,14 @@ AppOffline.prototype.actionSelect = function(evt, callback) {
 /**
  *  Cherche le parking le plus proche du noeud actuelement selectionné ou de notre pos courante
  */
-AppOffline.prototype.actionParking = function() {
+ AppOffline.prototype.actionParking = function() {
 
     var that = this;
 
     var pos;
 
     if (this.gpsmode) {
-        
+
         pos = this.currentPosition;
         
     } else if (this.pointsClicked[0] ) {
@@ -541,7 +541,7 @@ AppOffline.prototype.actionParking = function() {
  *  Quand le bouton 'edit' à été cliqué.
  *  Permet de mettre à jour l'objet actuelement selectionné
  */
-AppOffline.prototype.actionEdit = function() {
+ AppOffline.prototype.actionEdit = function() {
 
     var that = this;
     var properties = this.selectedFeature.getProperties();
@@ -634,7 +634,7 @@ AppOffline.prototype.splitClosestRoad = function(coord) {
 /**
  * Retourne par valeur ou par callback la liste des services dispo
  */
-AppOffline.prototype.getServiceList = function(callback) {
+ AppOffline.prototype.getServiceList = function(callback) {
 
     var that = this;
     
@@ -681,7 +681,7 @@ AppOffline.prototype.getServiceList = function(callback) {
  *  @param {ol.Coordinates} p1 début
  *  @param {ol.Coordinates} p2 arrivé
  */
-AppOffline.prototype.getRoute = function(p1, p2) {
+ AppOffline.prototype.getRoute = function(p1, p2) {
 
     // Sépare la route la plus proche en deux, pour pouvoir les utiliser dans le graphe.
     var e1 = this.splitClosestRoad(p1);
@@ -715,7 +715,7 @@ AppOffline.prototype.getRoute = function(p1, p2) {
 /**
  *  Active ou desactive le mode gps.
  */
-AppOffline.prototype.actionToggleGps = function() {
+ AppOffline.prototype.actionToggleGps = function() {
     var that = this;
 
     this.gpsmode = !this.gpsmode;
@@ -740,7 +740,7 @@ AppOffline.prototype.actionToggleGps = function() {
             {
                 enableHighAccuracy:true, maximumAge:0, timeout:5000
             }
-        );
+            );
 
     } else {
 
@@ -753,8 +753,8 @@ AppOffline.prototype.actionToggleGps = function() {
  *  Utilisation de dijsktra pour trouver le chemin en deux points.
  *  @param {MouseEvent} evt - 
  */
-AppOffline.prototype.actionPath = function(evt) {
-    
+ AppOffline.prototype.actionPath = function(evt) {
+
     var sourceSelected = this.layers['selected'].layer.getSource();
     var sourceRoute = this.layers['route'].layer.getSource();
 
@@ -770,7 +770,7 @@ AppOffline.prototype.actionPath = function(evt) {
         
 
     } else {
-        
+
         // clear les données si on a déjà afficher un chemin
         if (this.pointsClicked.length >= 2) {
             this.pointsClicked = [];
@@ -797,7 +797,7 @@ AppOffline.prototype.actionPath = function(evt) {
  *  @param {object} object - objet contenant l'id et le nom de l'objet où nous souhaitons bouger la map
  *  @param {callback} callback - callback prenant en parametre les propriétés du feature selectionné. Permet à l'UI d'afficher les info de objet.
  */
-AppOffline.prototype.actionGoto = function(object, callback) {
+ AppOffline.prototype.actionGoto = function(object, callback) {
 
     var feature;
 
@@ -841,7 +841,7 @@ AppOffline.prototype.actionGoto = function(object, callback) {
 /**
  *  Cherche le service le plus proche
  */
-AppOffline.prototype.actionPathService = function(service) {
+ AppOffline.prototype.actionPathService = function(service) {
 
     console.log(service);
     
@@ -856,7 +856,7 @@ AppOffline.prototype.actionPathService = function(service) {
         var pos;
 
         if (this.gpsmode) {
-            
+
             pos = this.currentPosition;
             
         } else if (this.pointsClicked[0] ) {
@@ -886,7 +886,7 @@ AppOffline.prototype.actionPathService = function(service) {
  *  @param {ol.coordinate} coord
  *  @returns {Object} route le plus proche de coord
  */
-AppOffline.prototype.getClosestRoad = function(coord) {
+ AppOffline.prototype.getClosestRoad = function(coord) {
 
     var min = Infinity;
     var minR = undefined;
@@ -911,7 +911,7 @@ AppOffline.prototype.getClosestRoad = function(coord) {
  *  @param {ol.coordinate} coord
  *  @returns {Object} parking le plus proche de coord
  */
-AppOffline.prototype.getClosestParking = function(coord) {
+ AppOffline.prototype.getClosestParking = function(coord) {
 
     var min = Infinity;
     var minP = undefined;
@@ -935,7 +935,7 @@ AppOffline.prototype.getClosestParking = function(coord) {
  *  @param {ol.coordinate} coord
  *  @returns {Object} parking le plus proche de coord
  */
-AppOffline.prototype.getClosestService = function(service, coord) {
+ AppOffline.prototype.getClosestService = function(service, coord) {
 
     var min = Infinity;
     var minP = undefined;
@@ -973,14 +973,14 @@ AppOffline.prototype.getClosestService = function(service, coord) {
       minP = p;
       }
       }
-    */
-    return minP;
-};
+      */
+      return minP;
+  };
 
 /**
  *  @returns {Array.<ol.Feature>} liste des routes
  */
-AppOffline.prototype.getRoadList = function() {
+ AppOffline.prototype.getRoadList = function() {
 
     var roads = [];
 
@@ -1013,7 +1013,7 @@ AppOffline.prototype.getRoadList = function() {
  * Récupére les fichiers geojson. soit dans www/ressources/
  * soit en utilisant les fonctions cordova si nous somme sur mobile et que ces fichiers existes
  */
-AppOffline.prototype.loadJsonFiles = function() {
+ AppOffline.prototype.loadJsonFiles = function() {
 
     var that = this;
     
@@ -1035,11 +1035,12 @@ AppOffline.prototype.loadJsonFiles = function() {
             lp.setSource(newSource);
 
              // met à jour les features de la source si il y a des modifs en localStorage
-            that.updateFeaturesFromStorage(newSource);
+             that.updateFeaturesFromStorage(newSource);
 
             // met à jour la liste des batiments dans le menu
-            that.getBuildingList(that.gui.updateBuildingList);
-
+            that.getBuildingList(function(buildings){
+                that.gui.updateBuildingList(buildings);
+            });
             // met à jour la liste des services
             that.getServiceList(function(services) {
                 that.gui.updateServiceList(services);
@@ -1050,12 +1051,12 @@ AppOffline.prototype.loadJsonFiles = function() {
             console.log("file not found, using polygons.geojson");
 
             var newSource = new ol.source.ImageVector({
- 		source: new ol.source.Vector({
- 		    url: 'ressources/polygons.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 		}),
- 		style: that.styleFunctionBuildings
- 	    });
+               source: new ol.source.Vector({
+                   url: 'ressources/polygons.geojson',
+                   format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+               }),
+               style: that.styleFunctionBuildings
+           });
             
             lp.setSource(newSource);
 
@@ -1063,68 +1064,68 @@ AppOffline.prototype.loadJsonFiles = function() {
             
         });
 
-        var lr = that.layers['roadVectors'].layer;
-        
-        that.storage.getCordovaFile('lines', function(geojson) {
+var lr = that.layers['roadVectors'].layer;
 
-            var newSource = new ol.source.ImageVector({
-                source: new ol.source.Vector({
-                    features: (new ol.format.GeoJSON()).readFeatures(geojson)
-                }),
-                style: that.styleFunctionRoads
-            });
-            
-            lr.setSource(newSource);
+that.storage.getCordovaFile('lines', function(geojson) {
 
-            that.updateFeaturesFromStorage(newSource);
-            
-        }, function(e) {
+    var newSource = new ol.source.ImageVector({
+        source: new ol.source.Vector({
+            features: (new ol.format.GeoJSON()).readFeatures(geojson)
+        }),
+        style: that.styleFunctionRoads
+    });
 
-            var newSource = new ol.source.ImageVector({
- 		source: new ol.source.Vector({
- 		    url: 'ressources/lines.geojson',
- 		    format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 		}),
- 		style: that.styleFunctionRoads
- 	    });
-            
-            lr.setSource(newSource);
+    lr.setSource(newSource);
 
-            that.setSourceCallback('lines');
-            
-        });
-              
-    } else {
+    that.updateFeaturesFromStorage(newSource);
 
-        console.log("not cordova, file found");
+}, function(e) {
 
-        var lp2 = that.layers['buildingsVectors'].layer;
-        var lr2 = that.layers['roadVectors'].layer;
+    var newSource = new ol.source.ImageVector({
+       source: new ol.source.Vector({
+           url: 'ressources/lines.geojson',
+           format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+       }),
+       style: that.styleFunctionRoads
+   });
 
-        var newSource = new ol.source.ImageVector({
- 	    source: new ol.source.Vector({
- 		url: 'ressources/polygons.geojson',
- 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 	    }),
- 	    style: that.styleFunctionBuildings
- 	});
-        
-        lp2.setSource(newSource);
+    lr.setSource(newSource);
 
-        that.setSourceCallback('buildings');
+    that.setSourceCallback('lines');
 
-        var newSource = new ol.source.ImageVector({
- 	    source: new ol.source.Vector({
- 		url: 'ressources/lines.geojson',
- 		format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
- 	    }),
- 	    style: that.styleFunctionRoads
- 	});
-        
-        lr2.setSource(newSource);
+});
 
-        that.setSourceCallback('lines');
-    }
+} else {
+
+    console.log("not cordova, file found");
+
+    var lp2 = that.layers['buildingsVectors'].layer;
+    var lr2 = that.layers['roadVectors'].layer;
+
+    var newSource = new ol.source.ImageVector({
+      source: new ol.source.Vector({
+       url: 'ressources/polygons.geojson',
+       format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+   }),
+      style: that.styleFunctionBuildings
+  });
+
+    lp2.setSource(newSource);
+
+    that.setSourceCallback('buildings');
+
+    var newSource = new ol.source.ImageVector({
+      source: new ol.source.Vector({
+       url: 'ressources/lines.geojson',
+       format: new ol.format.GeoJSON({'defaultDataProjection': 'EPSG:3785'})
+   }),
+      style: that.styleFunctionRoads
+  });
+
+    lr2.setSource(newSource);
+
+    that.setSourceCallback('lines');
+}
 
 };
 
@@ -1132,7 +1133,7 @@ AppOffline.prototype.loadJsonFiles = function() {
  *  Download les fichiers geojson depuis le serveur. 
  *  Permet de synchronisé de faire la synchronisation online -> offline
  */
-AppOffline.prototype.syncOnline = function() {
+ AppOffline.prototype.syncOnline = function() {
     this.downloadFiles();
 };
 
@@ -1140,7 +1141,7 @@ AppOffline.prototype.syncOnline = function() {
  *  Retourne la liste des parkings
  *  @returns {Array.<ol.Feature>} liste des parkings
  */
-AppOffline.prototype.getParkingList = function() {
+ AppOffline.prototype.getParkingList = function() {
 
     var parkings = [];
 
@@ -1172,31 +1173,31 @@ AppOffline.prototype.getParkingList = function() {
  *  Ajoute à la map le contenu de this.layers en respectant l'ordre défini par la propriété 'order'
  *
  *  @todo: refaire cette fonction, elle est moche, mais je savais pas cmt faire mieux :(
- */
-AppOffline.prototype.addAllLayers = function() {
+     */
+     AppOffline.prototype.addAllLayers = function() {
 
-    this.map.getLayers().clear();
+        this.map.getLayers().clear();
 
-    var tmp = [];
+        var tmp = [];
 
-    for (var key in this.layers) {
+        for (var key in this.layers) {
 
-        if (this.layers.hasOwnProperty(key)) {
-            var l = this.layers[key];
+            if (this.layers.hasOwnProperty(key)) {
+                var l = this.layers[key];
 
-            tmp.push(l);
+                tmp.push(l);
+            }
+
         }
 
-    }
+        sortByKey(tmp, 'order');
 
-    sortByKey(tmp, 'order');
+        for (var i of tmp) {
+            this.map.addLayer(i.layer);
+        }
+    };
 
-    for (var i of tmp) {
-        this.map.addLayer(i.layer);
-    }
-};
-
-AppOffline.prototype.editService = function(services, callback){
+    AppOffline.prototype.editService = function(services, callback){
     /*
 
     Service sous la forme 
@@ -1216,7 +1217,7 @@ AppOffline.prototype.editService = function(services, callback){
  *  @param {string} name clé du layer défini au moment de ça définition
  *  @param {boolean} value visible ou non
  */
-AppOffline.prototype.setVisible = function(name, value) {
+ AppOffline.prototype.setVisible = function(name, value) {
     this.layers[name].layer.setVisible(value);
 };
 
@@ -1226,7 +1227,7 @@ AppOffline.prototype.setVisible = function(name, value) {
  *  @param {ol.source.Vector} source source où afficher les points
  *  @param {Array.<Array.<Number>>} data array contenant la liste des points
  */
-AppOffline.prototype.displayPoints = function(source, data) {
+ AppOffline.prototype.displayPoints = function(source, data) {
 
     source.clear();
 
@@ -1244,7 +1245,7 @@ AppOffline.prototype.displayPoints = function(source, data) {
  *  Retourne la liste des batiments
  *  @returns {Array.<Object>} liste des batiments
  */
-AppOffline.prototype.getBuildingList = function(callback) {
+ AppOffline.prototype.getBuildingList = function(callback) {
 
     var buildings = [];
 
@@ -1270,8 +1271,8 @@ AppOffline.prototype.getBuildingList = function(callback) {
  *  @param {ol.source.Vector} source source to update
  *  @returns {Number} nombre de features mis à jour
  */
-AppOffline.prototype.updateFeaturesFromStorage = function(source) {
-    
+ AppOffline.prototype.updateFeaturesFromStorage = function(source) {
+
     var featuresToEdit = this.storage.get('edit');
 
     if (!featuresToEdit) {
@@ -1348,7 +1349,7 @@ AppOffline.prototype.downloadFiles = function() {
 /**
  *
  */
-AppOffline.prototype.initStyles = function() {
+ AppOffline.prototype.initStyles = function() {
 
     var that = this;
 
@@ -1403,38 +1404,38 @@ AppOffline.prototype.initStyles = function() {
     });
 
     this.styles['road_primary'] = [
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_BORDER,
-                width: 5
-            }),
-            zIndex: 9
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_BORDER,
+            width: 5
         }),
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_PRIMARY,
-                width: 4
-            }),
-            zIndex: 10
-        })
+        zIndex: 9
+    }),
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_PRIMARY,
+            width: 4
+        }),
+        zIndex: 10
+    })
     ];
 
     this.styles['road_tertiary'] =[
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_BORDER,
-                width: 3
-            }),
-            zIndex: 9
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_BORDER,
+            width: 3
         }),
-        new ol.style.Style({
-            
-            stroke: new ol.style.Stroke({
-                color: 'white',
-                width: 2
-            }),
-            zIndex: 10
-        })
+        zIndex: 9
+    }),
+    new ol.style.Style({
+
+        stroke: new ol.style.Stroke({
+            color: 'white',
+            width: 2
+        }),
+        zIndex: 10
+    })
     ];
 
 
@@ -1456,38 +1457,38 @@ AppOffline.prototype.initStyles = function() {
 
     this.styles['road_normal'] = [
 
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_BORDER,
-                width: 5
-            }),
-            zIndex: 9
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_BORDER,
+            width: 5
         }),
-        new ol.style.Style({
-            
-            stroke: new ol.style.Stroke({
-                color: 'white',
-                width: 4
-            }),
-            zIndex: 10
-        })
+        zIndex: 9
+    }),
+    new ol.style.Style({
+
+        stroke: new ol.style.Stroke({
+            color: 'white',
+            width: 4
+        }),
+        zIndex: 10
+    })
     ];
 
     this.styles['road_tram'] = [
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_BORDER,
-                width: 5
-            }),
-            zIndex: 19
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_BORDER,
+            width: 5
         }),
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: that.ROAD_TRAM,
-                width: 4
-            }),
-            zIndex: 20
-        })
+        zIndex: 19
+    }),
+    new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: that.ROAD_TRAM,
+            width: 4
+        }),
+        zIndex: 20
+    })
     ];
     
 
@@ -1534,7 +1535,7 @@ AppOffline.prototype.setSourceCallback = function(value) {
     if (value == 'buildings') {
     // callback pour buildings.json
     var key1 = this.layers['buildingsVectors'].layer.getSource().on('change', function() {
-        
+
         console.log('building callback json');
         
         var source = that.layers['buildingsVectors'].layer.getSource().getSource();
@@ -1550,7 +1551,9 @@ AppOffline.prototype.setSourceCallback = function(value) {
             that.updateFeaturesFromStorage(source);
 
             // met à jour la liste des batiments dans le menu
-            that.getBuildingList(that.gui.updateBuildingList);
+            that.getBuildingList(function(buildings){
+                that.gui.updateBuildingList(buildings);
+            });
             delete that.cache['services'];
             
             // met à jour la liste des services
@@ -1560,7 +1563,7 @@ AppOffline.prototype.setSourceCallback = function(value) {
         }
     });
 
-    } else if (value == 'lines') {
+} else if (value == 'lines') {
 
         // callback pour lines.json
         var key2 = this.layers['roadVectors'].layer.getSource().on('change', function() {
@@ -1585,7 +1588,7 @@ AppOffline.prototype.setSourceCallback = function(value) {
 /**
  *  @param {Gui}
  */
-AppOffline.prototype.setGui = function(gui) {
+ AppOffline.prototype.setGui = function(gui) {
     this.gui = gui;
 };
 

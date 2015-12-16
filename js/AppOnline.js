@@ -787,7 +787,9 @@ AppOnline.prototype.setGui = function(gui) {
 
     // met à jour la liste des batiments pour le search input
     //this.gui.updateBuildingList(this.getBuildingList());
-    this.getBuildingList(this.gui.updateBuildingList);
+    this.getBuildingList(function(buildings){
+        this.gui.updateBuildingList(buildings);
+    });
 
     // met à jour la liste des services (pour le dropdown en bas à gauche)
     this.getServiceList(function(services) {
